@@ -1,0 +1,133 @@
+/* TODO
+ * - when the grid overflows, it should have its own scrollbar,
+ *   not use the whole page's
+ * - the grid and text area should reach down to the bottom of the page
+ *   - currently this is a fixed em number
+*/
+
+html {
+    font-family: sans-serif, monospace;
+    font-size: 12px;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    box-sizing: border-box;
+    height: 100%;
+	display: flex;
+    flex-direction: column;
+}
+
+#header {
+    /* Retained in case we add a status bar */
+    padding-top: 0.83em;
+    padding-bottom: 0.83em;
+    padding-right: 8px;
+    font-family: Calibri;
+}
+
+#container {
+	display: flex;
+    flex-direction: row;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+#status-bar {
+    font-size: 11px;
+    background-color: rgb(0, 63, 147);
+    color: white;
+    padding: 4px;
+    font-family: Calibri;
+    text-transform: uppercase;
+}
+
+#status-bar > dl {
+  -webkit-margin-before: 0px;
+  -webkit-margin-after: 0px;
+}
+
+#status-bar > dl > dd {
+    -webkit-margin-start: 0px;
+    display: inline;
+}
+
+#spreadsheet {
+    margin-top: 4px;
+    margin-left: 8px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-y: auto;
+}
+
+#formula-bar {
+    margin-bottom: 0.5em;
+    font-family: Consolas, monospace;
+    resize: vertical;
+    min-height: 1.2em;
+    height: 1.2em;
+    border-color: #d3d3d3;
+}
+
+#grid {
+	flex-grow: 1;
+    overflow-y: auto;
+    margin-right: 0.5em;
+}
+
+#code_editor {
+    width: 70em;
+}
+
+.CodeMirror {
+    height: 100%;
+}
+
+.CodeMirror-scroll {
+    /* http://stackoverflow.com/questions/30098071/codemirror-autoresize-upto-a-given-number-of-lines */
+    /* max-height: 100%; */
+}
+
+.grid {
+    border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.grid td {
+    border: 1px solid grey;
+    border-color: #d3d3d3;
+    min-width: 1.2em;
+    height: 1.2em;
+    padding: 3px;
+}
+
+.grid td.identifier {
+    color: red;
+}
+
+.grid td.heading {
+    background-color: rgb(91, 155, 213);
+    color: white;
+    font-weight: bold;
+}
+
+.grid td.map {
+    background-color: #AFDCEC;
+}
+
+.grid td.selected {
+    background-color: rgb(255, 243, 153) !important;
+}
+
+.grid td.append {
+    background-color: rgb(153, 217, 234);
+    /* background-color: rgb(255, 204, 153); */
+    color: black;
+}
+
+.grid td.literal {
+    color: blue;
+}
