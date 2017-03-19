@@ -116,23 +116,22 @@ const app = function (state = INITIAL_APP, action) {
         case 'RESET_STATE':
             return Object.assign({}, state, INITIAL_APP);
 
-        case 'LOAD_FILE':
-            return (function() {
-                const path = action.path;
-                const filename = LocalFileIO.get_basename_from_path(path);
+        case 'LOAD_FILE': {
+            const path = action.path;
+            const filename = LocalFileIO.get_basename_from_path(path);
 
-                const contents = LocalFileIO.readFileSync(path, 'utf8');
-                const new_state = Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: contents}),
-                    loaded_filepath: path
-                });
+            const contents = LocalFileIO.readFileSync(path, 'utf8');
+            const new_state = Object.assign({}, state, {
+                code_editor: Object.assign({}, state.code_editor, {value: contents}),
+                loaded_filepath: path
+            });
 
-                // Move this into the main state and update with sync_state
-                document.title = `Mesh - ${filename}`;
+            // Move this into the main state and update with sync_state
+            document.title = `Mesh - ${filename}`;
 
-                sync_state(new_state);
-                return new_state;
-            })();
+            sync_state(new_state);
+            return new_state;
+        }
 
         case 'SAVE_FILE': {
             if (state.loaded_filepath !== null) {
@@ -174,7 +173,7 @@ const app = function (state = INITIAL_APP, action) {
             }
         }
 
-        case 'CLEAR_VGRID_DATA':
+        case 'CLEAR_VGRID_DATA': {
             // TODO optimise
             // TODO Have a think about whether this is necessary.
             //      Because when you think about it,
@@ -196,13 +195,15 @@ const app = function (state = INITIAL_APP, action) {
             return Object.assign({}, state, {
                 vgrid: new_vgrid
             })
+        }
 
-        case 'UPDATE_FORMULA_BAR':
+        case 'UPDATE_FORMULA_BAR': {
             const new_formula_bar = Object.assign({}, state.formula_bar, {
                     value: selected_cell.formula_bar_value});
             const new_state = Object.assign({}, state, {formula_bar: new_formula_bar});
             sync_state(new_state);
             return new_state;
+        }
 
         case 'SELECT_CODE': {
             const new_state = Object.assign({}, state, {mode: 'EDITING_CODE'});
@@ -224,49 +225,48 @@ const app = function (state = INITIAL_APP, action) {
             return new_state;
         }
 
-        case 'EXTEND_GRID':
+        case 'EXTEND_GRID': {
             // TODO feels like this is ripe for optimisation
-            return (function() {
-                const [current_row_index, current_col_index] = action.location;
-                const old_max_row_index = state.vgrid.length - 1;
-                const old_max_col_index = state.vgrid[0].length - 1;
-                if (current_row_index === old_max_row_index &&
-                    current_col_index === old_max_col_index) {
-                    return state;
-                }
+            const [current_row_index, current_col_index] = action.location;
+            const old_max_row_index = state.vgrid.length - 1;
+            const old_max_col_index = state.vgrid[0].length - 1;
+            if (current_row_index === old_max_row_index &&
+                current_col_index === old_max_col_index) {
+                return state;
+            }
 
-                const new_row_indices = Array(1 + Math.max(
-                                                old_max_row_index, 
-                                                current_row_index)).fill(0);
-                const new_col_indices = Array(1 + Math.max(
-                                                old_max_col_index,
-                                                current_col_index)).fill(0);
-                const extended_vgrid = new_row_indices.map( (_, row_index) => {
-                    return new_col_indices.map( (_, col_index) => {
-                        if ((row_index > old_max_row_index) ||
-                            (col_index > old_max_col_index)) {
-                            return EMPTY_CELL;
-                        } else {
-                            let selected_cell = state.vgrid[row_index][col_index];
-                            return selected_cell;
-                        }
-                    })
+            const new_row_indices = Array(1 + Math.max(
+                                            old_max_row_index, 
+                                            current_row_index)).fill(0);
+            const new_col_indices = Array(1 + Math.max(
+                                            old_max_col_index,
+                                            current_col_index)).fill(0);
+            const extended_vgrid = new_row_indices.map( (_, row_index) => {
+                return new_col_indices.map( (_, col_index) => {
+                    if ((row_index > old_max_row_index) ||
+                        (col_index > old_max_col_index)) {
+                        return EMPTY_CELL;
+                    } else {
+                        let selected_cell = state.vgrid[row_index][col_index];
+                        return selected_cell;
+                    }
                 })
-                
-                // Restore selection, if possible
-                const [sel_row, sel_col] = state.selectedCell;
-                if (sel_row <= (extended_vgrid.length - 1)
-                    && sel_col <= (extended_vgrid[0].length - 1)
-                ) {
-                    extended_vgrid[sel_row][sel_col] = Object.assign( 
-                        {}, 
-                        extended_vgrid[sel_row][sel_col],
-                        {selected: true}
-                    )
-                }
-                
-                return Object.assign({}, state, {vgrid: extended_vgrid});
-            })();
+            })
+            
+            // Restore selection, if possible
+            const [sel_row, sel_col] = state.selectedCell;
+            if (sel_row <= (extended_vgrid.length - 1)
+                && sel_col <= (extended_vgrid[0].length - 1)
+            ) {
+                extended_vgrid[sel_row][sel_col] = Object.assign( 
+                    {}, 
+                    extended_vgrid[sel_row][sel_col],
+                    {selected: true}
+                )
+            }
+            
+            return Object.assign({}, state, {vgrid: extended_vgrid});
+        }
 
         case 'ADD_CELLS': {
             const new_vgrid = [...state.vgrid];
@@ -292,78 +292,73 @@ const app = function (state = INITIAL_APP, action) {
         //  \/ PER-CELL BEHAVIOUR \/
         // ==========================
 
-        case 'SELECT_CELL':
+        case 'SELECT_CELL': {
             // When you have a specific cell in mind.
-            return (function() {
-                const new_selected_cell = get_cell(state.vgrid, action.location)
-                let new_state = selected_cell.reducers.deselect(state);
-                // TODO fix this crappy hack - should be based on something else?
-                new_state = Object.assign({}, new_state, {selectedCell: action.location});
-                new_state = new_selected_cell.reducers.select(new_state);
-                sync_state(new_state);
-                return new_state;
-            })();
+            const new_selected_cell = get_cell(state.vgrid, action.location)
+            let new_state = selected_cell.reducers.deselect(state);
+            // TODO fix this crappy hack - should be based on something else?
+            new_state = Object.assign({}, new_state, {selectedCell: action.location});
+            new_state = new_selected_cell.reducers.select(new_state);
+            sync_state(new_state);
+            return new_state;
+        }
 
-        case 'MOVE_CELL_SELECTION':
+        case 'MOVE_CELL_SELECTION': {
             // When you're moving the cell selection in a direction.
-            return (function() {
-                // Get the new selection coords
-                const [old_row, old_col] = state.selectedCell;
-                const last_row_index = state.vgrid.length - 1;
-                const last_col_index = state.vgrid[0].length - 1;
-                const new_location = (function () {
-                    switch(action.direction) {
-                        case 'UP':
-                            return [Math.max(old_row-1, 0), old_col];
-                        case 'LEFT':
-                            return [old_row, Math.max(old_col-1, 0)];
-                        case 'DOWN':
-                            return [Math.min(old_row+1, last_row_index), old_col];
-                        case 'RIGHT':
-                            return [old_row, Math.min(old_col+1, last_col_index)];
-                        default:
-                            return state.selectedCell;
-                    }
-                })();
-
-
-                // Get the new state
-                let new_state = selected_cell.reducers.deselect(state);
-                const new_selected_cell = get_cell(state.vgrid, new_location);
-                // TODO fix this crappy hack
-                new_state = Object.assign({}, new_state, {selectedCell: new_location});
-                new_state = new_selected_cell.reducers.select(new_state);
-                sync_state(new_state);
-                return new_state;
+            
+            // Get the new selection coords
+            const [old_row, old_col] = state.selectedCell;
+            const last_row_index = state.vgrid.length - 1;
+            const last_col_index = state.vgrid[0].length - 1;
+            const new_location = (function () {
+                switch(action.direction) {
+                    case 'UP':
+                        return [Math.max(old_row-1, 0), old_col];
+                    case 'LEFT':
+                        return [old_row, Math.max(old_col-1, 0)];
+                    case 'DOWN':
+                        return [Math.min(old_row+1, last_row_index), old_col];
+                    case 'RIGHT':
+                        return [old_row, Math.min(old_col+1, last_col_index)];
+                    default:
+                        return state.selectedCell;
+                }
             })();
 
-        case 'EDIT_CELL':
-            return (function() {
-                const new_state = selected_cell.reducers.edit(state);
-                sync_state(new_state);
-                return new_state;
-            })();
 
-        case 'COMMIT_CELL_EDIT': 
-            return (function() {
-                const new_state = selected_cell.reducers.commit_edit(state);
-                sync_state(new_state);
-                return new_state;
-            })()
+            // Get the new state
+            let new_state = selected_cell.reducers.deselect(state);
+            const new_selected_cell = get_cell(state.vgrid, new_location);
+            // TODO fix this crappy hack
+            new_state = Object.assign({}, new_state, {selectedCell: new_location});
+            new_state = new_selected_cell.reducers.select(new_state);
+            sync_state(new_state);
+            return new_state;
+        }
 
-        case 'DISCARD_CELL_EDIT':
-            return (function() {
-                const new_state = selected_cell.reducers.discard_edit(state)
-                sync_state(new_state);
-                return new_state;
-            })();
+        case 'EDIT_CELL': {
+            const new_state = selected_cell.reducers.edit(state);
+            sync_state(new_state);
+            return new_state;
+        }
 
-        case 'DELETE_VALUE':
-            return (function() {
-                const new_state = selected_cell.reducers.delete_value(state)
-                sync_state(new_state);
-                return new_state;
-            })()
+        case 'COMMIT_CELL_EDIT': {
+            const new_state = selected_cell.reducers.commit_edit(state);
+            sync_state(new_state);
+            return new_state;
+        }
+
+        case 'DISCARD_CELL_EDIT': {
+            const new_state = selected_cell.reducers.discard_edit(state)
+            sync_state(new_state);
+            return new_state;
+        }
+
+        case 'DELETE_VALUE': {
+            const new_state = selected_cell.reducers.delete_value(state)
+            sync_state(new_state);
+            return new_state;
+        }
 
         // TODO delete variable declaration?
         // TODO delete attachment?
