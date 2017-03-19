@@ -1,8 +1,8 @@
 # Mesh
 
-> Visualise data and edit code using a spreadsheet interface.
+Mesh is a JavaScript IDE that feels like a spreadsheet. 
 
-Mesh is a JavaScript IDE that feels like a spreadsheet.
+Visualise data and edit code using similar patterns to what you'd use in a spreadsheet.
 
 ## How to install Mesh
 
@@ -27,6 +27,8 @@ or
 $ yarn start
 ```
 
-To create a new file, just start moving the cursor around with jkl;
+To create a new file, just start moving the cursor around (keyboard: jkl;).
 
-Take a look at the example in the examples directory too (Ctrl-O).
+Take a look at the example in the examples directory too (keyboard: Ctrl-O).
+
+Full shortcut information is displayed on startup.
