@@ -8,6 +8,10 @@ Visualise data and edit code using similar patterns to what you'd use in a sprea
 
 ## How to install Mesh
 
+Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/).
+
+Then, at the command line:
+
 ```
 $ npm install
 
