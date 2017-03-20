@@ -10,7 +10,7 @@ Visualise data and edit code using similar patterns to what you'd use in a sprea
 
 Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/).
 
-Then, at the command line:
+Then, download the Mesh source. In the Mesh directory, at the command line, type:
 
 ```
 $ npm install
