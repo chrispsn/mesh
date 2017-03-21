@@ -1,135 +1,122 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
 // Key values: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
-//
-// TODO Vim keybindings? goto being easy (coords), jkl;, etc
+
+const shortcuts = [
+  {mode: 'READY', key: 'ArrowLeft', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+  {mode: 'READY', key: 'h', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+
+  {mode: 'READY', key: 'ArrowUp', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+  {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+
+  {mode: 'READY', key: 's', modifiers: (e) => e.ctrlKey, action: { type: 'SAVE_FILE' }},
+  {mode: 'READY', key: 's', modifiers: (e) => e.ctrlKey && e.shiftKey, action: { type: 'SAVE_FILE_AS' }},
+
+  {mode: 'READY', key: 'F2', action: { type: 'EDIT_CELL' }},
+  
+  {mode: 'EDIT', key: 'Escape', action: { type: 'DISCARD_CELL_EDIT' }},
+];
+
+/*
+if (typeof(sheet) !== "undefined" && sheet.attach) {
+  sheet.attach("shortcuts", shortcuts, [1, 1])
+}
+*/
+
+function process_event (event, store) {
+
+    const state = store.getState();
+    const mode = state.mode;
+
+    for (let shortcut of shortcuts) {
+        console.log(event.key, mode);
+        if (event.key === shortcut.key 
+            && (shortcut.modifiers === undefined || shortcut.modifiers(event))
+            && mode === shortcut.mode) {
+            console.log("Registered ", event.key);
+            store.dispatch(shortcut.action);
+            return;
+        }  
+    }
+
+    // TODO dealing with modifiers
+    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Exampleselected_cell
+
+    // Catch window closes
+    if (event.key == 'w' && event.ctrlKey) {
+        alert("YOU KILLED ME");
+        // TODO actually prevent close
+        return;
+    }
+
+    if (mode === 'EDIT' && event.key === 'Enter') {
+        // TOOD how can a user insert a line into the formula bar 
+        // without triggering commit? Same way as in Excel?
+        store.dispatch({ type: 'COMMIT_CELL_EDIT' });
+        store.dispatch({ type: 'CLEAR_VGRID_DATA' });
+        Mesh.run_and_render_code();
+        return;
+    }
+  
+    if (mode === 'READY') {
+        if (event.key === 'o' && event.ctrlKey) {
+            document.getElementById('open-file-manager').click();
+            return;
+        }
+        
+        switch (event.key) {
+
+            const EXTRA_ROWS = 1;
+            const EXTRA_COLS = 1;
+
+            case 'j':
+            case "ArrowDown":
+            case 'Enter':
+                store.dispatch({
+                    type: 'EXTEND_GRID', 
+                    location: [
+                        state.selectedCell[0] + EXTRA_ROWS, 
+                        state.selectedCell[1]
+                    ]
+                })
+                store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' });
+                return;
+            case 'l':
+            case "ArrowRight":
+                store.dispatch({ 
+                    type: 'EXTEND_GRID', 
+                    location: [
+                        state.selectedCell[0], 
+                        state.selectedCell[1] + EXTRA_COLS
+                    ]
+                })
+                store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' });
+                return;
+            case 'i':
+            case 'F9':
+                Mesh.run_and_render_code();
+                return;
+            case 'Delete':
+                // TODO If on the name: delete the declaration entirely
+                store.dispatch({ type: 'DELETE_VALUE' });
+                store.dispatch({ type: 'CLEAR_VGRID_DATA' });
+                Mesh.run_and_render_code();
+                return;
+            // how to know when to insert? Maybe just typing in normal mode
+            // is enough (ie remove VIM bindings and anything else that would stop this)
+            // OR we just rely on F2?
+            default:
+                return;
+        }
+    }
+}
+
 const keydown_fn_maker = function (store) {
     return (event) => {
     // https://developer.mozilla.org/en-US/docs/Web/Events/keydown
     // Event types: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
     event.stopPropagation();
 
-    // TODO dealing with modifiers
-    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Exampleselected_cell
-    const EXTRA_ROWS = 1;
-    const EXTRA_COLS = 1;
-    const state = store.getState();
-    const mode = store.getState().mode;
-
-    // Catch window closes
-    if (event.key == 'w' && event.ctrlKey) {
-        alert("YOU KILLED ME");
-        // TODO actually prevent close
-    }
-
-    // TODO move the sheet.render stuff to a middleware that's triggered 
-    // after every dispatch?
-
-    if (mode === 'EDIT') {
-        switch (event.key) {
-            case 'Enter':
-                // TOOD how can a user insert a line into the formula bar 
-                // without triggering commit? Same way as in Excel?
-                return function() {
-                    store.dispatch({ type: 'COMMIT_CELL_EDIT' });
-                    store.dispatch({ type: 'CLEAR_VGRID_DATA' });
-                    Mesh.run_and_render_code();
-                }();
-
-            case 'Escape':
-                store.dispatch({ type: 'DISCARD_CELL_EDIT' });
-                return;
-
-            default:
-                return;
-        }
-
-    } else if (mode == 'READY') {
-        if (event.ctrlKey) {
-
-            // TODO check this is working
-            if (event.shiftKey) {
-                switch (event.key) {
-                    case 's':
-                        store.dispatch({ type: 'SAVE_FILE_AS' });
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                switch (event.key) {
-                    case 'o':
-                        document.getElementById('open-file-manager').click();
-                        break;
-                    case 's':
-                        store.dispatch({ type: 'SAVE_FILE' });
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-
-        } else {
-            switch (event.key) {
-                case 'k':
-                case "ArrowUp":
-                    store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'UP' });
-                    sheet.render()
-                    break;
-                case 'j':
-                case "ArrowDown":
-                case 'Enter':
-                    store.dispatch({
-                        type: 'EXTEND_GRID', 
-                        location: [
-                            state.selectedCell[0] + EXTRA_ROWS, 
-                            state.selectedCell[1]
-                        ]
-                    })
-                    store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' });
-                    sheet.render()
-                    break;
-                case 'h':
-                case "ArrowLeft":
-                    store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' });
-                    sheet.render()
-                    break;
-                case 'l':
-                case "ArrowRight":
-                    store.dispatch({ 
-                        type: 'EXTEND_GRID', 
-                        location: [
-                            state.selectedCell[0], 
-                            state.selectedCell[1] + EXTRA_COLS
-                        ]
-                    })
-                    store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' });
-                    sheet.render()
-                    break;
-                case 'i':
-                case "F2":
-                    event.preventDefault();
-                    store.dispatch({ type: 'EDIT_CELL' });
-                    break;
-                case 'F9':
-                    Mesh.run_and_render_code();
-                    break;
-                case 'Delete':
-                    // TODO If on the name: delete the declaration entirely
-                    store.dispatch({ type: 'DELETE_VALUE' });
-                    store.dispatch({ type: 'CLEAR_VGRID_DATA' });
-                    Mesh.run_and_render_code();
-                    break;
-                // how to know when to insert? Maybe just typing in normal mode
-                // is enough (ie remove VIM bindings and anything else that would stop this)
-                // OR we just rely on F2?
-                default:
-                    return;
-            }
-        }
-
-    }
-
+    process_event(event, store)
 }}
 
 function get_clicked_cell_location (event) {
@@ -158,7 +145,7 @@ const bind_grid_events = function(store, grid_element) {
                         type: 'SELECT_CELL', 
                         location: clicked_location
                     });
-                    sheet.render();
+
                 case 'EDIT':
                     store.dispatch({ 
                         type: 'INSERT_REFERENCE_FROM_CELL',

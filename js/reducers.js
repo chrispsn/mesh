@@ -70,6 +70,7 @@ function sync_state(state) {
     
     // Grid
     const selected_cell = get_cell(state.vgrid, state.selectedCell)
+    Mesh.Sheet.render();
 
     // Status bar
     Mesh.status_bar.render(state);
