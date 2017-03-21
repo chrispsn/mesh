@@ -10,13 +10,13 @@ const object_string = String("Hello world!");
 const object_number = Number(123);
 const object_boolean = Boolean(1);
 
-// Empty values
-const empty_null = null;
-const empty_undefined = undefined;
-
 // Call 
 const unformatted_calc = number + Math.random() + 1;
 const formatted_calc = (unformatted_calc).toFixed(2);
+
+// Empty values
+const empty_null = null;
+const empty_undefined = undefined;
 
 // Arrow function
 const arrow_fn = () => "MEMES";
