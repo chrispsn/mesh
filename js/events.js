@@ -28,10 +28,10 @@ function process_event (event, store) {
     const mode = state.mode;
 
     for (let shortcut of shortcuts) {
-        if (event.key === shortcut.key 
+        if (event.key === shortcut.key
+            && mode === shortcut.mode
             && ((shortcut.modifiers === undefined) || shortcut.modifiers(event))
-            && mode === shortcut.mode) {
-            console.log("Registered ", event.key);
+        ) {
             store.dispatch(shortcut.action);
             return;
         }  
