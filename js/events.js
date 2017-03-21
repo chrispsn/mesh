@@ -1,5 +1,5 @@
-// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
 // Key values: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+// https://developer.mozilla.org/en-US/docs/Web/Events/keydown
 
 const shortcuts = [
   {mode: 'READY', key: 'ArrowLeft', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
@@ -9,7 +9,7 @@ const shortcuts = [
   {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
 
   {mode: 'READY', key: 's', modifiers: (e) => e.ctrlKey, action: { type: 'SAVE_FILE' }},
-  {mode: 'READY', key: 's', modifiers: (e) => e.ctrlKey && e.shiftKey, action: { type: 'SAVE_FILE_AS' }},
+  {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey && e.shiftKey), action: { type: 'SAVE_FILE_AS' }},
 
   {mode: 'READY', key: 'F2', action: { type: 'EDIT_CELL' }},
   
@@ -28,9 +28,8 @@ function process_event (event, store) {
     const mode = state.mode;
 
     for (let shortcut of shortcuts) {
-        console.log(event.key, mode);
         if (event.key === shortcut.key 
-            && (shortcut.modifiers === undefined || shortcut.modifiers(event))
+            && ((shortcut.modifiers === undefined) || shortcut.modifiers(event))
             && mode === shortcut.mode) {
             console.log("Registered ", event.key);
             store.dispatch(shortcut.action);
@@ -43,8 +42,7 @@ function process_event (event, store) {
 
     // Catch window closes
     if (event.key == 'w' && event.ctrlKey) {
-        alert("YOU KILLED ME");
-        // TODO actually prevent close
+        event.preventDefault();
         return;
     }
 
@@ -110,15 +108,6 @@ function process_event (event, store) {
     }
 }
 
-const keydown_fn_maker = function (store) {
-    return (event) => {
-    // https://developer.mozilla.org/en-US/docs/Web/Events/keydown
-    // Event types: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
-    event.stopPropagation();
-
-    process_event(event, store)
-}}
-
 function get_clicked_cell_location (event) {
     const id = event.target.getAttribute('id');
     let return_value = null;
@@ -145,15 +134,17 @@ const bind_grid_events = function(store, grid_element) {
                         type: 'SELECT_CELL', 
                         location: clicked_location
                     });
-
+                    break;
                 case 'EDIT':
                     store.dispatch({ 
                         type: 'INSERT_REFERENCE_FROM_CELL',
                         location: clicked_location
                     });
+                    break;
                 case 'EDITING_CODE':
                     store.dispatch({ type: 'UNSELECT_CODE' });
                     Mesh.run_and_render_code();
+                    break;
                 default:
                     break;
             }
@@ -171,6 +162,10 @@ const bind_formula_bar_events = function(store, formula_bar) {
     formula_bar.addEventListener('click',
         () => store.dispatch({ type: 'EDIT_CELL' })
     );
+}
+
+const keydown_fn_maker = function (store) {
+    return (event) => process_event(event, store);
 }
 
 const bind_keydown_events = function(store, window) {
@@ -194,16 +189,6 @@ function load_file_from_filepicker(event) {
 const filepicker = document.getElementById('open-file-manager');
 filepicker.addEventListener('change', load_file_from_filepicker);
 
-// Save logic
-
-function writeFile() {
-    Mesh.store.dispatch({type: 'SAVE_FILE'});
-};
-
-/*
-const file_saver = document.getElementById('save-file')
-file_saver.addEventListener('click', writeFile);
-*/
 module.exports = {
     bind_code_editor_events: bind_code_editor_events,
     bind_keydown_events: bind_keydown_events,
