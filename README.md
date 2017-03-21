@@ -10,29 +10,13 @@ Visualise data and edit code using similar patterns to what you'd use in a sprea
 
 Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/).
 
-Then, download the Mesh source. In the Mesh directory, at the command line, type:
-
-```
-$ yarn
-
-or
-
-$ npm install
-```
+Then, download the Mesh source. In the Mesh directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
 
 Electron's install seems to be fiddly; you may need to delete the electron directory in node_modules and reinstall.
 
 ## How to start using Mesh
 
-Launch Mesh by opening a command line in the Mesh directory and typing:
-
-```
-$ yarn start
-
-or
-
-$ npm start
-```
+To launch Mesh, open a command line in the Mesh directory, type `yarn start` or `npm start` (as relevant) and press Enter.
 
 To create a new file, just start moving the cursor around (keyboard: jkl;).
 
