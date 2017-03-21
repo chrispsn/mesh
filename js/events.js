@@ -62,11 +62,11 @@ function process_event (event, store) {
             document.getElementById('open-file-manager').click();
             return;
         }
+    
+        const EXTRA_ROWS = 1;
+        const EXTRA_COLS = 1;
         
         switch (event.key) {
-
-            const EXTRA_ROWS = 1;
-            const EXTRA_COLS = 1;
 
             case 'j':
             case "ArrowDown":
