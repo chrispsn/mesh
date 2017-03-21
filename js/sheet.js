@@ -3,10 +3,9 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-const Path = require('path');
-const Grid = require(Path.resolve('.', 'js/grid_component.js')).Grid;
-const CodeTransformers = require(Path.resolve('.', 'js/code_transformers.js'));
-const DisplayFunctions = require(Path.resolve('.', 'js/display_functions.js'));
+const Grid = require(__dirname + '/grid_component.js').Grid;
+const CodeTransformers = require(__dirname + '/code_transformers.js');
+const DisplayFunctions = require(__dirname + '/display_functions.js');
 
 class Sheet {
     // Public-facing API for virtual grid.

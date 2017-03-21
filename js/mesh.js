@@ -1,24 +1,14 @@
 // Imports
 // http://stackoverflow.com/a/19600250
 
-// Via https://gist.github.com/branneman/8048520
-global.rootRequire = function(name) {
-    return require(__dirname + '/' + name);
-}
-
-const Path = require('path');
-function load_local(relative_path) {
-    return require(Path.resolve('.', relative_path));
-}
-
 const Redux = require('redux');
 
-const CodeEditor = load_local('js/code_editor.js')
-const Sheet = load_local('js/sheet.js');
-const StatusBar = load_local('js/status_bar.js');
-const Events = load_local('js/events.js');
-const LocalFileIO = load_local('js/local_file_io.js');
-const Reducers = load_local('js/reducers.js');
+const CodeEditor = require(__dirname + '/code_editor.js')
+const Sheet = require(__dirname + '/sheet.js');
+const StatusBar = require(__dirname + '/status_bar.js');
+const Events = require(__dirname + '/events.js');
+const LocalFileIO = require(__dirname + '/local_file_io.js');
+const Reducers = require(__dirname + '/reducers.js');
 
 // HTML elements
 
