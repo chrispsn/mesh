@@ -25,7 +25,6 @@ function createMainWindow() {
         autoHideMenuBar: true
 	});
 
-    // https://electron.atom.io/docs/api/web-contents/#contentsinsertcsscss
 	win.loadURL(`file://${__dirname}/../main.html`);
 	win.on('closed', onClosed);
 
