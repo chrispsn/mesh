@@ -3,12 +3,12 @@
 
 const Redux = require('redux');
 
-const CodeEditor = require(__dirname + '/code_editor.js')
-const Sheet = require(__dirname + '/sheet.js');
-const StatusBar = require(__dirname + '/status_bar.js');
-const Events = require(__dirname + '/events.js');
-const LocalFileIO = require(__dirname + '/local_file_io.js');
-const Reducers = require(__dirname + '/reducers.js');
+const CodeEditor = require(__dirname + '/js/code_editor.js')
+const Sheet = require(__dirname + '/js/sheet.js');
+const StatusBar = require(__dirname + '/js/status_bar.js');
+const Events = require(__dirname + '/js/events.js');
+const LocalFileIO = require(__dirname + '/js/local_file_io.js');
+const Reducers = require(__dirname + '/js/reducers.js');
 
 // HTML elements
 
