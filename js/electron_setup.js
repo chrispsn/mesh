@@ -26,15 +26,7 @@ function createMainWindow() {
 	});
 
     // https://electron.atom.io/docs/api/web-contents/#contentsinsertcsscss
-    const FS = require('fs');
-    const base_codemirror_dir = `${__dirname}/../node_modules/codemirror/`
-    const codemirror_base_css = FS.readFileSync(base_codemirror_dir + 'lib/codemirror.css', 'utf8');
-    const codemirror_theme_css = FS.readFileSync(base_codemirror_dir + 'theme/neo.css', 'utf8');
 	win.loadURL(`file://${__dirname}/../main.html`);
-    win.webContents.on('did-finish-load', function() {
-        win.webContents.insertCSS(codemirror_base_css);
-        win.webContents.insertCSS(codemirror_theme_css);
-    });
 	win.on('closed', onClosed);
 
 	return win;
