@@ -8,8 +8,8 @@ const shortcuts = [
   {mode: 'READY', key: 'ArrowUp', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
   {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
 
-  {mode: 'READY', key: 's', modifiers: (e) => e.ctrlKey, action: { type: 'SAVE_FILE' }},
-  {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey && e.shiftKey), action: { type: 'SAVE_FILE_AS' }},
+  {mode: 'READY', key: 'S', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
+  {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
 
   {mode: 'READY', key: 'F2', action: { type: 'EDIT_CELL' }},
   
@@ -34,7 +34,7 @@ function process_event (event, store) {
         ) {
             store.dispatch(shortcut.action);
             return;
-        }  
+        }
     }
 
     // TODO dealing with modifiers
