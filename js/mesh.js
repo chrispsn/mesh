@@ -3,7 +3,7 @@
 
 const Redux = require('redux');
 
-const CodeEditor = require(__dirname + '/js/code_editor.js')
+const CodeEditor = require(__dirname + '/js/code_editor.js');
 const Sheet = require(__dirname + '/js/sheet.js');
 const StatusBar = require(__dirname + '/js/status_bar.js');
 const Events = require(__dirname + '/js/events.js');
@@ -27,7 +27,7 @@ const sheet = new Sheet.Sheet(HTML_elements.grid, store);
 
 // Event bindings
 
-Events.bind_code_editor_events(store, CodeEditor.code_editor);
+Events.bind_code_editor_events(store, CodeEditor);
 Events.bind_formula_bar_events(store, HTML_elements.formula_bar);
 Events.bind_grid_events(store, HTML_elements.grid);
 Events.bind_keydown_events(store, window);
@@ -50,15 +50,30 @@ function calculate_if_required () {
         eval(state.code_editor.value);
         store.dispatch({ type: 'RETURN_TO_READY' });
         store.dispatch({ type: 'UPDATE_FORMULA_BAR' });
+    }
+
+    // UI component updates
+    // TODO fact these are being hit every time is a good incentive
+    // to minimise the number of actions taken
+    if (state.mode !== 'CALCULATING') {
         sheet.render();
+        status_bar.render(state);
+        // Formula bar
+        // TODO consider making this a React element
+        HTML_elements.formula_bar.value = state.formula_bar.value;
+        if (state.formula_bar.focused) {
+            HTML_elements.formula_bar.focus();
+        } else {
+            HTML_elements.formula_bar.blur();
+        }
+
     }
 }
 store.subscribe(calculate_if_required);
 
 // Showtime
 
-sheet.render();
-status_bar.render(store.getState());
+store.dispatch({ type: 'RESET_STATE' });
 
 // Exports
 
@@ -67,6 +82,6 @@ module.exports = Mesh = {
 	Sheet: sheet,
     HTML_elements: HTML_elements,
     status_bar: status_bar,
-    code_editor: CodeEditor.code_editor,
+    code_editor: CodeEditor,
     load_CSV: LocalFileIO.load_CSV
 }

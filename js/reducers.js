@@ -1,7 +1,7 @@
 // # Connections to objects / HTML elements
 
 const formula_bar = document.getElementById('formula-bar');
-const code_editor = CodeEditor.code_editor;
+const code_editor = CodeEditor;
 
 // # State constants
 
@@ -66,14 +66,8 @@ function sync_state(state) {
     // http://redux.js.org/docs/advanced/Middleware.html
     // But note this may not work during the weird formula bar editing period?
     
-    // TODO move sheet.render calls into this?
-    
     // Grid
     const selected_cell = get_cell(state.vgrid, state.selectedCell)
-    Mesh.Sheet.render();
-
-    // Status bar
-    Mesh.status_bar.render(state);
 
     // Formula bar
     formula_bar.value = state.formula_bar.value;
@@ -128,7 +122,7 @@ const app = function (state = INITIAL_APP, action) {
                 mode: 'NEED_TO_CALCULATE'
             });
 
-            // Move this into the main state and update with sync_state
+            // TODO Move this into the main state and update with sync_state
             document.title = `Mesh - ${filename}`;
 
             sync_state(new_state);

@@ -32,6 +32,4 @@ let code_editor = CodeMirror(document.getElementById("code_editor"), {
     lineSeparator: LINE_SEPARATOR
 });
 
-module.exports = {
-    code_editor: code_editor
-};
+module.exports = code_editor;
