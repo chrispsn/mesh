@@ -12,7 +12,7 @@ const shortcuts = [
     {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
 
     // TODO If on the name: delete the declaration entirely
-    {mode: 'READY', key: 'DELETE', action: { type: 'DELETE_VALUE' }},
+    {mode: 'READY', key: 'Delete', action: { type: 'DELETE_VALUE' }},
 
     {mode: 'READY', key: 'S', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
     {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
@@ -155,7 +155,9 @@ const bind_formula_bar_events = function(store, formula_bar) {
 const bind_keydown_events = function(store, window) {
     // TODO consider just binding to grid, not whole window?
     // Would require breaking the keyboard logic up a bit.
-    window.addEventListener('keydown', (event) => process_event(event, store));
+    window.addEventListener('keydown', 
+        (event) => process_event(event, store)
+    );
 }
 
 // Load logic
