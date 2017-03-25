@@ -48,9 +48,9 @@ function calculate_if_required () {
         store.dispatch({ type: 'CALCULATING' });
         // TODO add error checking for calc
         eval(state.code_editor.value);
-        sheet.render();
         store.dispatch({ type: 'RETURN_TO_READY' });
         store.dispatch({ type: 'UPDATE_FORMULA_BAR' });
+        sheet.render();
     }
 }
 store.subscribe(calculate_if_required);
