@@ -15,15 +15,9 @@ class Sheet {
         this.store = store;
     }
      
-    add_cell(location, cell_props) {
-        this.store.dispatch({type: 'EXTEND_GRID', location: location})
-        this.store.dispatch({
-            type: 'ADD_CELL', 
-            location: location,
-            cell_props: cell_props
-        })
-    }
-
+    // TODO this means every time this gets called, the store gets updated.
+    // Should we wait until all components have been added
+    // and just add everything for the whole sheet in one go?
     add_cells(cells_to_add) {
         const max_row = Math.max(...(cells_to_add.map(cell => cell.location[0])))
         const max_col = Math.max(...(cells_to_add.map(cell => cell.location[1])))
