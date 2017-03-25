@@ -1,21 +1,32 @@
+// https://developer.mozilla.org/en-US/docs/Web/Events
+
 // Key values: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
 // https://developer.mozilla.org/en-US/docs/Web/Events/keydown
+// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Exampleselected_cell
 
 const shortcuts = [
-  {mode: 'READY', key: 'ArrowLeft', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
-  {mode: 'READY', key: 'h', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    {mode: 'READY', key: 'ArrowLeft', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    {mode: 'READY', key: 'h', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
 
-  {mode: 'READY', key: 'ArrowUp', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
-  {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+    {mode: 'READY', key: 'ArrowUp', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+    {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
 
-  {mode: 'READY', key: 'S', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
-  {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
+    // TODO If on the name: delete the declaration entirely
+    {mode: 'READY', key: 'DELETE', action: { type: 'DELETE_VALUE' }},
 
-  {mode: 'READY', key: 'F2', action: { type: 'EDIT_CELL' }},
+    {mode: 'READY', key: 'S', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
+    {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
+
+    {mode: 'READY', key: 'F2', action: { type: 'EDIT_CELL' }},
+    // TODO needs to preventDefault?
+    {mode: 'READY', key: 'i', action: { type: 'EDIT_CELL' }},
   
-  {mode: 'EDIT', key: 'Escape', action: { type: 'DISCARD_CELL_EDIT' }},
+    // TOOD how can a user insert a line into the formula bar 
+    // without triggering commit? Same way as in Excel?
+    {mode: 'EDIT', key: 'Enter', action: { type: 'COMMIT_CELL_EDIT' }},
+    {mode: 'EDIT', key: 'Escape', action: { type: 'DISCARD_CELL_EDIT' }},
 ];
-
+  
 /*
 if (typeof(sheet) !== "undefined" && sheet.attach) {
   sheet.attach("shortcuts", shortcuts, [1, 1])
@@ -37,22 +48,12 @@ function process_event (event, store) {
         }
     }
 
-    // TODO dealing with modifiers
-    // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Exampleselected_cell
-
     // Catch window closes
     if (event.key == 'w' && event.ctrlKey) {
         event.preventDefault();
         return;
     }
 
-    if (mode === 'EDIT' && event.key === 'Enter') {
-        // TOOD how can a user insert a line into the formula bar 
-        // without triggering commit? Same way as in Excel?
-        store.dispatch({ type: 'COMMIT_CELL_EDIT' });
-        return;
-    }
-  
     if (mode === 'READY') {
         if (event.key === 'o' && event.ctrlKey) {
             document.getElementById('open-file-manager').click();
@@ -87,14 +88,6 @@ function process_event (event, store) {
                 })
                 store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' });
                 return;
-            case 'i':
-            case 'Delete':
-                // TODO If on the name: delete the declaration entirely
-                store.dispatch({ type: 'DELETE_VALUE' });
-                return;
-            // how to know when to insert? Maybe just typing in normal mode
-            // is enough (ie remove VIM bindings and anything else that would stop this)
-            // OR we just rely on F2?
             default:
                 return;
         }
@@ -115,6 +108,9 @@ function get_clicked_cell_location (event) {
     }
     return return_value;
 }
+
+// # Event listeners
+// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Syntax
 
 const bind_grid_events = function(store, grid_element) {
     grid_element.addEventListener('click',
@@ -156,14 +152,10 @@ const bind_formula_bar_events = function(store, formula_bar) {
     );
 }
 
-const keydown_fn_maker = function (store) {
-    return (event) => process_event(event, store);
-}
-
 const bind_keydown_events = function(store, window) {
     // TODO consider just binding to grid, not whole window?
     // Would require breaking the keyboard logic up a bit.
-    window.addEventListener('keydown', keydown_fn_maker(store));
+    window.addEventListener('keydown', (event) => process_event(event, store));
 }
 
 // Load logic
@@ -186,6 +178,3 @@ module.exports = {
     bind_formula_bar_events: bind_formula_bar_events,
     bind_grid_events: bind_grid_events
 }
-
-// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Syntax
-// https://developer.mozilla.org/en-US/docs/Web/Events

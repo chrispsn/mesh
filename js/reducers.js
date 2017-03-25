@@ -27,7 +27,8 @@ const EMPTY_CELL = {
 
             return Object.assign({}, state, {
                 code_editor: new_code_editor,
-                formula_bar: new_formula_bar
+                formula_bar: new_formula_bar,
+                mode: 'NEED_TO_CALCULATE'
             });
         }
     }
@@ -289,6 +290,18 @@ const app = function (state = INITIAL_APP, action) {
             return state;
         }
 
+        case 'CALCULATING': {
+            const new_state = Object.assign({}, state, {mode: 'CALCULATING'});
+            sync_state(new_state);
+            return new_state;
+        }
+
+        case 'RETURN_TO_READY': {
+            const new_state = Object.assign({}, state, {mode: 'READY'});
+            sync_state(new_state);
+            return new_state;
+        }
+
         // ==========================
         //  \/ PER-CELL BEHAVIOUR \/
         // ==========================
@@ -326,7 +339,6 @@ const app = function (state = INITIAL_APP, action) {
                 }
             })();
 
-
             // Get the new state
             let new_state = selected_cell.reducers.deselect(state);
             const new_selected_cell = get_cell(state.vgrid, new_location);
@@ -345,18 +357,6 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'COMMIT_CELL_EDIT': {
             const new_state = selected_cell.reducers.commit_edit(state);
-            sync_state(new_state);
-            return new_state;
-        }
-
-        case 'CALCULATING': {
-            const new_state = Object.assign({}, state, {mode: 'CALCULATING'});
-            sync_state(new_state);
-            return new_state;
-        }
-
-        case 'RETURN_TO_READY': {
-            const new_state = Object.assign({}, state, {mode: 'READY'});
             sync_state(new_state);
             return new_state;
         }

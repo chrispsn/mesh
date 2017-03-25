@@ -63,7 +63,8 @@ module.exports = {
 
     discard_edit: (state) => {
         return Object.assign({}, state, {
-            formula_bar: Object.assign({}, state.formula_bar, {focused: false})
+            formula_bar: Object.assign({}, state.formula_bar,
+                                        {focused: false, mode: 'READY'})
         });
     },
 
