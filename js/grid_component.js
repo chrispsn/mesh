@@ -1,8 +1,3 @@
-// TODO consider replacing this with one of:
-// - https://github.com/felixrieseberg/React-Spreadsheet-Component
-// - https://github.com/facebook/fixed-data-table
-// - https://github.com/datazenit/sensei-grid
-
 const React = require('react');
 const ReactDOM = require('react-dom');
 
