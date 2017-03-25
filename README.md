@@ -4,6 +4,8 @@ Mesh is a JavaScript IDE that feels like a spreadsheet.
 
 Visualise data and edit code using similar patterns to what you'd use in a spreadsheet.
 
+**WARNING!** Mesh is alpha-quality and is under active development. Some features don't work yet and it is not well optimised from a speed or UI standpoint.
+
 ![screenshot](https://cloud.githubusercontent.com/assets/777010/24078505/9693f64e-0cc3-11e7-8b2e-0433483569ec.png)
 
 ## How to install Mesh
