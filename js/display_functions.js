@@ -10,9 +10,9 @@ const default_reducers = require(__dirname + '/default_cell_logic.js');
 const code_transformers = require(__dirname + '/code_transformers.js');
 const {get_text, replace_text, append_to_array, AST} = code_transformers;
 
-function write_ref_string(ref_string, sheet, location, declaration_AST_node) {
-    sheet.add_cells([{
-        location: location, 
+function get_ref_string_cell(ref_string, sheet, location, declaration_AST_node) {
+    return {
+        location: [...location], 
         cell_props: {
             repr: ref_string,
             ref_string: ref_string,
@@ -21,7 +21,7 @@ function write_ref_string(ref_string, sheet, location, declaration_AST_node) {
             code_location: declaration_AST_node.id.loc,
             reducers: default_reducers
         }
-    }]);
+    };
 }
 
 function write_dummy(value, ref_string, sheet, location, declaration_AST_node) {
@@ -32,9 +32,6 @@ function write_dummy(value, ref_string, sheet, location, declaration_AST_node) {
     // write_ref_string(ref_string, sheet, location);
 
     let [row_index, col_index] = location;
-    const [starting_row_index, starting_col_index] = location;
-
-    col_index++;
 
     const cell_props = {
         repr: String(value),
@@ -45,19 +42,14 @@ function write_dummy(value, ref_string, sheet, location, declaration_AST_node) {
     }
     
     sheet.add_cells([{
-        location: [row_index, col_index],
+        location: [row_index, col_index + 1],
         cell_props: cell_props
     }]);
 }
 
 function write_value(value, ref_string, sheet, location, declaration_AST_node) {
 
-    write_ref_string(ref_string, sheet, location, declaration_AST_node);
-
-    let [row_index, col_index] = location;
-    const [starting_row_index, starting_col_index] = location;
-
-    col_index++;
+    const ref_string_cell = get_ref_string_cell(ref_string, sheet, location, declaration_AST_node);
 
     const code_text = Mesh.store.getState().code_editor.value;
 
@@ -69,17 +61,21 @@ function write_value(value, ref_string, sheet, location, declaration_AST_node) {
         classes: 'literal',
         reducers: default_reducers
     }
-    
-    sheet.add_cells([{
-        location: [row_index, col_index], 
+
+    let [row_index, col_index] = location;
+
+    const value_cell = {
+        location: [row_index, col_index + 1], 
         cell_props: cell_props
-    }]);
+    }
+    
+    sheet.add_cells([ref_string_cell, value_cell]);
 }
 
 function write_array_ro(array, ref_string, sheet, location, declaration_AST_node) {
     // TODO it may be nice if, when you click on this, it selects the whole array.
 
-    write_ref_string(ref_string, sheet, location, declaration_AST_node);
+    const ref_string_cell = get_ref_string_cell(ref_string, sheet, location, declaration_AST_node);
 
     let [row_index, col_index] = location;
 
@@ -98,12 +94,12 @@ function write_array_ro(array, ref_string, sheet, location, declaration_AST_node
         }
     }))
 
-    sheet.add_cells(new_cells);
+    sheet.add_cells([ref_string_cell, ...new_cells]);
 }
 
 function write_array_rw(array, ref_string, sheet, location, declaration_AST_node) {
 
-    write_ref_string(ref_string, sheet, location, declaration_AST_node);
+    const ref_string_cell = get_ref_string_cell(ref_string, sheet, location, declaration_AST_node);
 
     let [row_index, col_index] = location;
 
@@ -161,15 +157,14 @@ function write_array_rw(array, ref_string, sheet, location, declaration_AST_node
         })
     }
     
-    sheet.add_cells(new_cells);
+    sheet.add_cells([ref_string_cell, ...new_cells]);
 }
 
 function write_map(map, ref_string, sheet, location, declaration_AST_node) {
 
-    write_ref_string(ref_string, sheet, location, declaration_AST_node);
+    const ref_string_cell = get_ref_string_cell(ref_string, sheet, location, declaration_AST_node);
 
     let [row_index, col_index] = location;
-    const [starting_row_index, starting_col_index] = location;
 
     row_index++;
 
@@ -201,7 +196,7 @@ function write_map(map, ref_string, sheet, location, declaration_AST_node) {
         });
     });
 
-    sheet.add_cells(cells);
+    sheet.add_cells([ref_string_cell, ...cells]);
 
 }
 
@@ -212,10 +207,10 @@ if (!Object.entries) {
 
 function write_object(object, ref_string, sheet, location, declaration_AST_node) {
 
-    write_ref_string(ref_string, sheet, location, declaration_AST_node);
+    const ref_string_cell = get_ref_string_cell(ref_string, sheet, location, declaration_AST_node);
 
     let [row_index, col_index] = location;
-    const [starting_row_index, starting_col_index] = location;
+    const starting_row_index = location[0];
 
     row_index++;
 
@@ -255,7 +250,7 @@ function write_object(object, ref_string, sheet, location, declaration_AST_node)
         row_index++;
     };
 
-    sheet.add_cells(cells);
+    sheet.add_cells([ref_string_cell, ...cells]);
 
 }
 
@@ -266,7 +261,7 @@ function write_records(records, ref_string, sheet, location) {
     let [row_index, col_index] = location;
 
     // Write the ref_string
-    write_ref_string(ref_string, sheet, location);
+    const ref_string_cell = get_ref_string_cell(ref_string, sheet, location, declaration_AST_node);
     row_index++;
 
     // Write the data structure
@@ -310,7 +305,7 @@ function write_records(records, ref_string, sheet, location) {
             }
         )
         cells_to_add = cells_to_add.reduce( (a, b) => a.concat(b) );
-        sheet.add_cells(cells_to_add);
+        sheet.add_cells([ref_string_cell, ...cells_to_add]);
     }
 }
 

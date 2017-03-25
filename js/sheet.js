@@ -13,16 +13,18 @@ class Sheet {
     constructor(DOM_element, store) {
         this.DOM_element = DOM_element;
         this.store = store;
+        this.cell_batch = [];
     }
-     
-    // TODO this means every time this gets called, the store gets updated.
-    // Should we wait until all components have been added
-    // and just add everything for the whole sheet in one go?
-    add_cells(cells_to_add) {
-        const max_row = Math.max(...(cells_to_add.map(cell => cell.location[0])))
-        const max_col = Math.max(...(cells_to_add.map(cell => cell.location[1])))
+
+    send_cell_batch() {
+        const max_row = Math.max(...(this.cell_batch.map(cell => cell.location[0])))
+        const max_col = Math.max(...(this.cell_batch.map(cell => cell.location[1])))
         this.store.dispatch({type: 'EXTEND_GRID', location: [max_row, max_col]});
-        this.store.dispatch({type: 'ADD_CELLS', cells: cells_to_add});
+        this.store.dispatch({type: 'ADD_CELLS', cells: this.cell_batch});
+    };
+     
+    add_cells(cells_to_batch) {
+        this.cell_batch.push(...cells_to_batch);
     }
 
     get vgrid () {

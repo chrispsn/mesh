@@ -48,6 +48,7 @@ function calculate_if_required () {
         store.dispatch({ type: 'CALCULATING' });
         // TODO add error checking for calc
         eval(state.code_editor.value);
+        sheet.send_cell_batch();
         store.dispatch({ type: 'RETURN_TO_READY' });
         store.dispatch({ type: 'UPDATE_FORMULA_BAR' });
     }
@@ -55,19 +56,17 @@ function calculate_if_required () {
     // UI component updates
     // TODO fact these are being hit every time is a good incentive
     // to minimise the number of actions taken
-    if (state.mode !== 'CALCULATING') {
-        sheet.render();
-        status_bar.render(state);
-        // Formula bar
-        // TODO consider making this a React element
-        HTML_elements.formula_bar.value = state.formula_bar.value;
-        if (state.formula_bar.focused) {
-            HTML_elements.formula_bar.focus();
-        } else {
-            HTML_elements.formula_bar.blur();
-        }
-
+    sheet.render();
+    status_bar.render(state);
+    // Formula bar
+    // TODO consider making this a React element
+    HTML_elements.formula_bar.value = state.formula_bar.value;
+    if (state.formula_bar.focused) {
+        HTML_elements.formula_bar.focus();
+    } else {
+        HTML_elements.formula_bar.blur();
     }
+
 }
 store.subscribe(calculate_if_required);
 
