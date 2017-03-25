@@ -37,18 +37,23 @@ window.onerror = function (msg, url, lineNo, colNo, error) {
     // TODO move cursor?
 }
 
-// Error handling
+// Calculation
 
-const run_and_render_code = function () {
+function calculate_if_required () {
     // TODO consider
     // http://stackoverflow.com/questions/25601865/how-to-run-user-provided-javascript-without-security-issues-like-jsfiddle-jsbi
     // http://stackoverflow.com/questions/8004001/how-does-jsfiddle-allow-and-execute-user-defined-javascript-without-being-danger
-    // const code = CodeEditor.code_editor.getValue();
-    const code = store.getState().code_editor.value;
-    eval(code);
-    sheet.render();
-    store.dispatch({ type: 'UPDATE_FORMULA_BAR' });
+    const state = store.getState();
+    if (state.mode === 'NEED_TO_CALCULATE') {
+        store.dispatch({ type: 'CALCULATING' });
+        // TODO add error checking for calc
+        eval(state.code_editor.value);
+        sheet.render();
+        store.dispatch({ type: 'RETURN_TO_READY' });
+        store.dispatch({ type: 'UPDATE_FORMULA_BAR' });
+    }
 }
+store.subscribe(calculate_if_required);
 
 // Showtime
 
@@ -63,6 +68,5 @@ module.exports = Mesh = {
     HTML_elements: HTML_elements,
     status_bar: status_bar,
     code_editor: CodeEditor.code_editor,
-    load_CSV: LocalFileIO.load_CSV,
-    run_and_render_code: run_and_render_code
+    load_CSV: LocalFileIO.load_CSV
 }

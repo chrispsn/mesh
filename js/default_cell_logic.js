@@ -55,15 +55,14 @@ module.exports = {
         const new_code = replace_text(old_code, this_cell.code_location, text_to_insert)
 
         return Object.assign({}, state, {
-            mode: 'READY', 
             formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
-            code_editor: Object.assign({}, state.code_editor, {value: new_code})
+            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+            mode: 'NEED_TO_CALCULATE'
         });
     },
 
     discard_edit: (state) => {
         return Object.assign({}, state, {
-            mode: 'READY', 
             formula_bar: Object.assign({}, state.formula_bar, {focused: false})
         });
     },
@@ -76,9 +75,9 @@ module.exports = {
         const new_code = replace_text(old_code, this_cell.code_location, 'null');
 
         return Object.assign({}, state, {
-            mode: 'READY', 
             formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
-            code_editor: Object.assign({}, state.code_editor, {value: new_code})
+            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+            mode: 'NEED_TO_CALCULATE'
         });
     }
 

@@ -50,8 +50,6 @@ function process_event (event, store) {
         // TOOD how can a user insert a line into the formula bar 
         // without triggering commit? Same way as in Excel?
         store.dispatch({ type: 'COMMIT_CELL_EDIT' });
-        store.dispatch({ type: 'CLEAR_VGRID_DATA' });
-        Mesh.run_and_render_code();
         return;
     }
   
@@ -90,14 +88,9 @@ function process_event (event, store) {
                 store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' });
                 return;
             case 'i':
-            case 'F9':
-                Mesh.run_and_render_code();
-                return;
             case 'Delete':
                 // TODO If on the name: delete the declaration entirely
                 store.dispatch({ type: 'DELETE_VALUE' });
-                store.dispatch({ type: 'CLEAR_VGRID_DATA' });
-                Mesh.run_and_render_code();
                 return;
             // how to know when to insert? Maybe just typing in normal mode
             // is enough (ie remove VIM bindings and anything else that would stop this)
@@ -143,7 +136,6 @@ const bind_grid_events = function(store, grid_element) {
                     break;
                 case 'EDITING_CODE':
                     store.dispatch({ type: 'UNSELECT_CODE' });
-                    Mesh.run_and_render_code();
                     break;
                 default:
                     break;
@@ -182,7 +174,6 @@ function load_file_from_filepicker(event) {
         const path = file.path;
         Mesh.store.dispatch({type: 'RESET_STATE'});
         Mesh.store.dispatch({type: 'LOAD_FILE', path: path});
-        Mesh.run_and_render_code();
     }
 }
 

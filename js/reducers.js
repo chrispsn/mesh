@@ -26,7 +26,6 @@ const EMPTY_CELL = {
                                     {value: new_code});
 
             return Object.assign({}, state, {
-                mode: 'READY',
                 code_editor: new_code_editor,
                 formula_bar: new_formula_bar
             });
@@ -124,7 +123,8 @@ const app = function (state = INITIAL_APP, action) {
             const contents = LocalFileIO.readFileSync(path, 'utf8');
             const new_state = Object.assign({}, state, {
                 code_editor: Object.assign({}, state.code_editor, {value: contents}),
-                loaded_filepath: path
+                loaded_filepath: path,
+                mode: 'NEED_TO_CALCULATE'
             });
 
             // Move this into the main state and update with sync_state
@@ -220,7 +220,7 @@ const app = function (state = INITIAL_APP, action) {
             const new_code_editor = Object.assign({}, state.code_editor, {value: new_code})
             const new_state = Object.assign({}, state, {
                 code_editor: new_code_editor,
-                mode: 'READY'
+                mode: 'NEED_TO_CALCULATE'
             })
             sync_state(new_state);
             return new_state;
@@ -345,6 +345,18 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'COMMIT_CELL_EDIT': {
             const new_state = selected_cell.reducers.commit_edit(state);
+            sync_state(new_state);
+            return new_state;
+        }
+
+        case 'CALCULATING': {
+            const new_state = Object.assign({}, state, {mode: 'CALCULATING'});
+            sync_state(new_state);
+            return new_state;
+        }
+
+        case 'RETURN_TO_READY': {
+            const new_state = Object.assign({}, state, {mode: 'READY'});
             sync_state(new_state);
             return new_state;
         }
