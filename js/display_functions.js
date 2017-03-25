@@ -28,9 +28,6 @@ function write_dummy(value, ref_string, sheet, location, declaration_AST_node) {
     // For use where you don't know what to use for the formula bar value
     // and code location values yet.
 
-    // TODO this assumes it's a declaration!
-    // write_ref_string(ref_string, sheet, location);
-
     let [row_index, col_index] = location;
 
     const cell_props = {
@@ -107,7 +104,7 @@ function write_array_rw(array, ref_string, sheet, location, declaration_AST_node
 
     const code_text = Mesh.store.getState().code_editor.value;
 
-    const new_cells = array.map( (val, row_offset) => {
+    const value_cells = array.map( (val, row_offset) => {
         const element_loc = declaration_AST_node.init.elements[row_offset].loc;
         return {
             location: [row_index + row_offset, col_index],
@@ -122,42 +119,41 @@ function write_array_rw(array, ref_string, sheet, location, declaration_AST_node
     })
 
     // Append cell
-    {
-        const append_location = {};
-        append_location.start = {
+    const append_location = {
+        start: {
             line: declaration_AST_node.init.loc.end.line,
             column: declaration_AST_node.init.loc.end.column - 1
-        };
-        append_location.end = declaration_AST_node.init.loc.end;
+        },
+        end: declaration_AST_node.init.loc.end
+    };
 
-        const commit_edit = (state) => {
-            // TODO Check that the commit is valid first?
-            const text_to_insert = Mesh.HTML_elements.formula_bar.value;
-            const new_code = code_transformers.append_to_array(
-                                code_text, declaration_AST_node.init.loc.end,
-                                array.length, text_to_insert);
-            return Object.assign({}, state, {
-                mode: 'READY', 
-                formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
-                code_editor: Object.assign({}, state.code_editor, {value: new_code})
-            });
+    const commit_edit = (state) => {
+        // TODO Check that the commit is valid first?
+        const text_to_insert = Mesh.HTML_elements.formula_bar.value;
+        const new_code = code_transformers.append_to_array(
+                            code_text, declaration_AST_node.init.loc.end,
+                            array.length, text_to_insert);
+        return Object.assign({}, state, {
+            mode: 'NEED_TO_CALCULATE', 
+            formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
+            code_editor: Object.assign({}, state.code_editor, {value: new_code})
+        });
+    }
+
+    const append_cell = {
+        location: [row_index + value_cells.length, col_index],
+        cell_props: {
+            repr: '<append here>',
+            ref_string: ref_string,
+            classes: 'append',
+            formula_bar_value: '',
+            code_location: append_location,
+            reducers: Object.assign({}, default_reducers, 
+                        {commit_edit: commit_edit})
         }
-
-        new_cells.push({
-            location: [row_index + new_cells.length, col_index],
-            cell_props: {
-                repr: '<append here>',
-                ref_string: ref_string,
-                classes: 'append',
-                formula_bar_value: '',
-                code_location: append_location,
-                reducers: Object.assign({}, default_reducers, 
-                            {commit_edit: commit_edit})
-            }
-        })
     }
     
-    sheet.add_cells([ref_string_cell, ...new_cells]);
+    sheet.add_cells([ref_string_cell, ...value_cells, append_cell]);
 }
 
 function write_map(map, ref_string, sheet, location, declaration_AST_node) {
@@ -172,7 +168,7 @@ function write_map(map, ref_string, sheet, location, declaration_AST_node) {
 
     Array.from(map.entries()).map((entry, index) => {
         let [key, value] = entry;
-        cells.push({
+        const key_cell = {
             location: [row_index + index, col_index],
             cell_props: {
                 repr: String(key), 
@@ -182,8 +178,8 @@ function write_map(map, ref_string, sheet, location, declaration_AST_node) {
                 code_location: undefined,
                 reducers: default_reducers
             }
-        });
-        cells.push({
+        }
+        const value_cell = {
             location: [row_index + index, col_index + 1],
             cell_props: {
                 repr: String(value), 
@@ -193,7 +189,8 @@ function write_map(map, ref_string, sheet, location, declaration_AST_node) {
                 code_location: undefined,
                 reducers: default_reducers
             }
-        });
+        };
+        cells.push(key_cell, value_cell);
     });
 
     sheet.add_cells([ref_string_cell, ...cells]);
@@ -223,7 +220,7 @@ function write_object(object, ref_string, sheet, location, declaration_AST_node)
                             .properties[row_index - starting_row_index - 1]
 
         const key_node = pair_node.key;
-        cells.push({
+        const key_cell = {
             location: [row_index, col_index],
             cell_props: {
                 repr: String(key), 
@@ -233,11 +230,11 @@ function write_object(object, ref_string, sheet, location, declaration_AST_node)
                 formula_bar_value: get_text(code_text, key_node.loc),
                 reducers: default_reducers
             }
-        });
+        };
 
         const value_node = pair_node.value;
-        cells.push({
-            location: [row_index, col_index+1],
+        const value_cell = {
+            location: [row_index, col_index + 1],
             cell_props: {
                 repr: String(value), 
                 ref_string: ref_string,
@@ -246,8 +243,10 @@ function write_object(object, ref_string, sheet, location, declaration_AST_node)
                 formula_bar_value: get_text(code_text, value_node.loc),
                 reducers: default_reducers
             }
-        });
+        };
+
         row_index++;
+        cells.push(key_cell, value_cell);
     };
 
     sheet.add_cells([ref_string_cell, ...cells]);
