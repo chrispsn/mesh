@@ -253,10 +253,10 @@ function write_object(object, ref_string, sheet, location, declaration_AST_node)
 
 }
 
-function write_records(records, ref_string, sheet, location) {
-    // Array of maps.
+function write_records(records, ref_string, sheet, location, declaration_AST_node) {
+    // Array (TODO change to a map?) of objects.
     // TODO allow user to specify headers, and therefore also order
-    
+
     let [row_index, col_index] = location;
 
     // Write the ref_string
@@ -266,12 +266,8 @@ function write_records(records, ref_string, sheet, location) {
     // Write the data structure
     if (records.length > 0) {
         
-        // TODO
-        // This code can probably be simplified
-        // Since it's the same logic for headers and records
-        
         // Headers
-        headers_to_add = [...records[0].keys()].map(
+        headers_to_add = Object.keys(records[0]).map(
             (key, col_offset) => ({
                 location: [row_index, col_index + col_offset], 
                 cell_props: {
@@ -283,16 +279,15 @@ function write_records(records, ref_string, sheet, location) {
                 }
             })
         )
-        sheet.add_cells(headers_to_add);
         row_index++;
 
         // Records
-        let cells_to_add = records.map(
+        let records_to_add = records.map(
             (record, row_offset) => {
-                const current_row = row_index + row_offset;
-                return [...record.values()].map(
-                    (val, offset) => ({
-                        location: [current_row, col_index + offset],
+                const current_row_index = row_index + row_offset;
+                return Object.values(record).map(
+                    (val, col_offset) => ({
+                        location: [current_row_index, col_index + col_offset],
                         cell_props: {
                             repr: val,
                             formula_bar_value: "TODO",
@@ -303,8 +298,8 @@ function write_records(records, ref_string, sheet, location) {
                 )
             }
         )
-        cells_to_add = cells_to_add.reduce( (a, b) => a.concat(b) );
-        sheet.add_cells([ref_string_cell, ...cells_to_add]);
+        records_to_add = records_to_add.reduce( (a, b) => a.concat(b) );
+        sheet.add_cells([ref_string_cell, ...headers_to_add, ...records_to_add]);
     }
 }
 

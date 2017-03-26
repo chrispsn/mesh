@@ -41,15 +41,15 @@ class Sheet {
     attach(ref_string, value, location, custom_display_func) {
         // TODO fix this terrible signature so ref_string is not needed?
         
+        const current_AST = new CodeTransformers.AST(Mesh.code_editor.getValue());
+        const declaration_node = current_AST.get_first_declaration_of_name(ref_string);
+
         if (custom_display_func) {
-            custom_display_func(value, ref_string, this, location);
+            custom_display_func(value, ref_string, this, location, declaration_node);
         }
 
         else {
             
-            const current_AST = new CodeTransformers.AST(Mesh.code_editor.getValue());
-            const declaration_node = current_AST.get_first_declaration_of_name(ref_string);
-
             // TODO what if it's not a declaration node?
             if (declaration_node) {
                 switch (declaration_node.init.type) {
