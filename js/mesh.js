@@ -60,7 +60,7 @@ function calculate_if_required () {
     status_bar.render(state);
     // Formula bar
     // TODO consider making this a React element
-    HTML_elements.formula_bar.value = state.formula_bar.value;
+    HTML_elements.formula_bar.value = store.getState().formula_bar.value;
     if (state.formula_bar.focused) {
         HTML_elements.formula_bar.focus();
     } else {
