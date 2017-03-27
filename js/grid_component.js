@@ -113,6 +113,4 @@ class Grid extends React.Component {
    
 };
 
-module.exports = {
-    Grid: Grid
-}
+module.exports = Grid;

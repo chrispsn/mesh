@@ -3,7 +3,7 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-const Grid = require(__dirname + '/grid_component.js').Grid;
+const Grid = require(__dirname + '/grid_component.js');
 const CodeTransformers = require(__dirname + '/code_transformers.js');
 const DisplayFunctions = require(__dirname + '/display_functions.js');
 const SyntaxDisplayMap = require(__dirname + '/syntax_display_map.js');
