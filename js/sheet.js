@@ -6,6 +6,7 @@ const ReactDOM = require('react-dom');
 const Grid = require(__dirname + '/grid_component.js').Grid;
 const CodeTransformers = require(__dirname + '/code_transformers.js');
 const DisplayFunctions = require(__dirname + '/display_functions.js');
+const SyntaxDisplayMap = require(__dirname + '/syntax_display_map.js');
 
 class Sheet {
     // Public-facing API for virtual grid.
@@ -49,89 +50,23 @@ class Sheet {
         }
 
         else {
-            
-            // TODO what if it's not a declaration node?
             if (declaration_node) {
-                switch (declaration_node.init.type) {
-                    // This code lists the types of possible types:
-                    // https://github.com/benjamn/ast-types/blob/master/def/core.js 
-
-                    // TODO write_value isn't always for a literal, but the code assumes
-                    // it is - consider this
-                    case 'Literal':                 // 'Hello world'
-                    case 'Identifier':              // undefined
-                    case 'BinaryExpression':        // 1 + 2
-                    case 'ArrowFunctionExpression': // (x) => x * 2
-                    case 'FunctionExpression':      // const f = function (x) { return x * 2 }
-                        DisplayFunctions.write_value(value, ref_string, this, location, declaration_node)
-                        break;
-
-                    case 'ArrayExpression':
-                        // eg [1, 2, 3]
-                        // TODO consider whether this will deal with array spread notation
-                        DisplayFunctions.write_array_rw(value, ref_string, this, location, declaration_node)
-                        break;
-
-                    case 'ObjectExpression':
-                        // eg {hello: 'world'}
-                        // TODO consider whether this will deal with object spread notation
-                        DisplayFunctions.write_object(value, ref_string, this, location, declaration_node)
-                        // TODO differentiate between read-only and read-write
-                        break;
-
-                    case 'CallExpression':
-                        // eg some_function();
-                        
-                        // TODO will need to enumerate the various kinds of objects here too...
-                        // TODO objects (problem is that lots of things are objects...)
-                        // if (value === Object(value) && !(value instanceof Function)) {
-                        // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof)
-                        // See also: http://stackoverflow.com/a/22482737
-
-                        if (value instanceof Map) {
-                            DisplayFunctions.write_map(value, ref_string, this, location, declaration_node)
-                        } else if (value instanceof Array) {
-                            DisplayFunctions.write_array_ro(value, ref_string, this, location, declaration_node)
-                        } else {
-                            DisplayFunctions.write_value(value, ref_string, this, location, declaration_node)
-                        };
-                        break;
-
-                    case 'NewExpression':
-                        // eg new Map([ ... ]);
-                        switch (declaration_node.init.callee.name) {
-                            case 'Map':
-                                DisplayFunctions.write_map(value, ref_string, this, location, declaration_node)
-                                break;
-
-                            // TODO what else could this be?
-                            default: 
-                                console.log(declaration_node.init.callee.name);
-                                DisplayFunctions.write_value('DISPLAY NOT IMPLEMENTED YET', 
-                                                        ref_string, this, location, declaration_node)
-                        }
-                        break;
-
-                    default:
-                        console.log("Unknown node type:")
-                        console.log(declaration_node);
-                        DisplayFunctions.write_dummy('DISPLAY NOT IMPLEMENTED YET', 
-                                                        ref_string, this, location, declaration_node)
-                        
+                const expression_type = declaration_node.init.type;
+                if (SyntaxDisplayMap.hasOwnProperty(expression_type)) {
+                    const display_fn = SyntaxDisplayMap[expression_type];
+                    display_fn(value, ref_string, this, location, declaration_node);
+                } else {
+                    console.log("Not sure how to display this expression type: ", expression_type);
+                    DisplayFunctions.write_dummy('TODO', ref_string, this, location, declaration_node)
                 }
-
             } else {
-                // TODO implement FunctionDeclaration
-                DisplayFunctions.write_dummy('DISPLAY NOT IMPLEMENTED YET', 
-                                                ref_string, this, location, declaration_node)
+                // TODO implement FunctionDeclaration (and anything else?)
+                DisplayFunctions.write_dummy('TODO', ref_string, this, location, declaration_node)
             }
-            
         }
        
     }
      
 };
 
-module.exports = {
-    Sheet: Sheet
-}
+module.exports = Sheet;

@@ -23,7 +23,7 @@ const HTML_elements = {
 
 const store = Redux.createStore(Reducers.app);
 const status_bar = new StatusBar(HTML_elements.status_bar, store) 
-const sheet = new Sheet.Sheet(HTML_elements.grid, store);
+const sheet = new Sheet(HTML_elements.grid, store);
 
 // Event bindings
 
@@ -78,7 +78,7 @@ store.dispatch({ type: 'RESET_STATE' });
 
 module.exports = Mesh = {
     store: store,
-	Sheet: sheet,
+	Sheet: Sheet,
     HTML_elements: HTML_elements,
     status_bar: status_bar,
     code_editor: CodeEditor,
