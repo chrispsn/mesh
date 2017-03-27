@@ -161,22 +161,21 @@ const bind_keydown_events = function(store, window) {
 }
 
 // Load logic
-
-function load_file_from_filepicker(event) {
-    const file = event.target.files[0]; 
-    if (file && file.path) {
-        const path = file.path;
-        Mesh.store.dispatch({type: 'RESET_STATE'});
-        Mesh.store.dispatch({type: 'LOAD_FILE', path: path});
-    }
+const bind_load_file_events = function(store, filepicker) {
+    filepicker.addEventListener('change', (event) => {
+        const file = event.target.files[0]; 
+        if (file && file.path) {
+            const path = file.path;
+            store.dispatch({type: 'RESET_STATE'});
+            store.dispatch({type: 'LOAD_FILE', path: path});
+        }
+    });
 }
-
-const filepicker = document.getElementById('open-file-manager');
-filepicker.addEventListener('change', load_file_from_filepicker);
 
 module.exports = {
     bind_code_editor_events: bind_code_editor_events,
     bind_keydown_events: bind_keydown_events,
     bind_formula_bar_events: bind_formula_bar_events,
-    bind_grid_events: bind_grid_events
+    bind_grid_events: bind_grid_events,
+    bind_load_file_events: bind_load_file_events,
 }

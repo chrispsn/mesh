@@ -15,7 +15,8 @@ const Reducers = require(__dirname + '/js/reducers.js');
 const HTML_elements = {
     grid: document.getElementById('grid'),
     formula_bar: document.getElementById('formula-bar'),
-    status_bar: document.getElementById('status-bar')
+    status_bar: document.getElementById('status-bar'),
+    filepicker: document.getElementById('open-file-manager')
 }
 
 // JS objects
@@ -31,6 +32,7 @@ Events.bind_code_editor_events(store, CodeEditor);
 Events.bind_formula_bar_events(store, HTML_elements.formula_bar);
 Events.bind_grid_events(store, HTML_elements.grid);
 Events.bind_keydown_events(store, window);
+Events.bind_load_file_events(store, HTML_elements.filepicker);
 
 window.onerror = function (msg, url, lineNo, colNo, error) {
     console.log(`${error.message} | url ${url}, line ${lineNo}, column ${colNo}`)
@@ -43,7 +45,7 @@ function calculate_if_required () {
     // TODO consider
     // http://stackoverflow.com/questions/25601865/how-to-run-user-provided-javascript-without-security-issues-like-jsfiddle-jsbi
     // http://stackoverflow.com/questions/8004001/how-does-jsfiddle-allow-and-execute-user-defined-javascript-without-being-danger
-    const state = store.getState();
+    let state = store.getState();
     if (state.mode === 'NEED_TO_CALCULATE') {
         store.dispatch({ type: 'CALCULATING' });
         // TODO add error checking for calc
@@ -56,17 +58,34 @@ function calculate_if_required () {
     // UI component updates
     // TODO fact these are being hit every time is a good incentive
     // to minimise the number of actions taken
+    state = store.getState();
+
     sheet.render();
     status_bar.render(state);
+    //
     // Formula bar
     // TODO consider making this a React element
-    HTML_elements.formula_bar.value = store.getState().formula_bar.value;
+    HTML_elements.formula_bar.value = state.formula_bar.value;
     if (state.formula_bar.focused) {
         HTML_elements.formula_bar.focus();
     } else {
         HTML_elements.formula_bar.blur();
     }
 
+    // Code editor
+    function ASTmod_loc_to_codemirror_loc (ASTmod_loc) {
+        const {line, column} = ASTmod_loc;
+        return {line: line - 1, ch: column};
+    };
+
+    CodeEditor.setValue(state.code_editor.value);
+    const selection = state.code_editor.selection;
+    if (selection !== undefined) {
+        CodeEditor.setSelection(
+            ASTmod_loc_to_codemirror_loc(selection.start),
+            ASTmod_loc_to_codemirror_loc(selection.end)
+        );
+    }
 }
 store.subscribe(calculate_if_required);
 

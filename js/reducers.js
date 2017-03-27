@@ -55,26 +55,6 @@ function get_cell(vgrid, location) {
     return vgrid[row][col];
 }
 
-function ASTmod_loc_to_codemirror_loc (ASTmod_loc) {
-    const {line, column} = ASTmod_loc;
-    return {line: line - 1, ch: column};
-};
-
-function sync_state(state) {
-    // TODO move this to mesh.js
-    // and banish all sync_state calls to the hills
-    
-    // Code editor
-    code_editor.setValue(state.code_editor.value);
-    const selection = state.code_editor.selection;
-    if (selection !== undefined) {
-        code_editor.setSelection(
-            ASTmod_loc_to_codemirror_loc(selection.start),
-            ASTmod_loc_to_codemirror_loc(selection.end)
-        );
-    }
-}
-
 function insert_into_textarea(textarea, text_to_insert) {
     // Modified version of:
     // http://stackoverflow.com/a/34278578
@@ -109,18 +89,15 @@ const app = function (state = INITIAL_APP, action) {
                 mode: 'NEED_TO_CALCULATE'
             });
 
-            // TODO Move this into the main state and update with sync_state
+            // TODO Move this into the main state and update with the subscriber
             document.title = `Mesh - ${filename}`;
 
-            sync_state(new_state);
             return new_state;
         }
 
         case 'SAVE_FILE': {
-            // TODO this is the blocker for sync_state removal.
-            const content = code_editor.getValue();
+            const content = state.code_editor.getValue();
             if (state.loaded_filepath !== null) {
-                const content = code_editor.getValue();
                 LocalFileIO.writeFile(state.loaded_filepath, content);
                 alert(`File saved: ${state.loaded_filepath}`)
                 return state;
@@ -185,13 +162,11 @@ const app = function (state = INITIAL_APP, action) {
             const new_formula_bar = Object.assign({}, state.formula_bar, {
                     value: selected_cell.formula_bar_value});
             const new_state = Object.assign({}, state, {formula_bar: new_formula_bar});
-            sync_state(new_state);
             return new_state;
         }
 
         case 'SELECT_CODE': {
             const new_state = Object.assign({}, state, {mode: 'EDITING_CODE'});
-            sync_state(new_state);
             return new_state;
         }
 
@@ -205,7 +180,6 @@ const app = function (state = INITIAL_APP, action) {
                 code_editor: new_code_editor,
                 mode: 'NEED_TO_CALCULATE'
             })
-            sync_state(new_state);
             return new_state;
         }
 
@@ -274,13 +248,11 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'CALCULATING': {
             const new_state = Object.assign({}, state, {mode: 'CALCULATING'});
-            sync_state(new_state);
             return new_state;
         }
 
         case 'RETURN_TO_READY': {
             const new_state = Object.assign({}, state, {mode: 'READY'});
-            sync_state(new_state);
             return new_state;
         }
 
@@ -295,7 +267,6 @@ const app = function (state = INITIAL_APP, action) {
             // TODO fix this crappy hack - should be based on something else?
             new_state = Object.assign({}, new_state, {selectedCell: action.location});
             new_state = new_selected_cell.reducers.select(new_state);
-            sync_state(new_state);
             return new_state;
         }
 
@@ -327,34 +298,13 @@ const app = function (state = INITIAL_APP, action) {
             // TODO fix this crappy hack
             new_state = Object.assign({}, new_state, {selectedCell: new_location});
             new_state = new_selected_cell.reducers.select(new_state);
-            sync_state(new_state);
             return new_state;
         }
 
-        case 'EDIT_CELL': {
-            const new_state = selected_cell.reducers.edit(state);
-            sync_state(new_state);
-            return new_state;
-        }
-
-        case 'COMMIT_CELL_EDIT': {
-            const new_state = selected_cell.reducers.commit_edit(state);
-            sync_state(new_state);
-            return new_state;
-        }
-
-        case 'DISCARD_CELL_EDIT': {
-            const new_state = selected_cell.reducers.discard_edit(state)
-            sync_state(new_state);
-            return new_state;
-        }
-
-        case 'DELETE_VALUE': {
-            const new_state = selected_cell.reducers.delete_value(state)
-            sync_state(new_state);
-            return new_state;
-        }
-
+        case 'EDIT_CELL': return selected_cell.reducers.edit(state);
+        case 'COMMIT_CELL_EDIT': return selected_cell.reducers.commit_edit(state);
+        case 'DISCARD_CELL_EDIT': return selected_cell.reducers.discard_edit(state);
+        case 'DELETE_VALUE': return selected_cell.reducers.delete_value(state)
         // TODO delete variable declaration?
         // TODO delete attachment?
         // TODO delete container?
