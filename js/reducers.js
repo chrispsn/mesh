@@ -61,22 +61,9 @@ function ASTmod_loc_to_codemirror_loc (ASTmod_loc) {
 };
 
 function sync_state(state) {
-    // TODO move all the sync_state calls into something that's called 
-    // after the state updates:
-    // http://redux.js.org/docs/advanced/Middleware.html
-    // But note this may not work during the weird formula bar editing period?
+    // TODO move this to mesh.js
+    // and banish all sync_state calls to the hills
     
-    // Grid
-    const selected_cell = get_cell(state.vgrid, state.selectedCell)
-
-    // Formula bar
-    formula_bar.value = state.formula_bar.value;
-    if (state.formula_bar.focused) {
-        formula_bar.focus();
-    } else {
-        formula_bar.blur();
-    }
-
     // Code editor
     code_editor.setValue(state.code_editor.value);
     const selection = state.code_editor.selection;
@@ -130,6 +117,8 @@ const app = function (state = INITIAL_APP, action) {
         }
 
         case 'SAVE_FILE': {
+            // TODO this is the blocker for sync_state removal.
+            const content = code_editor.getValue();
             if (state.loaded_filepath !== null) {
                 const content = code_editor.getValue();
                 LocalFileIO.writeFile(state.loaded_filepath, content);
@@ -137,7 +126,6 @@ const app = function (state = INITIAL_APP, action) {
                 return state;
             } else {
                 // TODO duplicate of SAVE_FILE_AS - can this be moved out?
-                const content = code_editor.getValue();
                 let dest_filepath = LocalFileIO.get_saveas_filepath();
                 if (dest_filepath !== undefined) {
                     if (dest_filepath.slice(-3) !== '.js') {
