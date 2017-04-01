@@ -3,13 +3,6 @@ const ReactDOM = require('react-dom');
 
 class Cell extends React.Component {
     
-    constructor() {
-        super();
-        this.state = {
-            selected: false
-        };
-    }
-    
     componentDidMount() {
         this.ensureVisible();
     }
@@ -28,13 +21,13 @@ class Cell extends React.Component {
 
     render() {
             
+        const cell_info = this.props.cell_info;
         const properties = {
-            className: this.props.cell_info ? this.props.cell_info.classes : '',
+            className: cell_info ? cell_info.classes : '',
             id: JSON.stringify(this.props.location)
         }
 
-        if (this.props.cell_info && this.props.cell_info.selected) {
-            properties.selected = true;
+        if (cell_info && cell_info.selected) {
             properties.className = properties.className + ' selected';
         }
         return React.createElement("td", properties, this.props.repr);
@@ -42,26 +35,6 @@ class Cell extends React.Component {
     };
     
 }
-
-class ColHeadings extends React.Component {
-    
-    render() {
-        
-        let col_headers = this.props.indices.map((
-            (index) => React.createElement(
-                ColHeader, {key: index}, index
-            )
-        ));
-        
-        return React.createElement("tr", null, col_headers);
-        
-    }
-    
-};
-
-const ColHeader = (props) => React.createElement(
-    "th", {className: 'col_header'}, String(props.children)
-);
 
 class Row extends React.Component {
    
@@ -72,6 +45,7 @@ class Row extends React.Component {
             const location = [row_index, col_index];
             const repr = cell_info ? cell_info.repr : '';
 
+            // TODO this could be a good place to do the 'check if a filled cell; else, fill with blank'
             return React.createElement(
                 Cell, 
                 {cell_info: cell_info, key: location + repr, location: location, repr: repr}
@@ -92,6 +66,8 @@ class Grid extends React.Component {
                
         const vgrid = this.props.vgrid;
 
+        // TODO do we even need to abstract out rows and columns here?
+        // just do it in the grid
         const rows = vgrid.map( 
             (vgrid_row, row_index) => React.createElement(
                 Row, 
@@ -99,14 +75,8 @@ class Grid extends React.Component {
             )
         );
 
-        const col_indices_iterable = Array(vgrid[0].length).keys();
-        const col_indices = Array.from(col_indices_iterable);
-        const col_headings = React.createElement(ColHeadings, {indices: col_indices})
-        
-        const TBody = React.createElement("tbody", null, col_headings, rows)
-
+        const TBody = React.createElement("tbody", null, rows)
         const Grid = React.createElement("table", {className: 'grid'}, TBody);
-        
         return Grid;
         
    }
