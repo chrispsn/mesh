@@ -10,6 +10,7 @@ const SyntaxDisplayMap = require(__dirname + '/syntax_display_map.js');
 
 class Sheet {
     // Public-facing API for virtual grid.
+    // TODO consider whether we even need this. Is it useful for the end user?
     
     constructor(DOM_element, store) {
         this.DOM_element = DOM_element;
@@ -18,9 +19,6 @@ class Sheet {
     }
 
     send_cell_batch() {
-        const max_row = Math.max(...(this.cell_batch.map(cell => cell.location[0])))
-        const max_col = Math.max(...(this.cell_batch.map(cell => cell.location[1])))
-        this.store.dispatch({type: 'EXTEND_GRID', location: [max_row, max_col]});
         this.store.dispatch({type: 'ADD_CELLS', cells: this.cell_batch});
     };
      
@@ -28,13 +26,9 @@ class Sheet {
         this.cell_batch.push(...cells_to_batch);
     }
 
-    get vgrid () {
-        return this.store.getState().vgrid;
-    }
-     
     render() {
         ReactDOM.render(
-            React.createElement(Grid, {vgrid: this.vgrid}),
+            React.createElement(Grid, {state: this.store.getState()}),
             this.DOM_element
         )
     }

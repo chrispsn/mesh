@@ -5,55 +5,26 @@ const code_editor = CodeEditor;
 
 // # State constants
 
-const ASTmod = require(__dirname + '/code_transformers.js');
-const default_reducers = require(__dirname + '/default_cell_logic.js')
+const {
+    EMPTY_CELL,
+    get_cell_id_from_location,
+    get_cell,
+} = require(__dirname + '/default_cell_logic.js')
 
-const EMPTY_CELL = { 
-    formula_bar_value: "", 
-    // TODO does it need only some of the reducers?
-    reducers: Object.assign({}, default_reducers, {
-        commit_edit: (state) => {
-            const variable_name = formula_bar.value;
-            const old_AST = new ASTmod.AST(state.code_editor.value);
-            const new_AST = old_AST
-                            .create_const_variable(variable_name)
-                            .add_attachment(variable_name, state.selectedCell)
-            const new_code = new_AST.to_string;
-
-            const new_formula_bar = {selected: false}
-
-            const new_code_editor = Object.assign({}, state.code_editor, 
-                                    {value: new_code});
-
-            return Object.assign({}, state, {
-                code_editor: new_code_editor,
-                formula_bar: new_formula_bar,
-                mode: 'NEED_TO_CALCULATE'
-            });
-        }
-    }
-)}
-
-const INITIAL_VGRID = [[ Object.assign({}, EMPTY_CELL, {selected: true}) ]];
+const INITIAL_CELLS = [ Object.assign({}, EMPTY_CELL, {location: [0, 0]}) ];
 const INITIAL_FORMULA_BAR = { focused: false, value: '' };
 const INITIAL_CODE_EDITOR = { focused: false, value: '', selection: undefined };
 
 const INITIAL_APP = {
     mode: 'READY',
-    vgrid: INITIAL_VGRID,
-    // TODO change this to selected_cell_loc or similar
-    selectedCell: [0, 0],
+    cells: INITIAL_CELLS,
+    selected_cell_loc: [0, 0],
     formula_bar: INITIAL_FORMULA_BAR,
     code_editor: INITIAL_CODE_EDITOR,
     loaded_filepath: null
 }
 
 // # Helper functions
-
-function get_cell(vgrid, location) {
-    const [row, col] = location;
-    return vgrid[row][col];
-}
 
 function insert_into_textarea(textarea, text_to_insert) {
     // Modified version of:
@@ -71,7 +42,7 @@ function insert_into_textarea(textarea, text_to_insert) {
 
 const app = function (state = INITIAL_APP, action) {
 
-    const selected_cell = get_cell(state.vgrid, state.selectedCell);
+    const selected_cell = get_cell(state.cells, state.selected_cell_loc);
 
     switch (action.type) {
 
@@ -134,46 +105,17 @@ const app = function (state = INITIAL_APP, action) {
             }
         }
 
-        case 'CLEAR_VGRID_DATA': {
-            // TODO optimise
-            // TODO Have a think about whether this is necessary.
-            //      Because when you think about it,
-            //      anything calling this will be rebuilding the grid
-            //      via ADD_CELLS calls anyway...
-            //      so probs could just replace with the initial VGrid state
-            
-            const [sel_row, sel_col] = state.selectedCell;
-
-            const new_vgrid = []
-            for (let row of state.vgrid) {
-                let new_row = [];
-                for (let cell of row) {
-                    new_row.push(EMPTY_CELL)
-                }
-                new_vgrid.push(new_row);
-            }
-
-            return Object.assign({}, state, {
-                vgrid: new_vgrid
-            })
-        }
-
         case 'UPDATE_FORMULA_BAR': {
             const new_formula_bar = Object.assign({}, state.formula_bar, {
                     value: selected_cell.formula_bar_value});
-            const new_state = Object.assign({}, state, {formula_bar: new_formula_bar});
-            return new_state;
+            return Object.assign({}, state, {formula_bar: new_formula_bar});
         }
 
         case 'SELECT_CODE': {
-            const new_state = Object.assign({}, state, {mode: 'EDITING_CODE'});
-            return new_state;
+            return Object.assign({}, state, {mode: 'EDITING_CODE'});
         }
 
         case 'UNSELECT_CODE': {
-            // TODO needs to do a full rebuild of the sheet, surely
-            // ie clear the vgrid (not all settings, eg preserve highlight)
-            // and recalculate
             const new_code = code_editor.getValue();
             const new_code_editor = Object.assign({}, state.code_editor, {value: new_code})
             const new_state = Object.assign({}, state, {
@@ -183,62 +125,19 @@ const app = function (state = INITIAL_APP, action) {
             return new_state;
         }
 
-        case 'EXTEND_GRID': {
-            // TODO feels like this is ripe for optimisation
-            const [current_row_index, current_col_index] = action.location;
-            const old_max_row_index = state.vgrid.length - 1;
-            const old_max_col_index = state.vgrid[0].length - 1;
-            if (current_row_index === old_max_row_index &&
-                current_col_index === old_max_col_index) {
-                return state;
-            }
-
-            const new_row_indices = Array(1 + Math.max(
-                                            old_max_row_index, 
-                                            current_row_index)).fill(0);
-            const new_col_indices = Array(1 + Math.max(
-                                            old_max_col_index,
-                                            current_col_index)).fill(0);
-            const extended_vgrid = new_row_indices.map( (_, row_index) => {
-                return new_col_indices.map( (_, col_index) => {
-                    if ((row_index > old_max_row_index) ||
-                        (col_index > old_max_col_index)) {
-                        return EMPTY_CELL;
-                    } else {
-                        let selected_cell = state.vgrid[row_index][col_index];
-                        return selected_cell;
-                    }
-                })
-            })
-            
-            // Restore selection, if possible
-            const [sel_row, sel_col] = state.selectedCell;
-            if (sel_row <= (extended_vgrid.length - 1)
-                && sel_col <= (extended_vgrid[0].length - 1)
-            ) {
-                extended_vgrid[sel_row][sel_col] = Object.assign( 
-                    {}, 
-                    extended_vgrid[sel_row][sel_col],
-                    {selected: true}
-                )
-            }
-            
-            return Object.assign({}, state, {vgrid: extended_vgrid});
-        }
-
         case 'ADD_CELLS': {
-            const new_vgrid = [...state.vgrid];
-            for (let {location, cell_props} of action.cells) {
-                const [row, col] = location;
-                new_vgrid[row][col] = Object.assign({}, cell_props);
+            const new_cells = Object.assign({}, state.cells);
+            for (let cell of action.cells) {
+                const cell_id = get_cell_id_from_location(cell.location);
+                new_cells[cell_id] = Object.assign({}, cell);
             }
-            return Object.assign({}, state, {vgrid: new_vgrid});
+            return Object.assign({}, state, {cells: new_cells});
         }
 
         case 'INSERT_REFERENCE_FROM_CELL': {
             // TODO improve this - for example, clicking on one cell then another
             // should replace the first ref with the second
-            const ref_cell = get_cell(state.vgrid, action.location)
+            const ref_cell = get_cell(state.cells, action.location)
             const ref_string = ref_cell.ref_string;
 
             insert_into_textarea(formula_bar, ref_string);
@@ -246,15 +145,9 @@ const app = function (state = INITIAL_APP, action) {
             return state;
         }
 
-        case 'CALCULATING': {
-            const new_state = Object.assign({}, state, {mode: 'CALCULATING'});
-            return new_state;
-        }
+        case 'CALCULATING': return Object.assign({}, state, {mode: 'CALCULATING'})
 
-        case 'RETURN_TO_READY': {
-            const new_state = Object.assign({}, state, {mode: 'READY'});
-            return new_state;
-        }
+        case 'RETURN_TO_READY': return Object.assign({}, state, {mode: 'READY'});
 
         // ==========================
         //  \/ PER-CELL BEHAVIOUR \/
@@ -262,41 +155,31 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'SELECT_CELL': {
             // When you have a specific cell in mind.
-            const new_selected_cell = get_cell(state.vgrid, action.location)
-            let new_state = selected_cell.reducers.deselect(state);
-            // TODO fix this crappy hack - should be based on something else?
-            new_state = Object.assign({}, new_state, {selectedCell: action.location});
+            let new_state = Object.assign({}, state, {selected_cell_loc: action.location});
+            const new_selected_cell = get_cell(state.cells, action.location)
             new_state = new_selected_cell.reducers.select(new_state);
             return new_state;
         }
 
         case 'MOVE_CELL_SELECTION': {
-            // When you're moving the cell selection in a direction.
-            
-            // Get the new selection coords
-            const [old_row, old_col] = state.selectedCell;
-            const last_row_index = state.vgrid.length - 1;
-            const last_col_index = state.vgrid[0].length - 1;
+            const [old_row_idx, old_col_idx] = state.selected_cell_loc;
             const new_location = (function () {
                 switch(action.direction) {
                     case 'UP':
-                        return [Math.max(old_row-1, 0), old_col];
+                        return [Math.max(old_row_idx-1, 0), old_col_idx];
                     case 'LEFT':
-                        return [old_row, Math.max(old_col-1, 0)];
+                        return [old_row_idx, Math.max(old_col_idx-1, 0)];
                     case 'DOWN':
-                        return [Math.min(old_row+1, last_row_index), old_col];
+                        return [old_row_idx+1, old_col_idx];
                     case 'RIGHT':
-                        return [old_row, Math.min(old_col+1, last_col_index)];
+                        return [old_row_idx, old_col_idx+1];
                     default:
                         return state.selectedCell;
                 }
             })();
 
-            // Get the new state
-            let new_state = selected_cell.reducers.deselect(state);
-            const new_selected_cell = get_cell(state.vgrid, new_location);
-            // TODO fix this crappy hack
-            new_state = Object.assign({}, new_state, {selectedCell: new_location});
+            const new_selected_cell = get_cell(state.cells, new_location);
+            new_state = Object.assign({}, state, {selected_cell_loc: new_location});
             new_state = new_selected_cell.reducers.select(new_state);
             return new_state;
         }
@@ -316,5 +199,5 @@ const app = function (state = INITIAL_APP, action) {
 }
 
 module.exports = {
-    app: app
+    app: app,
 }

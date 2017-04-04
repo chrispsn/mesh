@@ -1,26 +1,21 @@
-// TODO I would like to change 'sheet' to 'vgrid',
-// but right now they sometimes rely on the vgrid extender.
-// Maybe the extender can be refactored out?
-// Makes sense - the logic for what goes where shouldn't need to worry about extensions
-//
 // TODO can we avoid passing in the whole AST node and just pass in the locs
 // (and child locs)? No need to know anything about an AST. But maybe this way is easier...
+// TODO can we avoid getting the code pane contents directly from this file?
+// (pass it in, or something even better?)
 
-const default_reducers = require(__dirname + '/default_cell_logic.js');
+const {default_reducers} = require(__dirname + '/default_cell_logic.js');
 const code_transformers = require(__dirname + '/code_transformers.js');
 const {get_text, replace_text, append_to_array, AST} = code_transformers;
 
 function get_ref_string_cell(ref_string, sheet, location, declaration_AST_node) {
     return {
         location: [...location], 
-        cell_props: {
-            repr: ref_string,
-            ref_string: ref_string,
-            formula_bar_value: ref_string,
-            classes: 'identifier',
-            code_location: declaration_AST_node.id.loc,
-            reducers: default_reducers
-        }
+        repr: ref_string,
+        ref_string: ref_string,
+        formula_bar_value: ref_string,
+        classes: 'identifier',
+        code_location: declaration_AST_node.id.loc,
+        reducers: default_reducers
     };
 }
 
@@ -30,17 +25,13 @@ function write_dummy(value, ref_string, sheet, location, declaration_AST_node) {
 
     let [row_index, col_index] = location;
 
-    const cell_props = {
+    sheet.add_cells([{
+        location: [row_index, col_index + 1],
         repr: String(value),
         ref_string: ref_string,
         formula_bar_value: "TODO",
         code_location: undefined,
-        reducers: default_reducers
-    }
-    
-    sheet.add_cells([{
-        location: [row_index, col_index + 1],
-        cell_props: cell_props
+        reducers: default_reducers,
     }]);
 }
 
@@ -50,20 +41,16 @@ function write_value(value, ref_string, sheet, location, declaration_AST_node) {
 
     const code_text = Mesh.store.getState().code_editor.value;
 
-    const cell_props = {
+    let [row_index, col_index] = location;
+
+    const value_cell = {
+        location: [row_index, col_index + 1], 
         repr: String(value),
         ref_string: ref_string,
         formula_bar_value: get_text(code_text, declaration_AST_node.init.loc),
         code_location: declaration_AST_node.init.loc,
         classes: 'literal',
         reducers: default_reducers
-    }
-
-    let [row_index, col_index] = location;
-
-    const value_cell = {
-        location: [row_index, col_index + 1], 
-        cell_props: cell_props
     }
     
     sheet.add_cells([ref_string_cell, value_cell]);
@@ -82,13 +69,11 @@ function write_array_ro(array, ref_string, sheet, location, declaration_AST_node
 
     const new_cells = array.map( (val, row_offset) => ({
         location: [row_index + row_offset, col_index],
-        cell_props: {
-            repr: String(val),
-            ref_string: ref_string,
-            formula_bar_value: get_text(code_text, declaration_AST_node.init.loc),
-            code_location: declaration_AST_node.init.loc,
-            reducers: default_reducers
-        }
+        repr: String(val),
+        ref_string: ref_string,
+        formula_bar_value: get_text(code_text, declaration_AST_node.init.loc),
+        code_location: declaration_AST_node.init.loc,
+        reducers: default_reducers
     }))
 
     sheet.add_cells([ref_string_cell, ...new_cells]);
@@ -108,13 +93,11 @@ function write_array_rw(array, ref_string, sheet, location, declaration_AST_node
         const element_loc = declaration_AST_node.init.elements[row_offset].loc;
         return {
             location: [row_index + row_offset, col_index],
-            cell_props: {
-                repr: String(val),
-                ref_string: ref_string,
-                formula_bar_value: get_text(code_text, element_loc),
-                code_location: element_loc,
-                reducers: default_reducers
-            }
+            repr: String(val),
+            ref_string: ref_string,
+            formula_bar_value: get_text(code_text, element_loc),
+            code_location: element_loc,
+            reducers: default_reducers
         }
     })
 
@@ -142,15 +125,13 @@ function write_array_rw(array, ref_string, sheet, location, declaration_AST_node
 
     const append_cell = {
         location: [row_index + value_cells.length, col_index],
-        cell_props: {
-            repr: '<append here>',
-            ref_string: ref_string,
-            classes: 'append',
-            formula_bar_value: '',
-            code_location: append_location,
-            reducers: Object.assign({}, default_reducers, 
-                        {commit_edit: commit_edit})
-        }
+        repr: '<append here>',
+        ref_string: ref_string,
+        classes: 'append',
+        formula_bar_value: '',
+        code_location: append_location,
+        reducers: Object.assign({}, default_reducers, 
+                    {commit_edit: commit_edit})
     }
     
     sheet.add_cells([ref_string_cell, ...value_cells, append_cell]);
@@ -169,26 +150,22 @@ function write_map(map, ref_string, sheet, location, declaration_AST_node) {
     Array.from(map.entries()).map((entry, index) => {
         let [key, value] = entry;
         const key_cell = {
+            repr: String(key), 
+            ref_string: ref_string,
             location: [row_index + index, col_index],
-            cell_props: {
-                repr: String(key), 
-                ref_string: ref_string,
-                classes: 'map',
-                formula_bar_value: "TODO",
-                code_location: undefined,
-                reducers: default_reducers
-            }
+            classes: 'map',
+            formula_bar_value: "TODO",
+            code_location: undefined,
+            reducers: default_reducers
         }
         const value_cell = {
             location: [row_index + index, col_index + 1],
-            cell_props: {
-                repr: String(value), 
-                ref_string: ref_string,
-                classes: 'map',
-                formula_bar_value: "TODO",
-                code_location: undefined,
-                reducers: default_reducers
-            }
+            repr: String(value), 
+            ref_string: ref_string,
+            classes: 'map',
+            formula_bar_value: "TODO",
+            code_location: undefined,
+            reducers: default_reducers
         };
         cells.push(key_cell, value_cell);
     });
@@ -222,27 +199,23 @@ function write_object(object, ref_string, sheet, location, declaration_AST_node)
         const key_node = pair_node.key;
         const key_cell = {
             location: [row_index, col_index],
-            cell_props: {
-                repr: String(key), 
-                ref_string: ref_string,
-                classes: 'object',
-                code_location: key_node.loc,
-                formula_bar_value: get_text(code_text, key_node.loc),
-                reducers: default_reducers
-            }
+            repr: String(key), 
+            ref_string: ref_string,
+            classes: 'object',
+            code_location: key_node.loc,
+            formula_bar_value: get_text(code_text, key_node.loc),
+            reducers: default_reducers
         };
 
         const value_node = pair_node.value;
         const value_cell = {
             location: [row_index, col_index + 1],
-            cell_props: {
-                repr: String(value), 
-                ref_string: ref_string,
-                classes: 'object',
-                code_location: value_node.loc,
-                formula_bar_value: get_text(code_text, value_node.loc),
-                reducers: default_reducers
-            }
+            repr: String(value), 
+            ref_string: ref_string,
+            classes: 'object',
+            code_location: value_node.loc,
+            formula_bar_value: get_text(code_text, value_node.loc),
+            reducers: default_reducers
         };
 
         row_index++;
@@ -270,13 +243,11 @@ function write_records(records, ref_string, sheet, location, declaration_AST_nod
         headers_to_add = Object.keys(records[0]).map(
             (key, col_offset) => ({
                 location: [row_index, col_index + col_offset], 
-                cell_props: {
-                    repr: String(key),
-                    classes: 'heading',
-                    formula_bar_value: "TODO",
-                    code_location: undefined,
-                    reducers: default_reducers
-                }
+                repr: String(key),
+                classes: 'heading',
+                formula_bar_value: "TODO",
+                code_location: undefined,
+                reducers: default_reducers
             })
         )
         row_index++;
@@ -288,12 +259,10 @@ function write_records(records, ref_string, sheet, location, declaration_AST_nod
                 return Object.values(record).map(
                     (val, col_offset) => ({
                         location: [current_row_index, col_index + col_offset],
-                        cell_props: {
-                            repr: val,
-                            formula_bar_value: "TODO",
-                            code_location: undefined,
-                            reducers: default_reducers
-                        }
+                        repr: val,
+                        formula_bar_value: "TODO",
+                        code_location: undefined,
+                        reducers: default_reducers
                     })
                 )
             }

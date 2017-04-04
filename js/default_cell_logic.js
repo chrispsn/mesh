@@ -1,36 +1,30 @@
-/*
- * These functions change the virtual state when certain cell-related actions are done.
- * Other logic handles syncing the virtual state with the actual state.
- * Not all functions need to be implemented by every kind of cell.
- */
+const ASTmod = require(__dirname + '/code_transformers.js');
+const formula_bar = document.getElementById('formula-bar');
+const {replace_text} = require(__dirname + '/code_transformers.js');
 
-const CodeTransformers = require(__dirname + '/code_transformers.js');
-const {replace_text} = CodeTransformers;
+function get_cell_id_from_location (location) {
+    return location.map(i => i.toString()).join('-');
+}
 
-module.exports = {
+function get_cell(cells, location) {
+    const cell_id = get_cell_id_from_location(location);
+    if (cells.hasOwnProperty(cell_id)) {
+        return cells[cell_id];
+    } else {
+        return Object.assign({}, EMPTY_CELL, {location: location});
+    }
+}
+
+const default_reducers = {
 
     select: (state) => {
-        const [row, col] = state.selectedCell
-        const this_cell = state.vgrid[row][col];
-        const new_cell = Object.assign({}, this_cell, {selected: true});
-        const new_vgrid = [...state.vgrid];
-        new_vgrid[row][col] = new_cell;
+        const this_cell = get_cell(state.cells, state.selected_cell_loc);
         return Object.assign({}, state, {
-            vgrid: new_vgrid,
             formula_bar: Object.assign({}, state.formula_bar, 
                 {value: this_cell.formula_bar_value}),
             code_editor: Object.assign({}, state.code_editor,
                 {selection: this_cell.code_location})
         });
-    },
-
-    deselect: (state) => {
-        const [row, col] = state.selectedCell;
-        const this_cell = state.vgrid[row][col];
-        const new_cell = Object.assign({}, this_cell, {selected: false});
-        const new_vgrid = [...state.vgrid];
-        new_vgrid[row][col] = new_cell;
-        return Object.assign({}, state, {vgrid: new_vgrid});
     },
 
     edit: (state) => {
@@ -46,9 +40,7 @@ module.exports = {
 
     commit_edit: (state) => {
         // TODO Check that the commit is valid first?
-        // TODO replace with get_cell or similar
-        const [row_idx, col_idx] = state.selectedCell;
-        const this_cell = state.vgrid[row_idx][col_idx];
+        const this_cell = get_cell(state.cells, state.selected_cell_loc);
 
         const text_to_insert = Mesh.HTML_elements.formula_bar.value;
         const old_code = state.code_editor.value;
@@ -69,9 +61,7 @@ module.exports = {
     },
 
     delete_value: (state) => {
-        const [row_idx, col_idx] = state.selectedCell;
-        const this_cell = state.vgrid[row_idx][col_idx];
-
+        const this_cell = get_cell(state.cells, state.selected_cell_loc);
         const old_code = state.code_editor.value;
         const new_code = replace_text(old_code, this_cell.code_location, 'null');
 
@@ -80,6 +70,35 @@ module.exports = {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE'
         });
+
     }
 
+}
+
+const EMPTY_CELL = { 
+    formula_bar_value: "", 
+    // TODO does it need only some of the reducers?
+    reducers: Object.assign({}, default_reducers, {
+        commit_edit: (state) => {
+            const variable_name = formula_bar.value;
+            const old_AST = new ASTmod.AST(state.code_editor.value);
+            const new_AST = old_AST
+                            .create_const_variable(variable_name)
+                            .add_attachment(variable_name, state.selectedCell)
+            const new_code = new_AST.to_string;
+
+            return Object.assign({}, state, {
+                code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+                formula_bar: {selected: false},
+                mode: 'NEED_TO_CALCULATE'
+            });
+        }
+    }
+)}
+
+module.exports = {
+    default_reducers: default_reducers,
+    EMPTY_CELL: EMPTY_CELL,
+    get_cell: get_cell,
+    get_cell_id_from_location: get_cell_id_from_location,
 }

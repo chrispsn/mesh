@@ -11,6 +11,13 @@ const shortcuts = [
     {mode: 'READY', key: 'ArrowUp', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
     {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
 
+    {mode: 'READY', key: 'j', action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
+    {mode: 'READY', key: 'ArrowDown', action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
+    {mode: 'READY', key: 'Enter', action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
+
+    {mode: 'READY', key: 'l', action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
+    {mode: 'READY', key: 'ArrowRight', action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
+    
     // TODO If on the name: delete the declaration entirely
     {mode: 'READY', key: 'Delete', action: { type: 'DELETE_VALUE' }},
 
@@ -54,44 +61,11 @@ function process_event (event, store) {
         return;
     }
 
-    if (mode === 'READY') {
-        if (event.key === 'o' && event.ctrlKey) {
-            document.getElementById('open-file-manager').click();
-            return;
-        }
-    
-        const EXTRA_ROWS = 1;
-        const EXTRA_COLS = 1;
-        
-        switch (event.key) {
-
-            case 'j':
-            case "ArrowDown":
-            case 'Enter':
-                store.dispatch({
-                    type: 'EXTEND_GRID', 
-                    location: [
-                        state.selectedCell[0] + EXTRA_ROWS, 
-                        state.selectedCell[1]
-                    ]
-                })
-                store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' });
-                return;
-            case 'l':
-            case "ArrowRight":
-                store.dispatch({ 
-                    type: 'EXTEND_GRID', 
-                    location: [
-                        state.selectedCell[0], 
-                        state.selectedCell[1] + EXTRA_COLS
-                    ]
-                })
-                store.dispatch({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' });
-                return;
-            default:
-                return;
-        }
+    if (mode === 'READY' && event.key === 'o' && event.ctrlKey) {
+        document.getElementById('open-file-manager').click();
+        return;
     }
+    
 }
 
 function get_clicked_cell_location (event) {
