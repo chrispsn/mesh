@@ -7,7 +7,6 @@ const code_editor = CodeEditor;
 
 const {
     EMPTY_CELL,
-    get_cell_id_from_location,
     get_cell,
 } = require(__dirname + '/default_cell_logic.js')
 
@@ -120,7 +119,7 @@ const app = function (state = INITIAL_APP, action) {
         case 'ADD_CELLS': {
             const new_cells = Object.assign({}, state.cells);
             for (let cell of action.cells) {
-                const cell_id = get_cell_id_from_location(cell.location);
+                const cell_id = JSON.stringify(cell.location);
                 new_cells[cell_id] = cell;
             }
             return Object.assign({}, state, {cells: new_cells});

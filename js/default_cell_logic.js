@@ -1,13 +1,9 @@
 const ASTmod = require(__dirname + '/code_transformers.js');
 const formula_bar = document.getElementById('formula-bar');
-const {replace_text} = require(__dirname + '/code_transformers.js');
-
-function get_cell_id_from_location (location) {
-    return location.map(i => i.toString()).join('-');
-}
+const {replace_text} = ASTmod;
 
 function get_cell(cells, location) {
-    const cell_id = get_cell_id_from_location(location);
+    const cell_id = JSON.stringify(location);
     if (cells.hasOwnProperty(cell_id)) {
         return cells[cell_id];
     } else {
@@ -101,5 +97,4 @@ module.exports = {
     default_reducers: default_reducers,
     EMPTY_CELL: EMPTY_CELL,
     get_cell: get_cell,
-    get_cell_id_from_location: get_cell_id_from_location,
 }

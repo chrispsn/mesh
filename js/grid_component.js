@@ -1,6 +1,6 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
-const {EMPTY_CELL, get_cell_id_from_location} = require(__dirname + '/default_cell_logic.js');
+const {EMPTY_CELL} = require(__dirname + '/default_cell_logic.js');
 
 class Cell extends React.Component {
     
@@ -21,18 +21,13 @@ class Cell extends React.Component {
     }
 
     render() {
-            
-        const cell_info = this.props;
-        const properties = {
-            className: cell_info ? cell_info.classes : '',
-            id: JSON.stringify(this.props.location)
+        let props = this.props;
+        props = {
+            className: props.classes + (props.selected ? ' selected' : ''),
+            id: props.id,
+            repr: props.repr
         }
-
-        if (cell_info && cell_info.selected) {
-            properties.className = properties.className + ' selected';
-        }
-        return React.createElement("td", properties, this.props.repr);
-        
+        return React.createElement("td", props, props.repr);
     };
     
 }
@@ -58,13 +53,16 @@ class Grid extends React.Component {
         const rows = row_indices.map(row_idx => {
             const row_cells = col_indices.map(col_idx => {
                 const location = [row_idx, col_idx];
-                const cell_id = get_cell_id_from_location(location);
-                const cell = cells[cell_id] ? cells[cell_id] : EMPTY_CELL;
+                const id = JSON.stringify(location);
+                const cell = cells[id] ? cells[id] : EMPTY_CELL;
                 return React.createElement(
                     Cell, 
                     Object.assign({}, cell, {
-                        key: cell_id + '|' + cell.repr, 
+                        key: id + '|' + cell.repr, 
+                        id: id,
                         location: location,
+                        // TODO Seems a pain to do this for every cell instead of
+                        // just the selected one
                         selected: (row_idx === selected_row_idx && col_idx === selected_col_idx)
                     })
                 )
