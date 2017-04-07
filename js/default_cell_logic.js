@@ -17,13 +17,14 @@ function get_cell(cells, location) {
 
 const default_reducers = {
 
-    select: (state) => {
-        const this_cell = get_cell(state.cells, state.selected_cell_loc);
+    select: (state, action) => {
+        const this_cell = get_cell(state.cells, action.location);
         return Object.assign({}, state, {
             formula_bar: Object.assign({}, state.formula_bar, 
                 {value: this_cell.formula_bar_value}),
             code_editor: Object.assign({}, state.code_editor,
-                {selection: this_cell.code_location})
+                {selection: this_cell.code_location}),
+            selected_cell_loc: action.location
         });
     },
 

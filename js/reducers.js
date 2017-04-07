@@ -11,16 +11,12 @@ const {
     get_cell,
 } = require(__dirname + '/default_cell_logic.js')
 
-const INITIAL_CELLS = [ Object.assign({}, EMPTY_CELL, {location: [0, 0]}) ];
-const INITIAL_FORMULA_BAR = { focused: false, value: '' };
-const INITIAL_CODE_EDITOR = { focused: false, value: '', selection: undefined };
-
 const INITIAL_APP = {
     mode: 'READY',
-    cells: INITIAL_CELLS,
+    cells: {},
     selected_cell_loc: [0, 0],
-    formula_bar: INITIAL_FORMULA_BAR,
-    code_editor: INITIAL_CODE_EDITOR,
+    formula_bar: { focused: false, value: '' },
+    code_editor: { focused: false, value: '', selection: undefined },
     loaded_filepath: null
 }
 
@@ -46,15 +42,14 @@ const app = function (state = INITIAL_APP, action) {
 
     switch (action.type) {
 
-        case 'RESET_STATE':
-            return Object.assign({}, state, INITIAL_APP);
+        case 'RESET_STATE': return Object.assign({}, state, INITIAL_APP);
 
         case 'LOAD_FILE': {
             const path = action.path;
             const filename = LocalFileIO.get_basename_from_path(path);
 
             const contents = LocalFileIO.readFileSync(path, 'utf8');
-            const new_state = Object.assign({}, state, {
+            const new_state = Object.assign({}, INITIAL_APP, {
                 code_editor: Object.assign({}, state.code_editor, {value: contents}),
                 loaded_filepath: path,
                 mode: 'NEED_TO_CALCULATE'
@@ -111,25 +106,22 @@ const app = function (state = INITIAL_APP, action) {
             return Object.assign({}, state, {formula_bar: new_formula_bar});
         }
 
-        case 'SELECT_CODE': {
-            return Object.assign({}, state, {mode: 'EDITING_CODE'});
-        }
+        case 'SELECT_CODE': return Object.assign({}, state, {mode: 'EDITING_CODE'});
 
         case 'UNSELECT_CODE': {
             const new_code = code_editor.getValue();
             const new_code_editor = Object.assign({}, state.code_editor, {value: new_code})
-            const new_state = Object.assign({}, state, {
+            return Object.assign({}, state, {
                 code_editor: new_code_editor,
                 mode: 'NEED_TO_CALCULATE'
             })
-            return new_state;
         }
 
         case 'ADD_CELLS': {
             const new_cells = Object.assign({}, state.cells);
             for (let cell of action.cells) {
                 const cell_id = get_cell_id_from_location(cell.location);
-                new_cells[cell_id] = Object.assign({}, cell);
+                new_cells[cell_id] = cell;
             }
             return Object.assign({}, state, {cells: new_cells});
         }
@@ -155,10 +147,8 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'SELECT_CELL': {
             // When you have a specific cell in mind.
-            let new_state = Object.assign({}, state, {selected_cell_loc: action.location});
             const new_selected_cell = get_cell(state.cells, action.location)
-            new_state = new_selected_cell.reducers.select(new_state);
-            return new_state;
+            return new_selected_cell.reducers.select(state, action);
         }
 
         case 'MOVE_CELL_SELECTION': {
@@ -179,9 +169,9 @@ const app = function (state = INITIAL_APP, action) {
             })();
 
             const new_selected_cell = get_cell(state.cells, new_location);
-            new_state = Object.assign({}, state, {selected_cell_loc: new_location});
-            new_state = new_selected_cell.reducers.select(new_state);
-            return new_state;
+            return new_selected_cell.reducers.select(state, 
+                Object.assign({}, action, {location: new_location})
+            );
         }
 
         case 'EDIT_CELL': return selected_cell.reducers.edit(state);
