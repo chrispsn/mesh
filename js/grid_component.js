@@ -22,12 +22,12 @@ class Cell extends React.Component {
 
     render() {
         let props = this.props;
+        const repr = props.repr;
         props = {
             className: props.classes + (props.selected ? ' selected' : ''),
             id: props.id,
-            repr: props.repr
         }
-        return React.createElement("td", props, props.repr);
+        return React.createElement("td", props, repr);
     };
     
 }
