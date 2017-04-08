@@ -4,7 +4,6 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 const Grid = require(__dirname + '/grid_component.js');
-const CodeTransformers = require(__dirname + '/code_transformers.js');
 const DisplayFunctions = require(__dirname + '/display_functions.js');
 const SyntaxDisplayMap = require(__dirname + '/syntax_display_map.js');
 
@@ -36,7 +35,7 @@ class Sheet {
     attach(ref_string, value, location, custom_display_func) {
         // TODO fix this terrible signature so ref_string is not needed?
         
-        const current_AST = new CodeTransformers.AST(Mesh.code_editor.getValue());
+        const current_AST = this.store.getState().AST;
         const declaration_node = current_AST.get_first_declaration_of_name(ref_string);
 
         if (custom_display_func) {

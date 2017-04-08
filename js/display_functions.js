@@ -9,7 +9,7 @@ const {get_text, replace_text, append_to_array, AST} = code_transformers;
 
 function get_ref_string_cell(ref_string, sheet, location, declaration_AST_node) {
     return {
-        location: [...location], 
+        location: [...location],
         repr: ref_string,
         ref_string: ref_string,
         formula_bar_value: ref_string,

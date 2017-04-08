@@ -81,12 +81,12 @@ const EMPTY_CELL = {
             const old_AST = new ASTmod.AST(state.code_editor.value);
             const new_AST = old_AST
                             .create_const_variable(variable_name)
-                            .add_attachment(variable_name, state.selectedCell)
+                            .add_attachment(variable_name, state.selected_cell_loc)
             const new_code = new_AST.to_string;
 
             return Object.assign({}, state, {
+                formula_bar: Object.assign({}, state.formula_bar, {selected: false}),
                 code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                formula_bar: {selected: false},
                 mode: 'NEED_TO_CALCULATE'
             });
         }

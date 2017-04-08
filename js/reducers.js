@@ -1,14 +1,13 @@
-// # Connections to objects / HTML elements
+const CodeTransformers = require(__dirname + '/code_transformers.js');
 
+// # Connections to objects / HTML elements
 const formula_bar = document.getElementById('formula-bar');
+// TODO should this be a require? Or a reference to the Mesh object?
 const code_editor = CodeEditor;
 
 // # State constants
 
-const {
-    EMPTY_CELL,
-    get_cell,
-} = require(__dirname + '/default_cell_logic.js')
+const { get_cell } = require(__dirname + '/default_cell_logic.js')
 
 const INITIAL_APP = {
     mode: 'READY',
@@ -16,7 +15,9 @@ const INITIAL_APP = {
     selected_cell_loc: [0, 0],
     formula_bar: { focused: false, value: '' },
     code_editor: { focused: false, value: '', selection: undefined },
-    loaded_filepath: null
+    loaded_filepath: null,
+    AST: null,
+    screen_updating: true
 }
 
 // # Helper functions
@@ -33,6 +34,21 @@ function insert_into_textarea(textarea, text_to_insert) {
     textarea.selectionStart = textarea.selectionEnd = start + text_to_insert.length
 }
 
+function save_file_as(state, content) {
+    let dest_filepath = LocalFileIO.get_saveas_filepath();
+    if (dest_filepath !== undefined) {
+        if (dest_filepath.slice(-3) !== '.js') {
+            dest_filepath = dest_filepath + '.js';
+        }
+        LocalFileIO.writeFile(dest_filepath, state.code_editor.value);
+        alert(`File saved: ${dest_filepath}`);
+        document.title = `Mesh - ${dest_filepath}`;
+        return Object.assign({}, state, { loaded_filepath: dest_filepath });
+    } else {
+        return state;
+    }
+}
+
 // # Reducer
 
 const app = function (state = INITIAL_APP, action) {
@@ -43,67 +59,40 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'RESET_STATE': return Object.assign({}, state, INITIAL_APP);
 
+        // =========
+        //  \/ IO \/
+        // =========
+
         case 'LOAD_FILE': {
             const path = action.path;
             const filename = LocalFileIO.get_basename_from_path(path);
 
-            const contents = LocalFileIO.readFileSync(path, 'utf8');
-            const new_state = Object.assign({}, INITIAL_APP, {
-                code_editor: Object.assign({}, state.code_editor, {value: contents}),
-                loaded_filepath: path,
-                mode: 'NEED_TO_CALCULATE'
-            });
-
             // TODO Move this into the main state and update with the subscriber
             document.title = `Mesh - ${filename}`;
 
-            return new_state;
+            const contents = LocalFileIO.readFileSync(path, 'utf8');
+            return Object.assign({}, INITIAL_APP, {
+                code_editor: Object.assign({}, state.code_editor, {value: contents}),
+                loaded_filepath: path,
+                mode: 'NEED_TO_CALCULATE',
+            });
         }
 
         case 'SAVE_FILE': {
-            const content = state.code_editor.getValue();
             if (state.loaded_filepath !== null) {
-                LocalFileIO.writeFile(state.loaded_filepath, content);
+                LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
                 alert(`File saved: ${state.loaded_filepath}`)
                 return state;
             } else {
-                // TODO duplicate of SAVE_FILE_AS - can this be moved out?
-                let dest_filepath = LocalFileIO.get_saveas_filepath();
-                if (dest_filepath !== undefined) {
-                    if (dest_filepath.slice(-3) !== '.js') {
-                        dest_filepath = dest_filepath + '.js';
-                    }
-                    LocalFileIO.writeFile(dest_filepath, content);
-                    alert(`File saved: ${dest_filepath}`);
-                    document.title = `Mesh - ${dest_filepath}`;
-                    return Object.assign({}, state, { loaded_filepath: dest_filepath });
-                } else {
-                    return state;
-                }
+                return save_file_as(state);
             }
         }
 
-        case 'SAVE_FILE_AS': {
-            const content = code_editor.getValue();
-            let dest_filepath = LocalFileIO.get_saveas_filepath();
-            if (dest_filepath !== undefined) {
-                if (dest_filepath.slice(-3) !== '.js') {
-                    dest_filepath = dest_filepath + '.js';
-                }
-                LocalFileIO.writeFile(dest_filepath, content);
-                alert(`File saved: ${dest_filepath}`);
-                document.title = `Mesh - ${dest_filepath}`;
-                return Object.assign({}, state, { loaded_filepath: dest_filepath });
-            } else {
-                return state;
-            }
-        }
+        case 'SAVE_FILE_AS': return save_file_as(state);
 
-        case 'UPDATE_FORMULA_BAR': {
-            const new_formula_bar = Object.assign({}, state.formula_bar, {
-                    value: selected_cell.formula_bar_value});
-            return Object.assign({}, state, {formula_bar: new_formula_bar});
-        }
+        // ================
+        //  \/ CODE PANE \/
+        // ================
 
         case 'SELECT_CODE': return Object.assign({}, state, {mode: 'EDITING_CODE'});
 
@@ -115,6 +104,10 @@ const app = function (state = INITIAL_APP, action) {
                 mode: 'NEED_TO_CALCULATE'
             })
         }
+        
+        // ============
+        //  \/ SHEET \/
+        // ============
 
         case 'ADD_CELLS': {
             const new_cells = Object.assign({}, state.cells);
@@ -136,9 +129,36 @@ const app = function (state = INITIAL_APP, action) {
             return state;
         }
 
-        case 'CALCULATING': return Object.assign({}, state, {mode: 'CALCULATING'})
+        // ==========================
+        //  \/ CALCULATION STATES \/
+        // ==========================
+        
+        // NEED_TO_CALCULATE is used only by a subscriber function
+        // so that it knows to kick-off calculation.
 
-        case 'RETURN_TO_READY': return Object.assign({}, state, {mode: 'READY'});
+        case 'CALCULATING': {
+            // Exists purely to change the state away from NEED_TO_CALCULATE
+            // so that we don't get into an infinite calculation loop.
+            return Object.assign({}, state, {
+                mode: 'CALCULATING',
+                screen_updating: false,
+            });
+        }
+
+        case 'CALCULATE_AST': {
+            const AST = new CodeTransformers.AST(state.code_editor.value);
+            return Object.assign({}, state, {AST: AST})
+        }
+
+        case 'RETURN_TO_READY': {
+            const new_formula_bar = Object.assign({}, state.formula_bar, {
+                    value: selected_cell.formula_bar_value});
+            return Object.assign({}, state, {
+                formula_bar: new_formula_bar,
+                mode: 'READY',
+                screen_updating: true
+            });
+        }
 
         // ==========================
         //  \/ PER-CELL BEHAVIOUR \/
