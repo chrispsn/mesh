@@ -91,7 +91,9 @@ store.subscribe(calculate_if_required);
 
 // Showtime
 
+const WELCOME_MESSAGE = require(__dirname + '/js/settings.js').WELCOME_MESSAGE;
 store.dispatch({ type: 'RESET_STATE' });
+CodeEditor.setValue(WELCOME_MESSAGE);
 
 // Exports
 
