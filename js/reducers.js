@@ -17,7 +17,7 @@ const INITIAL_APP = {
     code_editor: { focused: false, value: '', selection: undefined },
     loaded_filepath: null,
     AST: null,
-    screen_updating: true
+    render: true
 }
 
 // # Helper functions
@@ -141,7 +141,7 @@ const app = function (state = INITIAL_APP, action) {
             // so that we don't get into an infinite calculation loop.
             return Object.assign({}, state, {
                 mode: 'CALCULATING',
-                screen_updating: false,
+                render: false,
             });
         }
 
@@ -156,7 +156,7 @@ const app = function (state = INITIAL_APP, action) {
             return Object.assign({}, state, {
                 formula_bar: new_formula_bar,
                 mode: 'READY',
-                screen_updating: true
+                render: true
             });
         }
 
@@ -183,7 +183,7 @@ const app = function (state = INITIAL_APP, action) {
                     case 'RIGHT':
                         return [old_row_idx, old_col_idx+1];
                     default:
-                        return state.selectedCell;
+                        // TODO raise error
                 }
             })();
 

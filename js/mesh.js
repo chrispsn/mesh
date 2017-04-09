@@ -39,9 +39,9 @@ window.onerror = function (msg, url, lineNo, colNo, error) {
     // TODO move cursor?
 }
 
-// Calculation
+// App side-effects
 
-function calculate_if_required () {
+store.subscribe( () => {
     // TODO consider
     // http://stackoverflow.com/questions/25601865/how-to-run-user-provided-javascript-without-security-issues-like-jsfiddle-jsbi
     // http://stackoverflow.com/questions/8004001/how-does-jsfiddle-allow-and-execute-user-defined-javascript-without-being-danger
@@ -57,7 +57,7 @@ function calculate_if_required () {
     }
 
     // UI component updates
-    if (state.screen_updating) {
+    if (state.render) {
         state = store.getState();
         sheet.render();
         status_bar.render(state);
@@ -86,13 +86,12 @@ function calculate_if_required () {
             );
         }
     }
-}
-store.subscribe(calculate_if_required);
+} )
 
 // Showtime
 
-const WELCOME_MESSAGE = require(__dirname + '/js/settings.js').WELCOME_MESSAGE;
 store.dispatch({ type: 'RESET_STATE' });
+const WELCOME_MESSAGE = require(__dirname + '/js/settings.js').WELCOME_MESSAGE;
 CodeEditor.setValue(WELCOME_MESSAGE);
 
 // Exports
