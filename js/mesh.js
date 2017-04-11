@@ -31,7 +31,7 @@ const sheet = new Sheet(HTML_elements.grid, store);
 Events.bind_code_editor_events(store, CodeEditor);
 Events.bind_formula_bar_events(store, HTML_elements.formula_bar);
 Events.bind_grid_events(store, HTML_elements.grid);
-Events.bind_keydown_events(store, window);
+Events.bind_window_events(store, window);
 Events.bind_load_file_events(store, HTML_elements.filepicker);
 
 window.onerror = function (msg, url, lineNo, colNo, error) {
@@ -59,19 +59,39 @@ store.subscribe( () => {
     // UI component updates
     if (state.render) {
         state = store.getState();
+        
+        // Document
+        if (state.loaded_filepath) {
+            const filename = LocalFileIO.get_basename_from_path(state.loaded_filepath);
+            document.title = `Mesh - ${filename}`;
+        }
+        
+        // File loading
+        if (state.mode === 'SPAWN_LOAD_DIALOG') {
+            document.getElementById('open-file-manager').click();
+        }
+
+        // Sheet
         sheet.render();
+
+        // Status bar
         status_bar.render(state);
+
+        // Grid
+        if (state.mode === 'READY') {
+            // TODO maybe we should return to having focus tracked in the app state?
+            HTML_elements.grid.focus();
+        }
         
         // Formula bar
         // TODO consider making this a React element
         HTML_elements.formula_bar.value = state.formula_bar.value;
-        if (state.formula_bar.focused) {
+        if (state.mode === 'EDIT') {
             HTML_elements.formula_bar.focus();
-        } else {
-            HTML_elements.formula_bar.blur();
         }
 
         // Code editor
+        // TODO move this fn somewhere?
         function ASTmod_loc_to_codemirror_loc (ASTmod_loc) {
             const {line, column} = ASTmod_loc;
             return {line: line - 1, ch: column};

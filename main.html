@@ -18,7 +18,8 @@
       <div id="container">
         <div id="spreadsheet">
           <textarea id="formula-bar" ></textarea>
-          <div id="grid"></div>
+          <!-- tabindex="0" allows the grid to be focused: http://stackoverflow.com/a/3149416 -->
+          <div id="grid" tabindex="0"></div>
         </div>
 		<div id="code_editor"></div>
       </div>

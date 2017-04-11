@@ -27,7 +27,6 @@ const default_reducers = {
     edit: (state) => {
         if (state.mode !== 'EDIT') {
             return Object.assign({}, state, {
-                formula_bar: Object.assign({}, state.formula_bar, {focused: true}), 
                 mode: 'EDIT'
             });
         } else {
@@ -44,17 +43,13 @@ const default_reducers = {
         const new_code = replace_text(old_code, this_cell.code_location, text_to_insert)
 
         return Object.assign({}, state, {
-            formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE'
         });
     },
 
     discard_edit: (state) => {
-        return Object.assign({}, state, {
-            formula_bar: Object.assign({}, state.formula_bar,
-                                        {focused: false, mode: 'READY'})
-        });
+        return Object.assign({}, state, {mode: 'READY'});
     },
 
     delete_value: (state) => {
@@ -63,7 +58,6 @@ const default_reducers = {
         const new_code = replace_text(old_code, this_cell.code_location, 'null');
 
         return Object.assign({}, state, {
-            formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE'
         });

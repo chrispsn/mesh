@@ -13,8 +13,8 @@ const INITIAL_APP = {
     mode: 'READY',
     cells: {},
     selected_cell_loc: [0, 0],
-    formula_bar: { focused: false, value: '' },
-    code_editor: { focused: false, value: '', selection: undefined },
+    formula_bar: { value: '' },
+    code_editor: { value: '', selection: undefined },
     loaded_filepath: null,
     AST: null,
     render: true
@@ -62,14 +62,13 @@ const app = function (state = INITIAL_APP, action) {
         // =========
         //  \/ IO \/
         // =========
+        
+        case 'SPAWN_LOAD_DIALOG': {
+            return Object.assign({}, state, {mode: 'SPAWN_LOAD_DIALOG'});
+        }
 
         case 'LOAD_FILE': {
             const path = action.path;
-            const filename = LocalFileIO.get_basename_from_path(path);
-
-            // TODO Move this into the main state and update with the subscriber
-            document.title = `Mesh - ${filename}`;
-
             const contents = LocalFileIO.readFileSync(path, 'utf8');
             return Object.assign({}, INITIAL_APP, {
                 code_editor: Object.assign({}, state.code_editor, {value: contents}),

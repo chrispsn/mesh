@@ -118,7 +118,6 @@ function write_array_rw(array, ref_string, sheet, location, declaration_AST_node
                             array.length, text_to_insert);
         return Object.assign({}, state, {
             mode: 'NEED_TO_CALCULATE', 
-            formula_bar: Object.assign({}, state.formula_bar, {focused: false}),
             code_editor: Object.assign({}, state.code_editor, {value: new_code})
         });
     }
