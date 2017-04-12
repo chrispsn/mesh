@@ -1,43 +1,24 @@
 // https://developer.mozilla.org/en-US/docs/Web/Events
 
 // Key values: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
-// https://developer.mozilla.org/en-US/docs/Web/Events/keydown
+// Keydown: https://developer.mozilla.org/en-US/docs/Web/Events/keydown
 // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Exampleselected_cell
 
-// # GRID
+// Regex:
+// https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
 
-const grid_keydown_events = [
-    {mode: 'READY', key: 'ArrowLeft', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
-    {mode: 'READY', key: 'h', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+// TODO how to stop a given event running through lots of the events?
+// (see via a console.log)
+// probably fixed via a carefully placed event.stopPropagation();.
 
-    {mode: 'READY', key: 'ArrowUp', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
-    {mode: 'READY', key: 'k', action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
-
-    {mode: 'READY', key: 'j', action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
-    {mode: 'READY', key: 'ArrowDown', action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
-    {mode: 'READY', key: 'Enter', action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
-
-    {mode: 'READY', key: 'l', action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
-    {mode: 'READY', key: 'ArrowRight', action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
-    
-    // TODO If on the name: delete the declaration entirely
-    {mode: 'READY', key: 'Delete', action: { type: 'DELETE_VALUE' }},
-
-    {mode: 'READY', key: 'F2', action: { type: 'EDIT_CELL' }},
-    {mode: 'READY', key: 'i', action: { type: 'EDIT_CELL' }},
-];
-
-const grid_click_events = [
-    { mode: 'READY', action: { type: 'SELECT_CELL' } },
-    { mode: 'EDIT', action: { type: 'INSERT_REFERENCE_FROM_CELL' } },
-    { mode: 'EDITING_CODE', action: { type: 'UNSELECT_CODE' } },
-];
+// # HELPERS
 
 function process_keydown_event (store, bindings, event) {
     const state = store.getState();
     const mode = state.mode;
     for (let binding of bindings) {
-        if (event.key === binding.key
+        if (binding.keypattern.test(event.key)
             && mode === binding.mode
             && ((binding.modifiers === undefined) || binding.modifiers(event))
         ) {
@@ -46,6 +27,38 @@ function process_keydown_event (store, bindings, event) {
         }
     }
 }
+
+
+// # GRID
+
+const grid_keydown_events = [
+    // TODO make this replace everything in the existing cell
+    {mode: 'READY', keypattern: /^[\w-]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL' }},
+
+    {mode: 'READY', keypattern: /^F2$/, action: { type: 'EDIT_CELL' }},
+
+    {mode: 'READY', keypattern: /^ArrowLeft$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    {mode: 'READY', keypattern: /^ArrowUp$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+    {mode: 'READY', keypattern: /^ArrowDown$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
+    {mode: 'READY', keypattern: /^ArrowRight$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
+
+    // TODO somehow need to event.preventDefault() for these
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+    
+    // TODO If on the name: delete the declaration entirely
+    {mode: 'READY', keypattern: /^Delete$/, action: { type: 'DELETE_VALUE' }},
+
+];
+
+const grid_click_events = [
+    { mode: 'READY', action: { type: 'SELECT_CELL' } },
+    { mode: 'EDIT', action: { type: 'INSERT_REFERENCE_FROM_CELL' } },
+    { mode: 'EDITING_CODE', action: { type: 'UNSELECT_CODE' } },
+];
 
 function get_clicked_cell_location (event) {
     const id = event.target.getAttribute('id');
@@ -79,22 +92,14 @@ const bind_grid_events = function(store, grid_element) {
     });
 
     grid_element.addEventListener('keydown', (event) => {
-        // TODO this will change if we switch to a more
-        // Excel-like keyboard experience.
-        // As for how to do that...
-        // keys need to be a keyPATTERN rather than a hardcoded key:
-        // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
-        event.preventDefault(); // Stops i appearing in formula bar
         process_keydown_event(store, grid_keydown_events, event);
     });
 }
 
 const window_keydown_events = [
-    {mode: 'READY', key: 'ArrowLeft', action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
-    {mode: 'READY', key: 'S', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
-    {mode: 'READY', key: 's', modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
-    {mode: 'READY', key: 'o', modifiers: (e) => (e.ctrlKey), action: { type: 'SPAWN_LOAD_DIALOG' }},
+    {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
+    {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
+    {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: { type: 'SPAWN_LOAD_DIALOG' }},
 ]
 
 // TODO move these to window KB events
@@ -128,8 +133,8 @@ const bind_code_editor_events = function(store, code_editor) {
 const formula_bar_keydown_events = [
     // TOOD how can a user insert a line into the formula bar 
     // without triggering commit? Same way as in Excel?
-    {mode: 'EDIT', key: 'Enter', action: { type: 'COMMIT_CELL_EDIT' }},
-    {mode: 'EDIT', key: 'Escape', action: { type: 'DISCARD_CELL_EDIT' }},
+    {mode: 'EDIT', keypattern: /^Enter$/, action: { type: 'COMMIT_CELL_EDIT' }},
+    {mode: 'EDIT', keypattern: /^Escape$/, action: { type: 'DISCARD_CELL_EDIT' }},
 ];
 
 const bind_formula_bar_events = function(store, formula_bar) {
