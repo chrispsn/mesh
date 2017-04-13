@@ -22,6 +22,9 @@ function process_keydown_event (store, bindings, event) {
             && mode === binding.mode
             && ((binding.modifiers === undefined) || binding.modifiers(event))
         ) {
+            if (binding.hasOwnProperty('preventDefault') && binding.preventDefault) {
+                event.preventDefault()
+            }
             store.dispatch(binding.action);
             return;
         }
@@ -33,7 +36,7 @@ function process_keydown_event (store, bindings, event) {
 
 const grid_keydown_events = [
     // TODO make this replace everything in the existing cell
-    {mode: 'READY', keypattern: /^[\w-]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL' }},
+    {mode: 'READY', keypattern: /^[\w-]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL_REPLACE' }},
 
     {mode: 'READY', keypattern: /^F2$/, action: { type: 'EDIT_CELL' }},
 
@@ -43,8 +46,8 @@ const grid_keydown_events = [
     {mode: 'READY', keypattern: /^ArrowRight$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
 
     // TODO somehow need to event.preventDefault() for these
-    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
-    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
     
     {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
     {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
@@ -133,7 +136,8 @@ const bind_code_editor_events = function(store, code_editor) {
 const formula_bar_keydown_events = [
     // TOOD how can a user insert a line into the formula bar 
     // without triggering commit? Same way as in Excel?
-    {mode: 'EDIT', keypattern: /^Enter$/, action: { type: 'COMMIT_CELL_EDIT' }},
+    {mode: 'EDIT', keypattern: /^Enter$/, action: { type: 'COMMIT_CELL_EDIT', direction: 'DOWN' }},
+    {mode: 'EDIT', keypattern: /^Tab$/, preventDefault: true, action: { type: 'COMMIT_CELL_EDIT', direction: 'RIGHT' }},
     {mode: 'EDIT', keypattern: /^Escape$/, action: { type: 'DISCARD_CELL_EDIT' }},
 ];
 
@@ -153,6 +157,8 @@ const bind_load_file_events = function(store, filepicker) {
         const file = event.target.files[0]; 
         if (file && file.path) {
             const path = file.path;
+            // TODO compress into single event?
+            // Reset state isn't working properly anyway given prev sheet cells stil appear
             store.dispatch({type: 'RESET_STATE'});
             store.dispatch({type: 'LOAD_FILE', path: path});
         }

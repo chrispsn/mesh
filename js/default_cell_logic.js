@@ -34,6 +34,17 @@ const default_reducers = {
         }
     },
 
+    edit_replace: (state) => {
+        if (state.mode !== 'EDIT') {
+            return Object.assign({}, state, {
+                mode: 'EDIT',
+                formula_bar: Object.assign({}, state.formula_bar, {value: ''}),
+            });
+        } else {
+            return state;
+        }
+    },
+
     commit_edit: (state) => {
         // TODO Check that the commit is valid first?
         const this_cell = get_cell(state.cells, state.selected_cell_loc);
@@ -44,7 +55,7 @@ const default_reducers = {
 
         return Object.assign({}, state, {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-            mode: 'NEED_TO_CALCULATE'
+            mode: 'NEED_TO_CALCULATE',
         });
     },
 
@@ -70,7 +81,7 @@ const EMPTY_CELL = {
     formula_bar_value: "", 
     // TODO does it need only some of the reducers?
     reducers: Object.assign({}, default_reducers, {
-        commit_edit: (state) => {
+        commit_edit: (state, action) => {
             const variable_name = formula_bar.value;
             const old_AST = new ASTmod.AST(state.code_editor.value);
             const new_AST = old_AST
@@ -78,10 +89,20 @@ const EMPTY_CELL = {
                             .add_attachment(variable_name, state.selected_cell_loc)
             const new_code = new_AST.to_string;
 
+            const new_selection_offset = [0, 0];
+            switch (action.direction) {
+                case 'RIGHT': new_selection_offset[1] = 1; break;
+                case 'DOWN': new_selection_offset[0] = 1; break;
+            }
+
             return Object.assign({}, state, {
                 formula_bar: Object.assign({}, state.formula_bar, {selected: false}),
                 code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                mode: 'NEED_TO_CALCULATE'
+                mode: 'NEED_TO_CALCULATE',
+                selected_cell_loc: [
+                    state.selected_cell_loc[0] + new_selection_offset[0],
+                    state.selected_cell_loc[1] + new_selection_offset[1]
+                ]
             });
         }
     }

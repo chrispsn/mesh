@@ -193,7 +193,8 @@ const app = function (state = INITIAL_APP, action) {
         }
 
         case 'EDIT_CELL': return selected_cell.reducers.edit(state);
-        case 'COMMIT_CELL_EDIT': return selected_cell.reducers.commit_edit(state);
+        case 'EDIT_CELL_REPLACE': return selected_cell.reducers.edit_replace(state);
+        case 'COMMIT_CELL_EDIT': return selected_cell.reducers.commit_edit(state, action);
         case 'DISCARD_CELL_EDIT': return selected_cell.reducers.discard_edit(state);
         case 'DELETE_VALUE': return selected_cell.reducers.delete_value(state)
         // TODO delete variable declaration?
