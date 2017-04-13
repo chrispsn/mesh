@@ -78,6 +78,7 @@ const default_reducers = {
 }
 
 const EMPTY_CELL = { 
+    // What if... this was a class? Would that add anything?
     formula_bar_value: "", 
     // TODO does it need only some of the reducers?
     reducers: Object.assign({}, default_reducers, {

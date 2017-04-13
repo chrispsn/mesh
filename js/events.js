@@ -36,7 +36,7 @@ function process_keydown_event (store, bindings, event) {
 
 const grid_keydown_events = [
     // TODO make this replace everything in the existing cell
-    {mode: 'READY', keypattern: /^[\w-]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL_REPLACE' }},
+    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL_REPLACE' }},
 
     {mode: 'READY', keypattern: /^F2$/, action: { type: 'EDIT_CELL' }},
 
