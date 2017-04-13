@@ -35,17 +35,20 @@ function process_keydown_event (store, bindings, event) {
 // # GRID
 
 const grid_keydown_events = [
-    // TODO make this replace everything in the existing cell
+    // TODO what else should trigger this?
     {mode: 'READY', keypattern: /^[\w-"'\(\[{\/]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL_REPLACE' }},
 
     {mode: 'READY', keypattern: /^F2$/, action: { type: 'EDIT_CELL' }},
 
     {mode: 'READY', keypattern: /^ArrowLeft$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    {mode: 'READY', keypattern: /^j$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
+    {mode: 'READY', keypattern: /^h$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
+    {mode: 'READY', keypattern: /^k$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+    {mode: 'READY', keypattern: /^l$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
     {mode: 'READY', keypattern: /^ArrowUp$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
     {mode: 'READY', keypattern: /^ArrowDown$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
     {mode: 'READY', keypattern: /^ArrowRight$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
 
-    // TODO somehow need to event.preventDefault() for these
     {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
     {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
     
