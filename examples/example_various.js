@@ -144,3 +144,9 @@ if (sheet && sheet.attach) {
   }
 
 }
+const regex = /beans/;
+sheet.attach("regex", regex, [0,8]);
+const regex_examples = ['bean', 'beans'];
+sheet.attach("regex_examples", regex_examples, [2,8]);
+const regex_results = regex_examples.map(x => regex.test(x));
+sheet.attach("regex_results", regex_results, [2, 9]);
