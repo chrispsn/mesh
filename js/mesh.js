@@ -24,7 +24,6 @@ const HTML_elements = {
 
 const store = Redux.createStore(Reducers.app);
 const status_bar = new StatusBar(HTML_elements.status_bar, store) 
-const sheet = new Sheet(HTML_elements.grid, store);
 
 // Event bindings
 
@@ -41,6 +40,7 @@ window.onerror = function (msg, url, lineNo, colNo, error) {
 
 // App side-effects
 
+let sheet;
 store.subscribe( () => {
     // TODO consider
     // http://stackoverflow.com/questions/25601865/how-to-run-user-provided-javascript-without-security-issues-like-jsfiddle-jsbi
@@ -51,6 +51,7 @@ store.subscribe( () => {
         // TODO add error checking for calc
         store.dispatch({ type: 'CALCULATING' });
         store.dispatch({ type: 'CALCULATE_AST' });
+        sheet = new Sheet(HTML_elements.grid, store);
         eval(state.code_editor.value);
         sheet.send_cell_batch();
         store.dispatch({ type: 'RETURN_TO_READY' });

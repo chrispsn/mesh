@@ -10,7 +10,7 @@ const code_editor = CodeEditor;
 const { get_cell } = require(__dirname + '/default_cell_logic.js')
 
 const INITIAL_APP = {
-    mode: 'READY',
+    mode: 'NEED_TO_CALCULATE',
     cells: {},
     selected_cell_loc: [0, 0],
     formula_bar: { value: '' },
