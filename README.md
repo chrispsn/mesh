@@ -8,6 +8,23 @@ Visualise data and edit code using similar patterns to what you'd use in a sprea
 
 ![screenshot](https://cloud.githubusercontent.com/assets/777010/24078505/9693f64e-0cc3-11e7-8b2e-0433483569ec.png)
 
+## Progress
+
+| Goal                                             | Progress  |
+| ------------------------------------------------ | --------- |
+| Read, write and display data of arbitrary length | 75%       |
+| Code editor that feels like a spreadsheet        | 75%       |
+| 'Regular' programming language                   | 75%       |
+| Output can be used without Mesh                  | 50%       |
+| Automatic formatting                             | 25%       |
+| Custom themes                                    | 0%        |
+| No need to be connected to internet              | 75%       |
+| Data: read/write from/to disk                    | 0%        |
+| Data: read/write from/to internet                | 50%       |
+| Extendable with third-party libraries            | 0%        |
+| Reasonable version control like regular code     | 100%      |
+| Minimum install friction                         | 0%        |
+
 ## How to install Mesh
 
 Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/).
