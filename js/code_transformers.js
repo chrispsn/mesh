@@ -109,7 +109,7 @@ class AST {
         // TODO be more smart about where this is created
         const old_code = this.code_string;
         const new_code = old_code + LINE_SEPARATOR + 
-            `sheet.attach("${variable_name}", ${variable_name}, [${location}]);`
+            `Mesh.attach("${variable_name}", ${variable_name}, [${location}]);`
         return new AST(new_code);
     }
 

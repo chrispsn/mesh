@@ -1,38 +1,23 @@
 const CodeTransformers = require(__dirname + '/code_transformers.js');
 
-// # Connections to objects / HTML elements
-const formula_bar = document.getElementById('formula-bar');
-// TODO should this be a require? Or a reference to the Mesh object?
-const code_editor = CodeEditor;
-
 // # State constants
 
-const { get_cell } = require(__dirname + '/default_cell_logic.js')
+const {get_cell, get_selected_cell} = require(__dirname + '/selectors.js');
+const {EMPTY_CELL} = require(__dirname + '/cells.js');
 
 const INITIAL_APP = {
     mode: 'NEED_TO_CALCULATE',
-    cells: {},
+    cells: {
+        '[0, 0]': Object.assign({}, EMPTY_CELL, {location: [0, 0]})
+    },
     selected_cell_loc: [0, 0],
-    formula_bar: { value: '' },
-    code_editor: { value: '', selection: undefined },
+    code_editor: { value: '', selection: undefined, show: true },
     loaded_filepath: null,
     AST: null,
-    render: true
+    formula_bar_value: '',
 }
 
 // # Helper functions
-
-function insert_into_textarea(textarea, text_to_insert) {
-    // Modified version of:
-    // http://stackoverflow.com/a/34278578
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const text = textarea.value
-    const before = text.substring(0, start)
-    const after  = text.substring(end, text.length)
-    textarea.value = (before + text_to_insert + after)
-    textarea.selectionStart = textarea.selectionEnd = start + text_to_insert.length
-}
 
 function save_file_as(state, content) {
     let dest_filepath = LocalFileIO.get_saveas_filepath();
@@ -52,8 +37,7 @@ function save_file_as(state, content) {
 // # Reducer
 
 const app = function (state = INITIAL_APP, action) {
-
-    const selected_cell = get_cell(state.cells, state.selected_cell_loc);
+    console.log(action);
 
     switch (action.type) {
 
@@ -103,27 +87,33 @@ const app = function (state = INITIAL_APP, action) {
                 mode: 'NEED_TO_CALCULATE'
             })
         }
+
+        case 'TOGGLE_CODE_PANE_SHOW': {
+            return Object.assign({}, state, {
+                code_editor: Object.assign({}, state.code_editor, {show: !state.code_editor.show}),
+            })
+        }
         
         // ============
         //  \/ SHEET \/
         // ============
-
-        case 'ADD_CELLS': {
-            const new_cells = Object.assign({}, state.cells);
-            for (let cell of action.cells) {
-                const cell_id = JSON.stringify(cell.location);
-                new_cells[cell_id] = cell;
-            }
-            return Object.assign({}, state, {cells: new_cells});
-        }
-
+        
         case 'INSERT_REFERENCE_FROM_CELL': {
             // TODO improve this - for example, clicking on one cell then another
             // should replace the first ref with the second
+            // TODO also this is entirely side-effects - move?
             const ref_cell = get_cell(state.cells, action.location)
             const ref_string = ref_cell.ref_string;
 
-            insert_into_textarea(formula_bar, ref_string);
+            // Modified version of:
+            // http://stackoverflow.com/a/34278578
+            const start = formula_bar.selectionStart
+            const end = formula_bar.selectionEnd
+            const text = formula_bar.value
+            const before = text.substring(0, start)
+            const after  = text.substring(end, text.length)
+            formula_bar.value = (before + ref_string + after)
+            formula_bar.selectionStart = formula_bar.selectionEnd = start + ref_string.length
 
             return state;
         }
@@ -135,27 +125,32 @@ const app = function (state = INITIAL_APP, action) {
         // NEED_TO_CALCULATE is used only by a subscriber function
         // so that it knows to kick-off calculation.
 
-        case 'CALCULATING': {
-            // Exists purely to change the state away from NEED_TO_CALCULATE
-            // so that we don't get into an infinite calculation loop.
+        case 'PREP_FOR_EVAL': {
             return Object.assign({}, state, {
+                AST: new CodeTransformers.AST(state.code_editor.value),
                 mode: 'CALCULATING',
-                render: false,
-            });
+                cells: {},
+            })
         }
 
-        case 'CALCULATE_AST': {
-            const AST = new CodeTransformers.AST(state.code_editor.value);
-            return Object.assign({}, state, {AST: AST})
+        // Note: cells object uses string IDs as cell keys,
+        // but each cell stores its location in an array.
+        
+        case 'ADD_CELLS_TO_SHEET': {
+            const new_cells = {};
+            for (let cell of action.cells) {
+                const cell_id = JSON.stringify(cell.location);
+                new_cells[cell_id] = cell;
+            }
+            return Object.assign({}, state, { cells: new_cells });
         }
 
         case 'RETURN_TO_READY': {
-            const new_formula_bar = Object.assign({}, state.formula_bar, {
-                    value: selected_cell.formula_bar_value});
+            const selected_cell = get_selected_cell(state);
             return Object.assign({}, state, {
-                formula_bar: new_formula_bar,
                 mode: 'READY',
-                render: true
+                formula_bar_value: selected_cell.formula_bar_value,
+                code_editor: Object.assign({}, state.code_editor, {selection: selected_cell.code_location}),      
             });
         }
 
@@ -166,7 +161,7 @@ const app = function (state = INITIAL_APP, action) {
         case 'SELECT_CELL': {
             // When you have a specific cell in mind.
             const new_selected_cell = get_cell(state.cells, action.location)
-            return new_selected_cell.reducers.select(state, action);
+            return new_selected_cell.select(state, action);
         }
 
         case 'MOVE_CELL_SELECTION': {
@@ -187,16 +182,16 @@ const app = function (state = INITIAL_APP, action) {
             })();
 
             const new_selected_cell = get_cell(state.cells, new_location);
-            return new_selected_cell.reducers.select(state, 
+            return new_selected_cell.select(state, 
                 Object.assign({}, action, {location: new_location})
             );
         }
 
-        case 'EDIT_CELL': return selected_cell.reducers.edit(state);
-        case 'EDIT_CELL_REPLACE': return selected_cell.reducers.edit_replace(state);
-        case 'COMMIT_CELL_EDIT': return selected_cell.reducers.commit_edit(state, action);
-        case 'DISCARD_CELL_EDIT': return selected_cell.reducers.discard_edit(state);
-        case 'DELETE_VALUE': return selected_cell.reducers.delete_value(state)
+        case 'EDIT_CELL': return get_selected_cell(state).edit(state);
+        case 'EDIT_CELL_REPLACE': return get_selected_cell(state).edit_replace(state);
+        case 'COMMIT_CELL_EDIT': return get_selected_cell(state).commit_edit(state, action);
+        case 'DISCARD_CELL_EDIT': return get_selected_cell(state).discard_edit(state);
+        case 'DELETE_VALUE': return get_selected_cell(state).delete_value(state)
         // TODO delete variable declaration?
         // TODO delete attachment?
         // TODO delete container?

@@ -30,6 +30,8 @@ const expression_type_display_fns = {
     // {hello: 'world'}
     'ObjectExpression': DisplayFunctions.write_object,
 
+    'Unknown': DisplayFunctions.write_dummy,
+
     // # These ones are more complex.
 
     // some_fn()
@@ -37,6 +39,7 @@ const expression_type_display_fns = {
 
     // new Map([...])
     'NewExpression': new_expression_mapper,
+
 }
 
 const constructor_display_fns = [
@@ -44,7 +47,7 @@ const constructor_display_fns = [
     [Array, DisplayFunctions.write_array_ro],
 ];
 
-function call_expression_mapper (value, ref_string, sheet, location, declaration_node) {
+function call_expression_mapper (value, ref_string, location, declaration_node) {
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
 
     // TODO will need to enumerate the various kinds of objects here too...
@@ -54,23 +57,23 @@ function call_expression_mapper (value, ref_string, sheet, location, declaration
 
     for (let [constructor, display_fn] of constructor_display_fns) {
         if (value instanceof constructor) {
-            return display_fn(value, ref_string, sheet, location, declaration_node);
+            return display_fn(value, ref_string, location, declaration_node);
         }
     }
-    return DisplayFunctions.write_value(value, ref_string, sheet, location, declaration_node);
+    return DisplayFunctions.write_value(value, ref_string, location, declaration_node);
 }
 
 const new_callee_display_fns = {
     'Map': DisplayFunctions.write_map,
 }
 
-function new_expression_mapper (value, ref_string, sheet, location, declaration_node) {
+function new_expression_mapper (value, ref_string, location, declaration_node) {
     const callee_name = declaration_node.init.callee.name;
     if (new_callee_display_fns.hasOwnProperty(callee_name)) {
         const display_fn = new_callee_display_fns[callee_name];
-        return display_fn(value, ref_string, sheet, location, declaration_node);
+        return display_fn(value, ref_string, location, declaration_node);
     } else {
-        return DisplayFunctions.write_value(value, ref_string, sheet, location, declaration_node);
+        return DisplayFunctions.write_value(value, ref_string, location, declaration_node);
     }
 }
 

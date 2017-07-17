@@ -25,7 +25,7 @@ function process_keydown_event (store, bindings, event) {
             if (binding.hasOwnProperty('preventDefault') && binding.preventDefault) {
                 event.preventDefault()
             }
-            store.dispatch(binding.action);
+            store.dispatch(binding.action());
             return;
         }
     }
@@ -36,27 +36,27 @@ function process_keydown_event (store, bindings, event) {
 
 const grid_keydown_events = [
     // TODO what else should trigger this?
-    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/]$/, modifiers: (e) => (!e.ctrlKey), action: { type: 'EDIT_CELL_REPLACE' }},
+    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/]$/, modifiers: (e) => (!e.ctrlKey), action: () => ({ type: 'EDIT_CELL_REPLACE' })},
 
-    {mode: 'READY', keypattern: /^F2$/, action: { type: 'EDIT_CELL' }},
+    {mode: 'READY', keypattern: /^F2$/, action: () => ({ type: 'EDIT_CELL' })},
 
-    {mode: 'READY', keypattern: /^ArrowLeft$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
-    {mode: 'READY', keypattern: /^j$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
-    {mode: 'READY', keypattern: /^h$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
-    {mode: 'READY', keypattern: /^k$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
-    {mode: 'READY', keypattern: /^l$/, modifiers: (e) => (e.ctrlKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
-    {mode: 'READY', keypattern: /^ArrowUp$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
-    {mode: 'READY', keypattern: /^ArrowDown$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
-    {mode: 'READY', keypattern: /^ArrowRight$/, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
+    {mode: 'READY', keypattern: /^ArrowLeft$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' })},
+    {mode: 'READY', keypattern: /^j$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' })},
+    {mode: 'READY', keypattern: /^h$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' })},
+    {mode: 'READY', keypattern: /^k$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'UP' })},
+    {mode: 'READY', keypattern: /^l$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' })},
+    {mode: 'READY', keypattern: /^ArrowUp$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'UP' })},
+    {mode: 'READY', keypattern: /^ArrowDown$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' })},
+    {mode: 'READY', keypattern: /^ArrowRight$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' })},
 
-    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, action: { type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' }},
-    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, action: { type: 'MOVE_CELL_SELECTION', direction: 'LEFT' }},
-    
-    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'DOWN' }},
-    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: { type: 'MOVE_CELL_SELECTION', direction: 'UP' }},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' })},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' })},
+
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' })},
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'UP' })},
     
     // TODO If on the name: delete the declaration entirely
-    {mode: 'READY', keypattern: /^Delete$/, action: { type: 'DELETE_VALUE' }},
+    {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'DELETE_VALUE' })},
 
 ];
 
@@ -70,7 +70,7 @@ function get_clicked_cell_location (event) {
     const id = event.target.getAttribute('id');
     let return_value = null;
     try {
-        return_value = JSON.parse(id);
+        return_value = JSON.parse(id); // 
     } catch (e) {
         if (e instanceof SyntaxError) {
             console.log("Couldn't read in the clicked element's ID as JSON.");
@@ -103,9 +103,10 @@ const bind_grid_events = function(store, grid_element) {
 }
 
 const window_keydown_events = [
-    {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE_AS' }},
-    {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: { type: 'SAVE_FILE' }},
-    {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: { type: 'SPAWN_LOAD_DIALOG' }},
+    {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE_AS' })},
+    {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE' })},
+    {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SPAWN_LOAD_DIALOG' })},
+    {mode: 'READY', keypattern: /^U/, modifiers: (e) => (e.ctrlKey && e.shiftKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
 ]
 
 // TODO move these to window KB events
@@ -136,12 +137,15 @@ const bind_code_editor_events = function(store, code_editor) {
 
 // # FORMULA BAR
 
+const formula_bar = document.getElementById("formula-bar");
 const formula_bar_keydown_events = [
     // TOOD how can a user insert a line into the formula bar 
     // without triggering commit? Same way as in Excel?
-    {mode: 'EDIT', keypattern: /^Enter$/, action: { type: 'COMMIT_CELL_EDIT', direction: 'DOWN' }},
-    {mode: 'EDIT', keypattern: /^Tab$/, preventDefault: true, action: { type: 'COMMIT_CELL_EDIT', direction: 'RIGHT' }},
-    {mode: 'EDIT', keypattern: /^Escape$/, action: { type: 'DISCARD_CELL_EDIT' }},
+    {mode: 'EDIT', keypattern: /^Enter$/, preventDefault: true, 
+        action: () => ({ type: 'COMMIT_CELL_EDIT', commit_value: formula_bar.value, direction: 'DOWN' })},
+    {mode: 'EDIT', keypattern: /^Tab$/, preventDefault: true, 
+        action: () => ({ type: 'COMMIT_CELL_EDIT', commit_value: formula_bar.value, direction: 'RIGHT' })},
+    {mode: 'EDIT', keypattern: /^Escape$/, action: () => ({ type: 'DISCARD_CELL_EDIT' })},
 ];
 
 const bind_formula_bar_events = function(store, formula_bar) {
@@ -169,15 +173,9 @@ const bind_load_file_events = function(store, filepicker) {
 }
 
 module.exports = {
-    bind_window_events: bind_window_events,
-    bind_grid_events: bind_grid_events,
-    bind_code_editor_events: bind_code_editor_events,
-    bind_formula_bar_events: bind_formula_bar_events,
-    bind_load_file_events: bind_load_file_events,
+    bind_window_events,
+    bind_grid_events,
+    bind_formula_bar_events,
+    bind_code_editor_events,
+    bind_load_file_events,
 }
-
-/* TODO add Mesh table bindings
-if (typeof(sheet) !== "undefined" && sheet.attach) {
-  sheet.attach("shortcuts", shortcuts, [1, 1])
-}
-*/
