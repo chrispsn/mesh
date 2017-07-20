@@ -11,6 +11,9 @@ const object_boolean = Boolean(1);
 const result = number + Math.random();
 const empty_null = null;
 const empty_undefined = undefined;
+const regex = /beans/;
+const str_to_test = 'bean';
+const regex_result = regex.test(str_to_test);
 
 const single_values = [
     ["string", string],
@@ -22,7 +25,10 @@ const single_values = [
     ["object_boolean", object_boolean],
     ["result", result],
     ["empty_null", empty_null],
-    ["empty_undefined", empty_undefined]
+    ["empty_undefined", empty_undefined],
+  	["regex", regex],
+  	["str_to_test", str_to_test],
+  	["regex_result", regex_result],
 ]
 Mesh.bulk_attach(single_values, [0, 0]);
 
