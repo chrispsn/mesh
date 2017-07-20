@@ -2,14 +2,12 @@
 
 Mesh is a JavaScript IDE that feels like a spreadsheet.
 
-Visualise and edit JavaScript data structures (arrays, objects, etc) in the same way you'd work with named ranges and tables in Excel.
-
 Consider Mesh if you:
 
-- use traditional programming languages, but want to 'see' the results and get more rapid feedback, or express your code in a 2D grid
+- use traditional programming languages, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
 
-**WARNING!** Mesh is under active development. It will likely change a lot. It is not well optimised from a speed or UI standpoint.
+**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are bugs.
 
 ![Animated GIF of Mesh in action](docs/unique_fruits.gif)
 
@@ -65,6 +63,8 @@ You can also edit the code directly by clicking and typing into the code pane. T
 
 Open a file with `Ctrl o`, save with `Ctrl s`, save as with `Ctrl S` (ie `Ctrl Shift s`).
 
+Show and hide the code pane with `Ctrl U` (ie `Ctrl Shift u`).
+
 ## Benefits of Mesh
 
 Excel's automatic calculations and location-based referencing model provide fast feedback and a low learning curve.
@@ -75,7 +75,7 @@ In Mesh, everything is a named range or formula. In fact, Mesh is just a spreads
 
 [More discussion here](http://chrispsn.com/mesh-preview.html).
 
-### LOL you will never beat Microsoft Excel at its own game
+### "LOL you will never beat Microsoft Excel at its own game"
 
 Excel's location-based referencing model and formatting make it perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
 
