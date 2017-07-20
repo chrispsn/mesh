@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Demo: use Mesh files without Mesh</title>
+    <script src="https://unpkg.com/react@latest/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <script src="./demo_without_mesh.js"></script>
+  </head>
+  <body>
+    <h1>Fruits</h1>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      const list_element = (props) => React.createElement('li', {}, props.value);
+      const list = (props) => React.createElement('ul', {},
+                                props.values.map((v) => React.createElement(list_element, {value: v}))
+                              );
+
+      ReactDOM.render(
+        React.createElement(list, {values: fruits}), 
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>

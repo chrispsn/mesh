@@ -1,6 +1,6 @@
 const React = require('react');
 
-const {EMPTY_CELL} = require(__dirname + '/../cells.js');
+const {EMPTY_CELL} = require('./display');
 
 class Cell extends React.PureComponent {
     

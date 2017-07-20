@@ -1,15 +1,15 @@
-// Imports
-// http://stackoverflow.com/a/19600250
-
 const React = require('react');
 const ReactDOM = require('react-dom');
 const Redux = require('redux');
+const CodeMirror = require('codemirror/lib/codemirror');
+require('codemirror/addon/selection/active-line');
+require('codemirror/mode/javascript/javascript');
 
-const Events = require(__dirname + '/js/events.js');
-const LocalFileIO = require(__dirname + '/js/local_file_io.js');
-const Reducers = require(__dirname + '/js/reducers.js');
-const DisplayFunctions = require(__dirname + '/js/display_functions.js');
-const SyntaxDisplayMap = require(__dirname + '/js/syntax_display_map.js');
+const Events = require('./events');
+const LocalFileIO = require('./local_file_io');
+const Reducers = require('./reducers');
+const Display = require('./display');
+const Settings = require('./settings');
 
 // Redux setup
 
@@ -17,12 +17,14 @@ const store = Redux.createStore(Reducers.app);
 
 // React components 
 
-const Grid = require(__dirname + '/js/react_components/grid.js');
-const StatusBar = require(__dirname + '/js/react_components/status_bar.js');
+const Grid = require('./react.grid');
+const StatusBar = require('./react.status_bar');
 
 // HTML elements
 
-ReactDOM.render(React.createElement(Grid, store.getState()),
+// Need to render now to get a reference to the grid
+ReactDOM.render(
+    React.createElement(Grid, store.getState()),
     document.getElementById('grid-container')
 )
 const HTML_elements = {
@@ -36,20 +38,14 @@ const HTML_elements = {
 
 // Code editor (CodeMirror)
 
-const create_code_mirror = require('codemirror/lib/codemirror');
-require('codemirror/addon/selection/active-line.js');
-require('codemirror/mode/javascript/javascript');
-
-const {LINE_SEPARATOR} = require(__dirname + "/js/settings.js");
-
-const code_editor = create_code_mirror(HTML_elements.code_editor, {
+const code_editor = CodeMirror(HTML_elements.code_editor, {
         value: '',
         mode: "javascript",
         theme: "neo",
         styleActiveLine: true,
         lineWrapping: true,
         lineNumbers: true,
-        lineSeparator: LINE_SEPARATOR
+        lineSeparator: Settings.LINE_SEPARATOR
     }
 )
 
@@ -60,13 +56,6 @@ Events.bind_formula_bar_events(store, HTML_elements.formula_bar);
 Events.bind_grid_events(store, HTML_elements.grid);
 Events.bind_code_editor_events(store, code_editor);
 Events.bind_load_file_events(store, HTML_elements.filepicker);
-
-/*
-window.onerror = function (msg, url, lineNo, colNo, error) {
-    console.log(`${error.message} | url ${url}, line ${lineNo}, column ${colNo}`)
-    // TODO move cursor?
-}
-*/
 
 // Mesh interaction functions
 
@@ -88,17 +77,18 @@ function attach(ref_string, value, location, custom_display_func) {
         // as a switch? Would allow default case to be dummy?
         if (declaration_node) {
             const expression_type = declaration_node.init.type;
+            console.log(expression_type);
             let display_fn;
-            if (SyntaxDisplayMap.hasOwnProperty(expression_type)) {
-                display_fn = SyntaxDisplayMap[expression_type];
+            if (Display.AST_node_to_display_fn.hasOwnProperty(expression_type)) {
+                display_fn = Display.AST_node_to_display_fn[expression_type];
             } else {
                 console.log("Not sure how to display this expression type: ", expression_type);
-                display_fn = SyntaxDisplayMap['Unknown'];
+                display_fn = Display.AST_node_to_display_fn['Unknown'];
             }
             new_cells = display_fn(value, ref_string, location, declaration_node);
         } else {
             // TODO implement FunctionDeclaration (and anything else?)
-            new_cells = DisplayFunctions.write_dummy('TODO', ref_string, location, declaration_node)
+            new_cells = Display.display_fns.dummy('TODO', ref_string, location, declaration_node)
         }
     }
 
@@ -122,10 +112,6 @@ function bulk_attach(ref_string_value_pairs, starting_location) {
 let cells;
 
 store.subscribe( function calculate () {
-    // TODO consider
-    // http://stackoverflow.com/questions/25601865/how-to-run-user-provided-javascript-without-security-issues-like-jsfiddle-jsbi
-    // http://stackoverflow.com/questions/8004001/how-does-jsfiddle-allow-and-execute-user-defined-javascript-without-being-danger
-
     const state = store.getState();
     if (state.mode === 'NEED_TO_CALCULATE') {
         store.dispatch({ type: 'PREP_FOR_EVAL' });
@@ -133,8 +119,8 @@ store.subscribe( function calculate () {
         // - at AST stage?
         // - at eval stage?
         // - both?
+        // The cells array is emptied but will fill via the eval below
         cells = [];
-        // The cells array is emptied and will fill via the eval below
         eval(state.code_editor.value);
         store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
         store.dispatch({ type: 'RETURN_TO_READY' });
@@ -142,7 +128,7 @@ store.subscribe( function calculate () {
 });
 
 store.subscribe( function log_state () {
-    console.log(store.getState());
+    console.log("State: ", store.getState());
 });
 
 store.subscribe( function run_side_effects () {
@@ -194,28 +180,23 @@ store.subscribe( function run_side_effects () {
     if (state.code_editor.show) {
         HTML_elements.code_editor.style.display = 'block';
     } else {
-        console.log(
-            "Hiding..."
-        )
         HTML_elements.code_editor.style.display = 'none';
     }
 });
 
 
 // Exports
-
-// TODO how much of this do we need? Aim to get of explicit store refs for example
 module.exports = Mesh = {
     store,
     attach,
     bulk_attach,
     HTML_elements,
-    load_CSV: LocalFileIO.load_CSV
 }
 
 // Showtime
 
-store.dispatch({ type: 'LOAD_FILE', path: __dirname + '/examples/blank.js' });
-// TODO should not be able to save the blank file
-const WELCOME_MESSAGE = require(__dirname + '/js/settings.js').WELCOME_MESSAGE;
+store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
+// store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });
+// TODO should not be able to write over the blank file
+const WELCOME_MESSAGE = require('./settings').WELCOME_MESSAGE;
 code_editor.setValue(WELCOME_MESSAGE);

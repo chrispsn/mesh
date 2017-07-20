@@ -1,15 +1,12 @@
-// TODO a lot of the NodePath methods in ast-types could be useful.
-// For example, replace, or insertBefore, or insertAfter,
-// or (these ones are under scope) .declares, or .lookup
-
 'use strict';
 
 // On the choice of parser:
 // https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API
 // Alternative to Recast: https://github.com/facebook/pfff
 const Recast = require('recast');
+const Builders = Recast.types.builders;
 
-const {LINE_SEPARATOR} = require(__dirname + '/settings.js');
+const {LINE_SEPARATOR} = require('./settings');
 const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR }
 
 function get_lines(body_text) {
@@ -44,7 +41,7 @@ function replace_text(body_string, loc, new_text) {
     const end_char_idx = loc.end.column;
 
     const code_lines = get_lines(body_string);
-    // Add back the line separators.
+    // Add back the line separators. Note this skips the last line.
     // TODO is this valid if the last line actually ends in a LINE_SEPARATOR?
     // Maybe the last line would actually be the empty string in that case.
     for (let i = 0; i < code_lines.length - 1; i++) {
@@ -66,14 +63,102 @@ function replace_text(body_string, loc, new_text) {
     return new_code_string;
 }
 
-function append_to_array(body_string, array_end_loc, array_length, new_element_string) {
-    const replace_loc = {
-        start: {line: array_end_loc.line, column: array_end_loc.column - 1},
-        end: array_end_loc
-    }
-    const start_string = (array_length === 0) ? '' : ', ';
-    const replacement_string = start_string + new_element_string + ']';
-    return replace_text(body_string, replace_loc, replacement_string);
+function remove_declaration(code, id_name) {
+    let AST = Recast.parse(code);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                path.prune();
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST).code;
+}
+
+function insert_array_element(code, id_name, element_num, inserted_text) {
+    let AST = Recast.parse(code);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const arr_path = path.get('init');
+                const elements_path = arr_path.get('elements');
+                const inserted_node = Builders.identifier(inserted_text);
+                if (elements_path.node.elements.length === 0) {
+                    elements_path.push(inserted_node);
+                } else {
+                    elements_path.insertAt(element_num, inserted_node);
+                }
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST).code;
+}
+
+function remove_array_element(code, id_name, element_num) {
+    let AST = Recast.parse(code);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const arr_path = path.get('init');
+                const element_path = arr_path.get('elements', element_num);
+                element_path.prune();
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST).code;
+}
+
+function insert_object_item(code, id_name, key_text, value_text) {
+    // TODO throw error if duplicate key?
+    let AST = Recast.parse(code);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const obj_path = path.get('init');
+                const props_path = obj_path.get('properties');
+                const new_prop_node = Builders.property('init', Builders.identifier(key_text), Builders.literal(value_text));
+                props_path.push(new_prop_node);
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST).code;
+}
+
+function remove_object_item(code, id_name, key) {
+    // TODO throw error if missing key?
+    let AST = Recast.parse(code);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const obj_path = path.get('init');
+                const props_path = obj_path.get('properties');
+                if (props_path.value.length > 0) {
+                    for (let i=0; i < props_path.value.length; i++) {
+                        let prop_path = props_path.get(i);
+                        let node_key = prop_path.node.key;
+                        // console.log(prop_path.node);
+                        if (
+                            (node_key.type === "Literal" && node_key.value === key) 
+                            || (node_key.type === "Identifier" && node_key.name === key)
+                        ) {
+                            prop_path.prune();
+                            return false;
+                        }
+                    }
+                }
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST).code;
 }
 
 class AST {
@@ -114,21 +199,6 @@ class AST {
     }
 
     get_first_declaration_of_name(name_string) {
-        // TODO this is for top-level only - how to address?
-        // TODO consider alt approach:
-        // const types = Recast.types
-        // function get_variable_declaration_node(AST, name) {
-        //     let desired_node = null;
-        //     types.visit(AST, {visitVariableDeclarator: function(path) {
-        //         let node = path.node;
-        //         if (node.hasOwnProperty('id') 
-        //             && node.id.hasOwnProperty('name') 
-        //             && node.id.name === name
-        //         ) { desired_node = node; return node }
-        //         this.traverse(path);
-        //     }})
-        //     return desired_node;
-        // }
         const declaration_nodes = this.program.body.filter(
                                     node => node.type === 'VariableDeclaration')
         for (let node of declaration_nodes) {
@@ -145,8 +215,12 @@ class AST {
 }
 
 module.exports = {
-    get_text: get_text,
-    replace_text: replace_text,
-    append_to_array, append_to_array,
-    AST: AST
+    get_text,
+    replace_text,
+    remove_declaration,
+    insert_array_element,
+    remove_array_element,
+    insert_object_item,
+    remove_object_item,
+    AST,
 }

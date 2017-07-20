@@ -1,9 +1,6 @@
-const CodeTransformers = require(__dirname + '/code_transformers.js');
-
-// # State constants
-
-const {get_cell, get_selected_cell} = require(__dirname + '/selectors.js');
-const {EMPTY_CELL} = require(__dirname + '/cells.js');
+const CodeTransformers = require('./code_transformers');
+const {get_cell, get_selected_cell} = require('./selectors');
+const {EMPTY_CELL} = require('./display');
 
 const INITIAL_APP = {
     mode: 'NEED_TO_CALCULATE',
@@ -37,7 +34,7 @@ function save_file_as(state, content) {
 // # Reducer
 
 const app = function (state = INITIAL_APP, action) {
-    console.log(action);
+    console.log("Action: ", action);
 
     switch (action.type) {
 
@@ -191,8 +188,10 @@ const app = function (state = INITIAL_APP, action) {
         case 'EDIT_CELL_REPLACE': return get_selected_cell(state).edit_replace(state);
         case 'COMMIT_CELL_EDIT': return get_selected_cell(state).commit_edit(state, action);
         case 'DISCARD_CELL_EDIT': return get_selected_cell(state).discard_edit(state);
-        case 'DELETE_VALUE': return get_selected_cell(state).delete_value(state)
-        // TODO delete variable declaration?
+        case 'DELETE_VALUE': return get_selected_cell(state).delete_value(state);
+        case 'INSERT_ELEMENT': return get_selected_cell(state).insert_element(state);
+        case 'DELETE_ELEMENT': return get_selected_cell(state).delete_element(state);
+        case 'DELETE_CONTAINER': return get_selected_cell(state).delete_container(state);
         // TODO delete attachment?
         // TODO delete container?
 

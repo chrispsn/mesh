@@ -25,7 +25,7 @@ function createMainWindow() {
         autoHideMenuBar: true
 	});
 
-	win.loadURL(`file://${__dirname}/../main.html`);
+	win.loadURL(`file://${__dirname}/main.html`);
 	win.on('closed', onClosed);
 
 	return win;

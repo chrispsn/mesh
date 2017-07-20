@@ -2,7 +2,7 @@
   "name": "mesh",
   "version": "0.0.1",
   "license": "Apache-2.0",
-  "main": "js/electron_setup.js",
+  "main": "electron_setup.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-packager . --out=dist --asar --overwrite --all",
@@ -13,14 +13,12 @@
     "style.css"
   ],
   "jest": {
-    "testPathIgnorePatterns": [ "/node_modules/" ]
+    "testPathIgnorePatterns": [ "node_modules/" ]
   },
   "dependencies": {
-    "babyparse": "0.4.6",
     "codemirror": "^5.0.0",
     "electron-config": "^0.2.1",
     "electron-debug": "^1.0.0",
-    "object.entries": "1.0.3",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
     "recast": "0.11.18",

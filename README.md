@@ -1,98 +1,122 @@
 # Mesh
 
-Mesh is a JavaScript IDE that feels like a spreadsheet. 
+Mesh is a JavaScript IDE that feels like a spreadsheet.
 
-Visualise data and edit code using similar patterns to what you'd use in a spreadsheet.
+Visualise and edit JavaScript data structures (arrays, objects, etc) in the same way you'd work with named ranges and tables in Excel.
 
-**WARNING!** Mesh is alpha-quality and is under active development. Some features don't work yet and it is not well optimised from a speed or UI standpoint.
+Consider Mesh if you:
 
-![screenshot](https://cloud.githubusercontent.com/assets/777010/24078505/9693f64e-0cc3-11e7-8b2e-0433483569ec.png)
+- use traditional programming languages, but want to 'see' the results and get more rapid feedback, or express your code in a 2D grid
+- use spreadsheets, but feel constrained by Excel's limitations.
 
-## Progress
+**WARNING!** Mesh is under active development. It will likely change a lot. It is not well optimised from a speed or UI standpoint.
 
-| Goal                                             | Progress  |
-| ------------------------------------------------ | --------- |
-| Read, write and display data of arbitrary length | 75%       |
-| Code editor that feels like a spreadsheet        | 75%       |
-| 'Regular' programming language                   | 75%       |
-| Output can be used without Mesh                  | 50%       |
-| Automatic formatting                             | 25%       |
-| Custom themes                                    | 0%        |
-| No need to be connected to internet              | 75%       |
-| Data: read/write from/to disk                    | 0%        |
-| Data: read/write from/to internet                | 50%       |
-| Extendable with third-party libraries            | 0%        |
-| Reasonable version control like regular code     | 100%      |
-| Minimum install friction                         | 0%        |
+![Animated GIF of Mesh in action](docs/unique_fruits.gif)
 
-## How to install Mesh
+## How to get Mesh
 
-Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/).
+### Default
 
-Then, download the Mesh source. In the Mesh directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
+TODO
 
-Electron's install seems to be fiddly; you may need to delete the electron directory in node_modules and reinstall.
+### From source
 
-## How to start using Mesh
+1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/)
+2. [Download the Mesh source](https://github.com/chrispsn/mesh/archive/master.zip)
+3. In the Mesh `src` directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
 
-To launch Mesh, open a command line in the Mesh directory, type `yarn start` or `npm start` (as relevant) and press Enter.
+Then to launch, again in the `src` directory, type `yarn start` or `npm start` (as relevant) and press Enter.
 
-To create a new file, just start moving the cursor around (keyboard: jkl;).
+## Quick user guide
 
-Take a look at the example in the examples directory too (keyboard: Ctrl-O).
+Mesh is a JavaScript code editor. Your actions in the 2D grid on the left change the code text on the right. The code on the right is run (`eval`ed) every time it changes.
 
-Full shortcut information is displayed on startup.
+When you select a cell, the corresponding code will be selected in the right-hand pane.
 
-## For programmers - understanding the files
+Create a name by typing a name into a cell. You'll see this inserts some `Mesh.attach` code in the right-hand pane.
 
-A quick summary of Mesh workflow:
+Assign a value to a name by typing into the cell to the right of a name (for example `123` or `"Hello world!"` or `true`). Note strings need to be in single or double quotes, or backticks.
 
-- user edits their JavaScript file, either by making changes in the formula bar or editing the code in the right pane directly
-- once the user commits the code change, Mesh `eval`s the code
-- this produces the values and UI in the grid on the left.
+Replace the contents of a cell by selecting it and writing over it. Edit a cell's contents by pressing `F2`. Commit the edit by pressing `Enter`. Note that if the cell is the result of a calculation (such as a processed array), you'll edit the formula that produced the cell, not the calculated value in the cell.
 
-Mesh's grid and status bar are built in React, and state is managed via Redux.
+### Arrays and objects
 
-Mesh's `Sheet` object in `sheet.js`, in addition to wrapping the grid defined in `grid_component.js`, offers an interface allowing values to 'attach' themselves to the grid. This `attach` method:
+Create an array or object by typing `[]` or `{}` into a value box.
 
-- detects the type of the attached value, and 
-- figures out how to write it to the sheet using logic in `display_functions.js`.
+Unlike regular values, constituents of array and object cells can be individually manipulated:
 
-The various functions in `display_functions.js` define the CSS class for a cell, what the formula bar looks like when it's selected, the location of the corresponding code in the right pane, and the UI behaviour for the cell.
+- Append to an array or object by typing into the 'append' cells that appear
+- Insert a new element above a selected cell with `Ctrl =`
+- Delete a selected element with `Ctrl -`
 
-The UI behaviour for the cell is typically taken from `default_cell_logic.js` and consists of various actions such as selecting the cell, going into edit mode, committing or discarding an edit, or deleting the cell's contents. 
+Delete the array or object entirely with `Ctrl _` (ie `Ctrl Shift -`).
 
-These methods, all of which are simply reducers which modify a state object, are called by the state reducers in `reducers.js` which are themselves triggered by either methods of the `Sheet` object or UI events defined in `events.js`.
+### Other data structures
 
-Of these reducers, `commit_edit` is most important. Currently it does a simple replacement of the cell's text in the right pane with the contents of the formula bar, using a method defined in `code_transformers.js`. This file also defines an `AST` class which uses the Recast parser to analyse the code in the right-hand pane. This `AST` class is also used to figure out where a cell's code is located.
+Mesh has built-in support for displaying JavaScript primitives, arrays and objects, but sometimes you'll want to customise how the code and its calculation results map to the grid.
 
-Finally:
+You can give a custom display function as an argument to `Mesh.attach`. This is how we show records (arrays of objects) as a table.
 
-- `local_code_io.js` provides an abstraction over the local file system (and a CSV reader via Baby Parse)
-- `settings.js` helps define platform-specific constants
-- `utils.js` is a grab bag of small helpers.
+### Functions and other edits
 
-### What happens when you start Mesh
+You can also edit the code directly by clicking and typing into the code pane. This is useful for editing code that makes less sense to interact with via a grid or formula bar, such as large functions.
 
-First, Electron's **main process** runs the file nominated as main in `package.json`.
+### Meta
 
-That file, being `electron_setup.js`, creates a **renderer process** that, among other things:
+Open a file with `Ctrl o`, save with `Ctrl s`, save as with `Ctrl S` (ie `Ctrl Shift s`).
 
-- loads main.html
-- sets up CSS for CodeMirror, Mesh's code editor.
+## Benefits of Mesh
 
-`main.html` loads the program's non-CodeMirror styles (`style.css`) and the entry point for the Mesh app, `mesh.js`.
+Excel's automatic calculations and location-based referencing model provide fast feedback and a low learning curve.
 
-`mesh.js`:
+However, if you want to work with data of arbitrary size within an Excel spreadsheet, you need to go outside 'automatic' calculations (eg VBA, Pivot Table refreshing, etc). At best, this breaks the user's workflow; at worst, this is an avoidable source of human error.
 
-- starts CodeMirror via `code_editor.js`
-- creates a new sheet via `sheet.js` (more below)
-- creates a React-based status bar via `status_bar.js`
-- binds UI events to various HTML elements via calls to functions in `events.js`
-- sets up how we track and change state, via `reducers.js`.
+In Mesh, everything is a named range or formula. In fact, Mesh is just a spreadsheet UI wrapper around a text file editor; actions on the spreadsheet are automatically translated to changes in the JavaScript code.
 
-`mesh.js` also exports an application object, `Mesh`, which offers:
+[More discussion here](http://chrispsn.com/mesh-preview.html).
 
-- bindings to the various HTML elements of the app and the Redux store
-- a way to trigger calculation and re-render
-- some convenience functions for users (such as `load_CSV`).
+### LOL you will never beat Microsoft Excel at its own game
+
+Excel's location-based referencing model and formatting make it perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
+
+Also, Google Sheets solves some of Excel's problems; for example, it can display data of arbitrary length, with some caveats.
+
+I think Mesh has some advantages over both Excel and Google Sheets as a tool for developing applications, or infrastructure, or repeated processes. Aside from the 'data of arbitary length' point above:
+
+- the file format is just JavaScript code in a text file, so:
+  - `diff`ing is easy (function is built into Windows: `FC` in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
+  - it integrates with standard version control systems like Git
+  - you don't need Mesh to run a Mesh file
+- JavaScript is under active development and the community is huge
+- Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This gives it a good shot of minimising the frictions associated with getting new software.
+
+[More discussion, with examples](http://chrispsn.com/mesh-preview.html).
+
+## Caveats with this approach
+
+- Unlike Excel, the whole file gets recalculated every time (no caching of values that won't change)
+- Won't work well with names whose values change over the course of a file (you may get best results if you adopt an 'immutability' convention)
+- Miss out on Excel's built-in functions (although if we can get Mesh running on native Windows via JScript, we can probably get access to `WorksheetFunction` via COM).
+
+## Known issues
+
+- Can't rename a name without it breaking other references in the file (Excel beats this hands down)
+- Grid experience could be better; eg when in EDIT mode, highlighting inputs in the grid or clicking on the sheet to insert a reference
+- Poor compatibility with standard data formats like CSV (I am not sure how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
+- Incomplete coverage of built-in data structures, such as Maps or Sets
+- Poor integration with Electron (eg menu items)
+- Poor user experience with `Mesh.attach` (function signature and code insertion).
+
+## Possible enhancements
+
+- Allow the user to add buttons so they can run functions in the file outside the 'automatic' calculation loop (such as exporting the result of a calculation)
+- Windows-native JScript version (so if people can get the JS files onto their machine, they can run Mesh locally)
+- Cloud version
+- Custom themes
+- Optionally use TypeScript or ClojureScript as formula languages.
+
+## Bugs, issues, enhancements, contact
+
+Please file any bugs, issues or enhancements via GitHub.
+
+To contact me: chrispsn+mesh AT gmail.

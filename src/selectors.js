@@ -1,4 +1,4 @@
-const {EMPTY_CELL} = require(__dirname + '/cells.js');
+const {EMPTY_CELL} = require('./display');
 
 function get_cell(cells, cell_location) {
     const cell_id = JSON.stringify(cell_location);

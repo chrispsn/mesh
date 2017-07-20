@@ -19,7 +19,7 @@ function process_keydown_event (store, bindings, event) {
     const mode = state.mode;
     for (let binding of bindings) {
         if (binding.keypattern.test(event.key)
-            && mode === binding.mode
+            && ((mode === binding.mode) || (binding.mode === 'ALL'))
             && ((binding.modifiers === undefined) || binding.modifiers(event))
         ) {
             if (binding.hasOwnProperty('preventDefault') && binding.preventDefault) {
@@ -58,6 +58,11 @@ const grid_keydown_events = [
     // TODO If on the name: delete the declaration entirely
     {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'DELETE_VALUE' })},
 
+    // Add and remove elements (eg slots in an array)
+    {mode: 'READY', keypattern: /^=$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'INSERT_ELEMENT' })},
+    {mode: 'READY', keypattern: /^-$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'DELETE_ELEMENT' })},
+    {mode: 'READY', keypattern: /^_$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'DELETE_CONTAINER' })},
+
 ];
 
 const grid_click_events = [
@@ -70,7 +75,7 @@ function get_clicked_cell_location (event) {
     const id = event.target.getAttribute('id');
     let return_value = null;
     try {
-        return_value = JSON.parse(id); // 
+        return_value = JSON.parse(id);
     } catch (e) {
         if (e instanceof SyntaxError) {
             console.log("Couldn't read in the clicked element's ID as JSON.");
@@ -106,17 +111,19 @@ const window_keydown_events = [
     {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE_AS' })},
     {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE' })},
     {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SPAWN_LOAD_DIALOG' })},
-    {mode: 'READY', keypattern: /^U/, modifiers: (e) => (e.ctrlKey && e.shiftKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
+    {mode: 'ALL', keypattern: /^U/, modifiers: (e) => (e.ctrlKey && e.shiftKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
+
+    // Prevent certain Electron defaults
+    {mode: 'ALL', keypattern: /^-/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
+    {mode: 'ALL', keypattern: /^\+/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
+    {mode: 'ALL', keypattern: /^w/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
+
+
 ]
 
 // TODO move these to window KB events
 // Catch window closes
-/*
-if (event.key == 'w' && event.ctrlKey) {
-    event.preventDefault();
-    return;
-}
-*/
+
 
 const bind_window_events = function(store, window) {
     window.addEventListener('keydown', (event) => {
