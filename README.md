@@ -2,7 +2,7 @@
 
 Mesh is a JavaScript IDE that feels like a spreadsheet.
 
-Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Actions on the spreadsheet are automatically translated to changes in the JavaScript code.
+Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Actions on the grid are automatically translated to changes in the JavaScript code.
 
 Mesh's aim is to improve the user experience of 'regular' programming languages. Consider Mesh if you:
 
@@ -11,7 +11,7 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 **WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are bugs.
 
-![Animated GIF of Mesh in action](docs/unique_fruits.gif)
+![Animated GIF of Mesh in action](docs/mesh_demo.gif)
 
 ## How to get Mesh
 
@@ -29,13 +29,13 @@ Then to launch, again in the `src` directory, type `yarn start` or `npm start` (
 
 ## Quick user guide
 
-Mesh is a JavaScript code editor. Your actions in the 2D grid on the left change the code text on the right. The code on the right is run (`eval`ed) every time it changes.
+Mesh is a JavaScript code editor. Your actions in the 2D grid on the left change the code text on the right. The code on the right is run (`eval`ed) every time you commit a change from the formula bar (by pressing `Enter` or `Tab`), or from the code pane (by clicking back on the grid).
 
 When you select a cell, the corresponding code will be selected in the right-hand pane.
 
 ### Name-based referencing
 
-Compared to existing spreadshet programs, Mesh does not have location-based referencing, so everything is a named range or formula.
+Compared to existing spreadsheet programs, Mesh does not have location-based referencing - every value has a name.
 
 Create a name by typing a name into a cell. You'll see this inserts some `Mesh.attach` code in the right-hand pane.
 
@@ -47,17 +47,17 @@ Replace the contents of a cell by selecting it and writing over it. Edit a cell'
 
 Create an array or object by typing `[]` or `{}` into a value box.
 
-Unlike regular values, constituents of array and object cells can be individually manipulated:
+Items in arrays and objects take up their own cells and can be individually manipulated:
 
 - Append to an array or object by typing into the 'append' cells that appear
-- Insert a new element above a selected cell with `Ctrl =`
-- Delete a selected element with `Ctrl -`
+- Insert a new cell above a selected cell with `Ctrl =`
+- Delete a selected cell with `Ctrl -`.
 
 Delete the array or object entirely with `Ctrl _` (ie `Ctrl Shift -`).
 
 ### Other data structures
 
-Mesh has built-in support for displaying JavaScript primitives, arrays and objects, but sometimes you'll want to customise how the code and its calculation results map to the grid.
+Mesh has built-in support for displaying JavaScript primitives, arrays and objects, but sometimes you'll want to customise how the code and its calculation results map to the grid, including the actions that occur when you select a cell or commit a change.
 
 You can give a custom display function as an argument to `Mesh.attach`. This is how we show records (arrays of objects) as a table.
 
@@ -73,41 +73,41 @@ Show and hide the code pane with `Ctrl U` (ie `Ctrl Shift u`).
 
 If Mesh breaks, reload with `F5`.
 
-## Benefits of Mesh (or "LOL you will never beat Microsoft Excel")
+## Benefits of Mesh (or "LOL, you will never beat Microsoft Excel")
 
 Mesh is *not* intended to replace existing spreadsheet programs in all domains.
 
-Existing spreadsheet programs offer flexible, location-based referencing and formatting. This makes them perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
+Existing spreadsheet programs offer location-based referencing and formatting, which is very flexible. This makes them perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
 
 However, spreadsheets are often used in domains where a 'traditional' programming languages would be a better tool, such as repeated processes with minimal human intervention. In particular, spreadsheets are poor at processing and generating data of arbitrary length ([more discussion here](http://chrispsn.com/mesh-preview.html)).
 
-In these cases, a spreadsheet is often used because of the user's familiarity or preference for a spreadsheet environment, or because a spreadsheet is the only tool available in the user's position (it's pre-installed or the user does not have permission to install new programs).
+In these cases, a spreadsheet is often used because of the user's familiarity or preference for a spreadsheet environment, or because a spreadsheet is the only tool available in the user's position (perhaps it's pre-installed on colleagues' machines, or the user does not have permission to install new programs or use cloud solutions).
 
-Mesh has advantages over a 'traditional' spreadsheet for this kind of problem:
+For writing programs, Mesh has advantages over a 'traditional' spreadsheet:
 
 - Mesh is designed to process, and generate, data of arbitary length
+- the absence of location-based referencing eliminates a class of errors that normally require humans to identify and fix
 - the Mesh file format is just JavaScript code in a text file, so:
   - `diff`ing is easy (function is built into Windows: `FC` in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
   - it integrates with standard version control systems like Git
-  - you don't need Mesh to run a Mesh file
-- Mesh files are just JavaScript programs, so you can run them as part of a larger system without knowing that Mesh was used to create them.
+  - you don't need Mesh to run a Mesh file, so you can integrate Mesh files into other systems.
 
-Also, Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This and its familiar interface give it a better shot of beating 'spreadsheet inertia', particularly if we can get it running on Windows without installation being required (via JScript).
+Also, Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This and its familiar interface give it a better shot of overcoming 'spreadsheet inertia', particularly if we can get it running on Windows without installation being required (via JScript).
 
 ## Caveats with this approach
 
 - Unlike Excel, the whole file gets recalculated every time (no caching of values that won't change)
-- Won't work well with names whose values change over the course of a file (you may get best results if you adopt an 'immutability' convention)
-- Miss out on Excel's built-in functions (although if we can get Mesh running on native Windows via JScript, we can probably get access to `WorksheetFunction` via COM).
+- Spreadsheet display won't work well with names whose values change over the course of a file (you may get best results if you adopt an 'immutability' convention)
+- Mesh misses out on Excel's built-in functions (although if we can get Mesh running on native Windows via JScript, we can probably get access to `WorksheetFunction` via COM).
 
 ## Known issues
 
 - Can't rename a name without it breaking other references in the file (Excel beats this hands down)
-- Grid experience could be better; eg when in EDIT mode, highlighting inputs in the grid or clicking on the sheet to insert a reference
+- When editing in the formula bar, it should highlight input cells in the grid, and let you click on a cell to insert a reference
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Incomplete coverage of built-in data structures, such as Maps or Sets
-- Poor integration with Electron (eg menu items)
-- Poor user experience with `Mesh.attach` (function signature; code is just appended to the bottom of the file).
+- Poor integration with Electron (such as menu items for New, Open, Save, Save As)
+- Poor user experience with `Mesh.attach` (function signature requires you to repeat the name).
 
 ## Possible enhancements
 

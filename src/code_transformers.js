@@ -64,7 +64,7 @@ function replace_text(body_string, loc, new_text) {
 }
 
 function remove_declaration(code, id_name) {
-    let AST = Recast.parse(code);
+    let AST = Recast.parse(code, RECAST_SETTINGS);
     AST = Recast.visit(AST, {
         visitVariableDeclarator: function (path) {
             if (path.node.id.name == id_name) {
@@ -74,11 +74,11 @@ function remove_declaration(code, id_name) {
             this.traverse(path);
         }
     });
-    return Recast.print(AST).code;
+    return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
 function insert_array_element(code, id_name, element_num, inserted_text) {
-    let AST = Recast.parse(code);
+    let AST = Recast.parse(code, RECAST_SETTINGS);
     AST = Recast.visit(AST, {
         visitVariableDeclarator: function (path) {
             if (path.node.id.name == id_name) {
@@ -95,11 +95,11 @@ function insert_array_element(code, id_name, element_num, inserted_text) {
             this.traverse(path);
         }
     });
-    return Recast.print(AST).code;
+    return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
 function remove_array_element(code, id_name, element_num) {
-    let AST = Recast.parse(code);
+    let AST = Recast.parse(code, RECAST_SETTINGS);
     AST = Recast.visit(AST, {
         visitVariableDeclarator: function (path) {
             if (path.node.id.name == id_name) {
@@ -111,12 +111,12 @@ function remove_array_element(code, id_name, element_num) {
             this.traverse(path);
         }
     });
-    return Recast.print(AST).code;
+    return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
 function insert_object_item(code, id_name, key_text, value_text) {
     // TODO throw error if duplicate key?
-    let AST = Recast.parse(code);
+    let AST = Recast.parse(code, RECAST_SETTINGS);
     AST = Recast.visit(AST, {
         visitVariableDeclarator: function (path) {
             if (path.node.id.name == id_name) {
@@ -129,12 +129,12 @@ function insert_object_item(code, id_name, key_text, value_text) {
             this.traverse(path);
         }
     });
-    return Recast.print(AST).code;
+    return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
 function remove_object_item(code, id_name, key) {
     // TODO throw error if missing key?
-    let AST = Recast.parse(code);
+    let AST = Recast.parse(code, RECAST_SETTINGS);
     AST = Recast.visit(AST, {
         visitVariableDeclarator: function (path) {
             if (path.node.id.name == id_name) {
@@ -158,7 +158,7 @@ function remove_object_item(code, id_name, key) {
             this.traverse(path);
         }
     });
-    return Recast.print(AST).code;
+    return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
 class AST {

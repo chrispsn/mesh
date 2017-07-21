@@ -34,7 +34,6 @@ function save_file_as(state, content) {
 // # Reducer
 
 const app = function (state = INITIAL_APP, action) {
-    console.log("Action: ", action);
 
     switch (action.type) {
 
@@ -122,12 +121,13 @@ const app = function (state = INITIAL_APP, action) {
         // NEED_TO_CALCULATE is used only by a subscriber function
         // so that it knows to kick-off calculation.
 
-        case 'PREP_FOR_EVAL': {
+        case 'UPDATE_AST': {
+            const new_AST = new CodeTransformers.AST(state.code_editor.value)
             return Object.assign({}, state, {
-                AST: new CodeTransformers.AST(state.code_editor.value),
+                AST: new_AST,
                 mode: 'CALCULATING',
                 cells: {},
-            })
+            });
         }
 
         // Note: cells object uses string IDs as cell keys,

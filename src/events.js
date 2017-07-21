@@ -8,9 +8,8 @@
 // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
 
-// TODO how to stop a given event running through lots of the events?
-// (see via a console.log)
-// probably fixed via a carefully placed event.stopPropagation();.
+// TODO how to stop a given event running through lots of the events? (see via a console.log)
+// Probably fixed via a carefully placed event.stopPropagation();.
 
 // # HELPERS
 

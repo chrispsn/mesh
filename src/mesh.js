@@ -77,7 +77,6 @@ function attach(ref_string, value, location, custom_display_func) {
         // as a switch? Would allow default case to be dummy?
         if (declaration_node) {
             const expression_type = declaration_node.init.type;
-            console.log(expression_type);
             let display_fn;
             if (Display.AST_node_to_display_fn.hasOwnProperty(expression_type)) {
                 display_fn = Display.AST_node_to_display_fn[expression_type];
@@ -114,22 +113,32 @@ let cells;
 store.subscribe( function calculate () {
     const state = store.getState();
     if (state.mode === 'NEED_TO_CALCULATE') {
-        store.dispatch({ type: 'PREP_FOR_EVAL' });
-        // TODO add error checking for calc
-        // - at AST stage?
-        // - at eval stage?
-        // - both?
-        // The cells array is emptied but will fill via the eval below
-        cells = [];
-        eval(state.code_editor.value);
-        store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
-        store.dispatch({ type: 'RETURN_TO_READY' });
+        // TODO right now this dumps the user back to the code editing pane,
+        // but it should depend on where the commit came from (code pane or formula bar)
+        try {
+            store.dispatch({ type: 'UPDATE_AST' });
+            try {
+                // The cells array is emptied but will fill via the eval below
+                cells = [];
+                eval(state.code_editor.value);
+                store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
+                store.dispatch({ type: 'RETURN_TO_READY' });
+            } catch (e) {
+                alert(e);
+                store.dispatch({ type: 'SELECT_CODE' })
+            }
+        } catch (e) {  
+            alert(e);
+            store.dispatch({ type: 'SELECT_CODE' })
+        }
     }
 });
 
+/*
 store.subscribe( function log_state () {
     console.log("State: ", store.getState());
 });
+*/
 
 store.subscribe( function run_side_effects () {
     const state = store.getState();
@@ -196,5 +205,5 @@ module.exports = Mesh = {
 // Showtime
 
 // TODO should not be able to write over the blank file
-// store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
-store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });
+store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
+// store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });

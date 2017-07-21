@@ -42,8 +42,7 @@ const default_cell_props = {
         // TODO Check that the commit is valid first?
         // Merge with select code somehow? (Feels like select should just be a 'refresh ready')
         const old_code = state.code_editor.value;
-        const new_code = CM.replace_text(old_code, this.code_location, action.commit_value)
-            console.log(new_code);
+        const new_code = CM.replace_text(old_code, this.code_location, action.commit_value);
 
         const [old_row, old_col] = state.selected_cell_loc;
 
@@ -220,7 +219,6 @@ const display_fns = {
                 delete_container: function (state) {
                     const old_code = state.code_editor.value;
                     const new_code = CM.replace_text(old_code, declaration_AST_node.init.loc, 'null');
-                    console.log(new_code);
 
                     return Object.assign({}, state, {
                         code_editor: Object.assign({}, state.code_editor, {value: new_code}),
@@ -269,7 +267,6 @@ const display_fns = {
             delete_container: function (state) {
                 const old_code = state.code_editor.value;
                 const new_code = CM.replace_text(old_code, declaration_AST_node.init.loc, 'null');
-                console.log(new_code);
 
                 return Object.assign({}, state, {
                     code_editor: Object.assign({}, state.code_editor, {value: new_code}),
@@ -372,7 +369,6 @@ const display_fns = {
                 delete_container: function (state) {
                     const old_code = state.code_editor.value;
                     const new_code = CM.replace_text(old_code, declaration_AST_node.init.loc, 'null');
-                    console.log(new_code);
 
                     return Object.assign({}, state, {
                         code_editor: Object.assign({}, state.code_editor, {value: new_code}),
@@ -408,7 +404,6 @@ const display_fns = {
                 delete_container: function (state) {
                     const old_code = state.code_editor.value;
                     const new_code = CM.replace_text(old_code, declaration_AST_node.init.loc, 'null');
-                    console.log(new_code);
 
                     return Object.assign({}, state, {
                         code_editor: Object.assign({}, state.code_editor, {value: new_code}),
@@ -435,7 +430,7 @@ const display_fns = {
             location: [row_index, col_index],
             repr: '',
             ref_string: ref_string,
-            classes: 'append',
+            classes: 'append_key',
             formula_bar_value: '',
             code_location: append_location,
             commit_edit: (state, action) => {
@@ -461,7 +456,6 @@ const display_fns = {
             delete_container: function (state) {
                 const old_code = state.code_editor.value;
                 const new_code = CM.replace_text(old_code, declaration_AST_node.init.loc, 'null');
-                console.log(new_code);
 
                 return Object.assign({}, state, {
                     code_editor: Object.assign({}, state.code_editor, {value: new_code}),
