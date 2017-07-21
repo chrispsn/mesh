@@ -61,7 +61,7 @@ You can give a custom display function to `Mesh.attach`. This is how we show rec
 
 ### Functions and other edits
 
-You can also edit the code directly by clicking and typing into the code pane. This is useful for editing code that makes less sense to interact with via a grid or formula bar, such as large functions.
+You can also edit the code directly by clicking and typing into the code pane. Commit the change by clicking back onto the grid. This is useful for editing code that makes less sense to interact with via a grid or formula bar, such as large functions.
 
 ### Meta
 
