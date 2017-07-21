@@ -57,7 +57,7 @@ Delete the array or object entirely with `Ctrl _` (ie `Ctrl Shift -`).
 
 Mesh has built-in support for displaying JavaScript primitives, arrays and objects, but sometimes you'll want to customise how the code and its calculation results map to the grid, including the actions that occur when you select a cell or commit a change.
 
-You can give a custom display function as an argument to `Mesh.attach`. This is how we show records (arrays of objects) as a table.
+You can give a custom display function to `Mesh.attach`. This is how we show records (arrays of objects) as a table.
 
 ### Functions and other edits
 
