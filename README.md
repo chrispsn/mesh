@@ -86,7 +86,7 @@ For writing programs, Mesh has advantages over a 'traditional' spreadsheet:
 - Mesh is designed to process, and generate, data of arbitary length
 - the absence of location-based referencing eliminates a class of errors that normally require humans to identify and fix
 - the Mesh file format is just JavaScript code in a text file, so:
-  - `diff`ing is easy (function is built into Windows: `FC` in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
+  - `diff`ing is easy (function is built into Windows: [`FC`](https://ss64.com/nt/fc.html) in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
   - it integrates with standard version control systems like Git
   - you don't need Mesh to run a Mesh file, so you can integrate Mesh files into other systems.
 
@@ -100,11 +100,10 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 
 ## Known issues
 
-- Lots of syntax not supported (eg spreads (`[...elements, "extra"]`); some functions)
+- Incomplete syntax support (eg spreads (`[...elements, "extra"]`); Maps and Sets; some functions)
 - Can't rename a name without it breaking other references in the file (Excel beats this hands down)
 - When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and let you click on a cell to insert a reference
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
-- Incomplete coverage of built-in data structures, such as Maps or Sets
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
 - Poor user experience with `Mesh.attach` (function signature requires you to repeat the name).
 
@@ -121,4 +120,4 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 
 Please file any bugs, issues or enhancements via GitHub.
 
-Contact me at Twitter: @mesh_ide.
+Contact me at Twitter: [@mesh_ide](https://twitter.com/mesh_ide).
