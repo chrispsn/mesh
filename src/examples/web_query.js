@@ -22,7 +22,7 @@ const filtered_posts = posts.filter(filter_fn);
 const display_fns = require('./display.js').display_fns;
 
 if (require.main === module && typeof Mesh !== 'undefined') {
-    Mesh.attach("posts", filtered_posts, [4, 0], display_fns.records);
+    Mesh.attach("posts", filtered_posts, [4, 0], display_fns.records_ro);
   	Mesh.attach("post_ID", post_ID, [0, 0]);
     Mesh.attach("filter_on", filter_on, [1, 0]);
     Mesh.attach("filter_fn", filter_fn, [2, 0]);

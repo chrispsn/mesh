@@ -195,8 +195,6 @@ module.exports = Mesh = {
 
 // Showtime
 
-store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
-// store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });
 // TODO should not be able to write over the blank file
-const WELCOME_MESSAGE = require('./settings').WELCOME_MESSAGE;
-code_editor.setValue(WELCOME_MESSAGE);
+// store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
+store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });

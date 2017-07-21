@@ -45,9 +45,15 @@ const default_cell_props = {
         const new_code = CM.replace_text(old_code, this.code_location, action.commit_value)
             console.log(new_code);
 
+        const [old_row, old_col] = state.selected_cell_loc;
+
         return Object.assign({}, state, {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE',
+            selected_cell_loc: [
+                old_row + action.offset[0], 
+                old_col + action.offset[1]
+            ],
         });
     },
 
@@ -93,18 +99,12 @@ const EMPTY_CELL = Object.assign(create_cell({
                         .add_attachment(variable_name, state.selected_cell_loc)
         const new_code = new_AST.to_string;
 
-        const new_selection_offset = [0, 0];
-        switch (action.direction) {
-            case 'RIGHT': new_selection_offset[1] = 1; break;
-            case 'DOWN': new_selection_offset[0] = 1; break;
-        }
-
         return Object.assign({}, state, {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE',
             selected_cell_loc: [
-                state.selected_cell_loc[0] + new_selection_offset[0],
-                state.selected_cell_loc[1] + new_selection_offset[1]
+                state.selected_cell_loc[0] + action.offset[0],
+                state.selected_cell_loc[1] + action.offset[1],
             ]
         });
     }
@@ -251,7 +251,11 @@ const display_fns = {
                 const new_code = CM.insert_array_element(old_code, ref_string, array.length, action.commit_value);
                 return Object.assign({}, state, {
                     code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE'
+                    mode: 'NEED_TO_CALCULATE',
+                    selected_cell_loc: [
+                        state.selected_cell_loc[0] + action.offset[0], 
+                        state.selected_cell_loc[1] + action.offset[1],
+                    ],
                 });
             },
             insert_element: (state, action) => {
@@ -415,17 +419,64 @@ const display_fns = {
 
             row_index++;
 
-            // TODO Add append cells
             cells.push(key_cell, value_cell);
         };
 
-        return [ref_string_cell, ...cells];
+        // Append cell
+        const append_location = {
+            start: {
+                line: declaration_AST_node.init.loc.end.line,
+                column: declaration_AST_node.init.loc.end.column - 1
+            }
+        };
+        append_location.end = append_location.start;
+
+        const append_cell = create_cell({
+            location: [row_index, col_index],
+            repr: '',
+            ref_string: ref_string,
+            classes: 'append',
+            formula_bar_value: '',
+            code_location: append_location,
+            commit_edit: (state, action) => {
+                const old_code = state.code_editor.value;
+                const new_code = CM.insert_object_item(old_code, ref_string, action.commit_value, "null");
+                return Object.assign({}, state, {
+                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+                    mode: 'NEED_TO_CALCULATE',
+                    selected_cell_loc: [
+                        state.selected_cell_loc[0] + action.offset[0], 
+                        state.selected_cell_loc[1] + action.offset[1]
+                    ]
+                });
+            },
+            insert_element: (state, action) => {
+                const old_code = state.code_editor.value;
+                const new_code = CM.insert_object_item(old_code, ref_string, "new_key", "null");
+                return Object.assign({}, state, {
+                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+                    mode: 'NEED_TO_CALCULATE'
+                });
+            },
+            delete_container: function (state) {
+                const old_code = state.code_editor.value;
+                const new_code = CM.replace_text(old_code, declaration_AST_node.init.loc, 'null');
+                console.log(new_code);
+
+                return Object.assign({}, state, {
+                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+                    mode: 'NEED_TO_CALCULATE'
+                });
+            },
+        })
+
+        return [ref_string_cell, ...cells, append_cell];
 
     },
 
 /* OTHER TYPES */
 
-    records: (records, ref_string, location, declaration_AST_node) => {
+    records_ro: (records, ref_string, location, declaration_AST_node) => {
         // Array (TODO change to a map?) of objects.
         // TODO allow user to specify headers, and therefore also order
 

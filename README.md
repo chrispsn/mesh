@@ -2,7 +2,9 @@
 
 Mesh is a JavaScript IDE that feels like a spreadsheet.
 
-Consider Mesh if you:
+Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Actions on the spreadsheet are automatically translated to changes in the JavaScript code.
+
+Mesh's aim is to improve the user experience of 'regular' programming languages. Consider Mesh if you:
 
 - use traditional programming languages, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
@@ -30,6 +32,10 @@ Then to launch, again in the `src` directory, type `yarn start` or `npm start` (
 Mesh is a JavaScript code editor. Your actions in the 2D grid on the left change the code text on the right. The code on the right is run (`eval`ed) every time it changes.
 
 When you select a cell, the corresponding code will be selected in the right-hand pane.
+
+### Name-based referencing
+
+Compared to existing spreadshet programs, Mesh does not have location-based referencing, so everything is a named range or formula.
 
 Create a name by typing a name into a cell. You'll see this inserts some `Mesh.attach` code in the right-hand pane.
 
@@ -65,32 +71,28 @@ Open a file with `Ctrl o`, save with `Ctrl s`, save as with `Ctrl S` (ie `Ctrl S
 
 Show and hide the code pane with `Ctrl U` (ie `Ctrl Shift u`).
 
-## Benefits of Mesh
+If Mesh breaks, reload with `F5`.
 
-Excel's automatic calculations and location-based referencing model provide fast feedback and a low learning curve.
+## Benefits of Mesh (or "LOL you will never beat Microsoft Excel")
 
-However, if you want to work with data of arbitrary size within an Excel spreadsheet, you need to go outside 'automatic' calculations (eg VBA, Pivot Table refreshing, etc). At best, this breaks the user's workflow; at worst, this is an avoidable source of human error.
+Mesh is *not* intended to replace existing spreadsheet programs in all domains.
 
-In Mesh, everything is a named range or formula. In fact, Mesh is just a spreadsheet UI wrapper around a text file editor; actions on the spreadsheet are automatically translated to changes in the JavaScript code.
+Existing spreadsheet programs offer flexible, location-based referencing and formatting. This makes them perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
 
-[More discussion here](http://chrispsn.com/mesh-preview.html).
+However, spreadsheets are often used in domains where a 'traditional' programming languages would be a better tool, such as repeated processes with minimal human intervention. In particular, spreadsheets are poor at processing and generating data of arbitrary length ([more discussion here](http://chrispsn.com/mesh-preview.html)).
 
-### "LOL you will never beat Microsoft Excel at its own game"
+In these cases, a spreadsheet is often used because of the user's familiarity or preference for a spreadsheet environment, or because a spreadsheet is the only tool available in the user's position (it's pre-installed or the user does not have permission to install new programs).
 
-Excel's location-based referencing model and formatting make it perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
+Mesh has advantages over a 'traditional' spreadsheet for this kind of problem:
 
-Also, Google Sheets solves some of Excel's problems; for example, it can display data of arbitrary length, with some caveats.
-
-I think Mesh has some advantages over both Excel and Google Sheets as a tool for developing applications, or infrastructure, or repeated processes. Aside from the 'data of arbitary length' point above:
-
-- the file format is just JavaScript code in a text file, so:
+- Mesh is designed to process, and generate, data of arbitary length
+- the Mesh file format is just JavaScript code in a text file, so:
   - `diff`ing is easy (function is built into Windows: `FC` in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
   - it integrates with standard version control systems like Git
   - you don't need Mesh to run a Mesh file
-- JavaScript is under active development and the community is huge
-- Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This gives it a good shot of minimising the frictions associated with getting new software.
+- Mesh files are just JavaScript programs, so you can run them as part of a larger system without knowing that Mesh was used to create them.
 
-[More discussion, with examples](http://chrispsn.com/mesh-preview.html).
+Also, Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This and its familiar interface give it a better shot of beating 'spreadsheet inertia', particularly if we can get it running on Windows without installation being required (via JScript).
 
 ## Caveats with this approach
 
@@ -102,10 +104,10 @@ I think Mesh has some advantages over both Excel and Google Sheets as a tool for
 
 - Can't rename a name without it breaking other references in the file (Excel beats this hands down)
 - Grid experience could be better; eg when in EDIT mode, highlighting inputs in the grid or clicking on the sheet to insert a reference
-- Poor compatibility with standard data formats like CSV (I am not sure how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
+- Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Incomplete coverage of built-in data structures, such as Maps or Sets
 - Poor integration with Electron (eg menu items)
-- Poor user experience with `Mesh.attach` (function signature and code insertion).
+- Poor user experience with `Mesh.attach` (function signature; code is just appended to the bottom of the file).
 
 ## Possible enhancements
 
@@ -119,4 +121,4 @@ I think Mesh has some advantages over both Excel and Google Sheets as a tool for
 
 Please file any bugs, issues or enhancements via GitHub.
 
-To contact me: chrispsn+mesh AT gmail.
+Contact me at Twitter: @mesh_ide.
