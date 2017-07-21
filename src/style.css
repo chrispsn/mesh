@@ -112,7 +112,7 @@ body {
     font-size: 11px;
 }
 
-#grid td.append_key {
+#grid td.add_key {
     /* idea: stronger, but dashed, border? */
     background-color: rgb(255, 235, 204);
     /* background-color: rgb(255, 204, 153); */
@@ -127,8 +127,8 @@ body {
     content: "Append"
 }
 
-#grid td.append_key:before {
-    content: "Append key"
+#grid td.add_key:before {
+    content: "Add key"
 }
 
 #grid td.string {

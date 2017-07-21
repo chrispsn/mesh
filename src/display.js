@@ -131,6 +131,18 @@ function create_ref_string_cell(ref_string, location, declaration_AST_node) {
 }
 
 const display_fns = {
+    
+    dummy: (value, ref_string, location, declaration_AST_node) => {
+        // For use where you don't know what to use for the formula bar value
+        // and code location values yet.
+        return [create_cell({
+            location: [location[0], location[1] + 1],
+            repr: 'TODO',
+            ref_string: ref_string,
+            formula_bar_value: "TODO",
+            code_location: undefined,
+        })];
+    },
 
     value: (value, ref_string, location, declaration_AST_node) => {
         const code_text = Mesh.store.getState().code_editor.value;
@@ -146,16 +158,18 @@ const display_fns = {
         return [ref_string_cell, value_cell];
     },
 
-    dummy: (value, ref_string, location, declaration_AST_node) => {
-        // For use where you don't know what to use for the formula bar value
-        // and code location values yet.
-        return [create_cell({
-            location: [location[0], location[1] + 1],
-            repr: 'TODO',
+    value_ro: (value, ref_string, location, declaration_AST_node) => {
+        const code_text = Mesh.store.getState().code_editor.value;
+        const ref_string_cell = create_ref_string_cell(ref_string, location, declaration_AST_node);
+        const value_cell = create_cell({
+            location: [location[0], location[1] + 1], 
+            repr: String(value),
             ref_string: ref_string,
-            formula_bar_value: "TODO",
-            code_location: undefined,
-        })];
+            formula_bar_value: CM.get_text(code_text, declaration_AST_node.init.loc),
+            code_location: declaration_AST_node.init.loc,
+            classes: 'occupied read-only ' + typeof value + (typeof value === 'boolean' ? ' ' + String(value) : ''),
+        });
+        return [ref_string_cell, value_cell];
     },
 
 /* ARRAY */
@@ -430,7 +444,7 @@ const display_fns = {
             location: [row_index, col_index],
             repr: '',
             ref_string: ref_string,
-            classes: 'append_key',
+            classes: 'add_key',
             formula_bar_value: '',
             code_location: append_location,
             commit_edit: (state, action) => {
@@ -517,10 +531,10 @@ const display_fns = {
     },
 }
 
-// List of possible types: https://github.com/benjamn/ast-types/blob/master/def/core.js 
+// Lists of possible types:
+// https://github.com/benjamn/ast-types/blob/master/def/core.js
+// https://github.com/benjamn/ast-types/blob/master/def/es6.js
 const AST_node_to_display_fn = {
-
-    // # These ones are simple.
 
     // 'Hello world'
     'Literal': display_fns.value,
@@ -530,6 +544,9 @@ const AST_node_to_display_fn = {
 
     // 1 + 2
     'BinaryExpression': display_fns.value,
+
+    // `Hello ${name}`
+    'TemplateLiteral': display_fns.value_ro,
 
     // (x) => x + 2
     'ArrowFunctionExpression': display_fns.value,

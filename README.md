@@ -6,7 +6,7 @@ Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Action
 
 Mesh's aim is to improve the user experience of 'regular' programming languages. Consider Mesh if you:
 
-- use traditional programming languages, but want rapid visual feedback and a convenient grid UI
+- use JavaScript, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
 
 **WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are bugs.
@@ -15,11 +15,7 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 ## How to get Mesh
 
-### Default
-
-TODO
-
-### From source
+For now, install from source:
 
 1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/)
 2. [Download the Mesh source](https://github.com/chrispsn/mesh/archive/master.zip)
@@ -35,11 +31,13 @@ When you select a cell, the corresponding code will be selected in the right-han
 
 ### Name-based referencing
 
+![Animated GIF of simple value edits](docs/demo_values.gif)
+
 Compared to existing spreadsheet programs, Mesh does not have location-based referencing - every value has a name.
 
 Create a name by typing a name into a cell. You'll see this inserts some `Mesh.attach` code in the right-hand pane.
 
-Assign a value to a name by typing into the cell to the right of a name (for example `123` or `"Hello world!"` or `true`). Note strings need to be in single or double quotes, or backticks.
+Assign a value to a name by typing into the cell to the right of a name (for example `123` or `"Hello world!"` or `true`). Note strings need to be in single or double quotes, or backticks for template literals.
 
 Replace the contents of a cell by selecting it and writing over it. Edit a cell's contents by pressing `F2`. Commit the edit by pressing `Enter`. Note that if the cell is the result of a calculation (such as a processed array), you'll edit the formula that produced the cell, not the calculated value in the cell.
 
@@ -102,8 +100,9 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 
 ## Known issues
 
+- Lots of syntax not supported (eg spreads (`[...elements, "extra"]`); some functions)
 - Can't rename a name without it breaking other references in the file (Excel beats this hands down)
-- When editing in the formula bar, it should highlight input cells in the grid, and let you click on a cell to insert a reference
+- When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and let you click on a cell to insert a reference
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Incomplete coverage of built-in data structures, such as Maps or Sets
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
@@ -112,6 +111,7 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 ## Possible enhancements
 
 - Allow the user to add buttons so they can run functions in the file outside the 'automatic' calculation loop (such as exporting the result of a calculation)
+- Currently we don't distinguish between 'value' and 'formula' cells (that is, prepended wth a `=`). This makes entering strings harder and is less familiar to existing spreadsheet users. Maybe reintroduce? 
 - Windows-native JScript version (so if people can get the JS files onto their machine, they can run Mesh locally)
 - Cloud version
 - Custom themes
