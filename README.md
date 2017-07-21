@@ -71,7 +71,7 @@ Show and hide the code pane with `Ctrl U` (ie `Ctrl Shift u`).
 
 If Mesh breaks, reload with `F5`.
 
-## Benefits of Mesh (or "LOL, you will never beat Microsoft Excel")
+## Benefits of Mesh (or "LOL, you will never beat Excel")
 
 Mesh is *not* intended to replace existing spreadsheet programs in all domains.
 
