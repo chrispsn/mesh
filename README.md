@@ -83,7 +83,7 @@ In these cases, a spreadsheet is often used because of the user's familiarity or
 
 For writing programs, Mesh has advantages over a 'traditional' spreadsheet:
 
-- Mesh is designed to process, and generate, data of arbitary length
+- Mesh is designed to process, and generate, data of arbitrary length
 - the absence of location-based referencing eliminates a class of errors that normally require humans to identify and fix
 - the Mesh file format is just JavaScript code in a text file, so:
   - `diff`ing is easy (function is built into Windows: [`FC`](https://ss64.com/nt/fc.html) in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
