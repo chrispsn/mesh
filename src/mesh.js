@@ -163,18 +163,14 @@ store.subscribe( function run_side_effects () {
     }
 
     // Code editor
-    // TODO move this fn somewhere?
-    function ASTmod_loc_to_codemirror_loc (ASTmod_loc) {
-        const {line, column} = ASTmod_loc;
-        return {line: line - 1, ch: column};
-    };
-
+    // TODO setting this every time is probably slow - consider React-ising
     code_editor.setValue(state.code_editor.value);
     const selection = state.code_editor.selection;
     if (selection) {
+        const {start, end} = selection;
         code_editor.setSelection(
-            ASTmod_loc_to_codemirror_loc(selection.start),
-            ASTmod_loc_to_codemirror_loc(selection.end)
+            {line: start.line - 1, ch: start.column},
+            {line: end.line - 1, ch: end.column},
         );
     }
     if (state.code_editor.show) {
@@ -184,7 +180,6 @@ store.subscribe( function run_side_effects () {
     }
 });
 
-
 // Exports
 module.exports = Mesh = {
     store,
@@ -193,7 +188,6 @@ module.exports = Mesh = {
 }
 
 // Showtime
-
 // TODO should not be able to write over the blank file
 // store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
 store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });
