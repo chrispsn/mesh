@@ -19,14 +19,11 @@ const filter_on = true;
 const filter_fn = (p) => !filter_on || p.id === post_ID;
 const filtered_posts = posts.filter(filter_fn);
 
-const {display_fns} = require('./display.js');
+const display_fns = require('./display.js').display_fns;
 
 if (require.main === module && typeof Mesh !== 'undefined') {
-  const MESH_ATTACHMENTS = [
-    {id: "posts", value: filtered_posts, loc: [4, 0], display_fn: display_fns.records_ro},
-    {id: "post_ID", value: post_ID, loc: [0, 0]},
-    {id: "filter_on", value: filter_on, loc: [1, 0]},
-    {id: "filter_fn", value: filter_fn, loc: [2, 0]},
-  ];
-  Mesh.attach(MESH_ATTACHMENTS);
+    Mesh.attach("posts", filtered_posts, [4, 0], display_fns.records_ro);
+  	Mesh.attach("post_ID", post_ID, [0, 0]);
+    Mesh.attach("filter_on", filter_on, [1, 0]);
+    Mesh.attach("filter_fn", filter_fn, [2, 0]);
 }

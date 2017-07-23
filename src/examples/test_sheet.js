@@ -16,6 +16,24 @@ const regex = /beans/;
 const str_to_test = 'bean';
 const regex_result = regex.test(str_to_test);
 
+const single_values = [
+    ["name", name],
+    ["template_lit", template_lit],
+    ["number", number],
+    ["boolean_true", boolean_true],
+    ["boolean_false", boolean_false],
+    ["object_string", object_string],
+    ["object_number", object_number],
+    ["object_boolean", object_boolean],
+    ["result", result],
+    ["empty_null", empty_null],
+    ["empty_undefined", empty_undefined],
+  	["regex", regex],
+  	["str_to_test", str_to_test],
+  	["regex_result", regex_result],
+]
+Mesh.bulk_attach(single_values, [0, 0]);
+
 /* ARRAYS */
 
 const arr = [
@@ -29,6 +47,9 @@ const arr = [
   undefined,
 ];
 const new_arr = arr.map(x => typeof x);
+
+Mesh.attach("arr", arr, [0, 3]);
+Mesh.attach("new_arr", new_arr, [0, 4]);
 
 /* OBJECTS */
 
@@ -44,45 +65,10 @@ const new_obj = (() => {
   };
   return output;
 })();
+Mesh.attach("obj", obj, [0, 6]);
+Mesh.attach("new_obj", new_obj, [3 + Object.keys(obj).length, 6]);
 
 /* FUNCTIONS */
 
 const arrow_fn = () => "cool beans";
-
-/* MESH-SPECIFIC CODE */
-
-// Put your Mesh.attach code in these brackets
-// if you need it to run without Mesh
-if (require.main === module && typeof Mesh !== 'undefined') {
-
-    const next_row = (function () {
-        let row_count = 0;
-        return () => [row_count++, 0];
-    })();
-
-    const MESH_ATTACHMENTS = [
-        {id: "name", value: name, loc: next_row()},
-        {id: "template_lit", value: template_lit, loc: next_row()},
-        {id: "number", value: number, loc: next_row()},
-        {id: "boolean_true", value: boolean_true, loc: next_row()},
-        {id: "boolean_false", value: boolean_false, loc: next_row()},
-        {id: "object_string", value: object_string, loc: next_row()},
-        {id: "object_number", value: object_number, loc: next_row()},
-        {id: "object_boolean", value: object_boolean, loc: next_row()},
-        {id: "result", value: result, loc: next_row()},
-        {id: "empty_null", value: empty_null, loc: next_row()},
-        {id: "empty_undefined", value: empty_undefined, loc: next_row()},
-        {id: "regex", value: regex, loc: next_row()},
-        {id: "str_to_test", value: str_to_test, loc: next_row()},
-        {id: "regex_result", value: regex_result, loc: next_row()},
-
-        {id: "arr", value: arr, loc: [0, 3]},
-        {id: "new_arr", value: new_arr, loc: [0, 4]},
-
-        {id: "obj", value: obj, loc: [0, 6]},
-        {id: "new_obj", value: new_obj, loc: [3 + Object.keys(obj).length, 6]},
-        {id: "arrow_fn", value: arrow_fn, loc: [0, 9]},
-    ];
-    Mesh.attach(MESH_ATTACHMENTS);
-
-}
+Mesh.attach("arrow_fn", arrow_fn, [0, 9]);
