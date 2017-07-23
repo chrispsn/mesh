@@ -11,6 +11,8 @@
 // TODO how to stop a given event running through lots of the events? (see via a console.log)
 // Probably fixed via a carefully placed event.stopPropagation();.
 
+'use strict';
+
 // # HELPERS
 
 function process_keydown_event (store, bindings, event) {

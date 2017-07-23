@@ -1,3 +1,5 @@
+'use strict';
+
 const Recast = require('recast');
 
 const CM = require('../code_transformers');
