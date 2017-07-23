@@ -1,3 +1,5 @@
+'use strict';
+
 const {EMPTY_CELL} = require('./display');
 
 function get_cell(cells, cell_location) {
