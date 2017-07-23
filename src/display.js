@@ -2,6 +2,8 @@
 // TODO can we avoid getting the code pane contents directly from this file? (Pass it in, or something even better?)
 // TODO fix inconsistency in function arg order between Mesh.attach and these
 
+'use strict';
+
 const CM = require('./code_transformers');
 
 const default_cell_props = {
