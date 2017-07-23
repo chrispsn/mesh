@@ -81,7 +81,6 @@ if (require.main === module && typeof Mesh !== 'undefined') {
 
         {id: "obj", value: obj, loc: [0, 6]},
         {id: "new_obj", value: new_obj, loc: [3 + Object.keys(obj).length, 6]},
-        
         {id: "arrow_fn", value: arrow_fn, loc: [0, 9]},
     ];
     Mesh.attach(MESH_ATTACHMENTS);
