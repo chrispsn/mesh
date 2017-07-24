@@ -1,6 +1,6 @@
 # Mesh
 
-Mesh is a JavaScript IDE that feels like a spreadsheet.
+Mesh is a JavaScript code editor that feels like a spreadsheet.
 
 Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Actions on the grid are automatically translated to changes in the JavaScript code.
 
