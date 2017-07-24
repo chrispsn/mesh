@@ -9,7 +9,7 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 - use JavaScript, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
 
-**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are lots of missing features and bugs.
+**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are lots of missing features and bugs. Follow updates at [@mesh_ide](https://twitter.com/mesh_ide).
 
 ![Animated GIF of Mesh in action](docs/mesh_demo.gif)
 
