@@ -93,10 +93,10 @@ const EMPTY_CELL = Object.assign(create_cell({
     // TODO does it need only some of the reducers?
     commit_edit: function (state, action) {
         const variable_name = action.commit_value;
-        const new_AST = state.AST
-                        .create_const_variable(variable_name)
-                        .add_attachment(variable_name, state.selected_cell_loc)
-        const new_code = new_AST.to_string;
+        const old_code = state.code_editor.value;
+        let new_code;
+        new_code = CM.create_const_variable(old_code, variable_name);
+        new_code = CM.add_attachment(new_code, variable_name, state.selected_cell_loc);
 
         return Object.assign({}, state, {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),

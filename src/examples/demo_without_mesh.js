@@ -3,5 +3,8 @@
 const fruits = ['Apple', 'Banana', 'Pear'];
 
 if (require.main === module && typeof Mesh !== 'undefined') {
-    Mesh.attach('fruits', fruits, [0, 0]);
+    const MESH_ATTACHMENTS = [
+        {id: 'fruits', value: fruits, loc: [0, 0]},
+    ];
+    Mesh.attach(MESH_ATTACHMENTS);
 }

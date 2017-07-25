@@ -76,6 +76,24 @@ describe('replace_text', () => {
 });
 
 // DECLARATIONS
+// TODO rewrite these tests
+// TODO let's attach this to the 'delete name' code
+
+describe('create_const_variable', () => {
+    it('works when a "use strict" statement is present', () => {
+        const old_code = `
+        'use strict';
+        const MESH_ATTACHMENTS = [];
+        `
+        let new_code = CM.create_const_variable(old_code, 'new_one');
+        const expected_code = `
+        'use strict';
+        const new_one = null;
+        const MESH_ATTACHMENTS = [];
+        `
+        expect(new_code).toBe(expected_code);
+    });
+});
 
 describe('remove_declaration', () => {
     it('removes the named declaration', () => {
@@ -89,6 +107,25 @@ describe('remove_declaration', () => {
         expect(new_code).toBe(expected_code);
     })
 })
+
+// ATTACHMENTS
+
+describe('add_attachment', () => {
+    it('adds to the bottom of the MESH_ATTACHMENTS array', () => {
+        const old_code = `const MESH_ATTACHMENTS = [
+            {id: "something", value: "DUMMY", loc: "DUMMY"},
+        ];`;
+        let new_code = CM.add_attachment(old_code, "new_id", [1, 2]);
+        let expected_code = `const MESH_ATTACHMENTS = [
+            {id: "something", value: "DUMMY", loc: "DUMMY"},
+            {id: "new_id", value: new_id, loc: [1, 2]},
+        ];`;
+        const options = {tabWidth: 0};
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    });
+});
 
 // ARRAYS
 
@@ -109,6 +146,21 @@ describe('insert_array_element', () => {
         const old_code = "const arr = [];";
         const new_code = CM.insert_array_element(old_code, 'arr', 0, "1 + 2");
         const expected_code = "const arr = [1 + 2];";
+        expect(new_code).toBe(expected_code);
+    })
+});
+
+describe('append_array_element', () => {
+    it('appends an element to a non-empty array', () => {
+        const old_code = "const arr = [1, 2, 3];";
+        const new_code = CM.append_array_element(old_code, 'arr', '4');
+        const expected_code = "const arr = [1, 2, 3, 4];";
+        expect(new_code).toBe(expected_code);
+    })
+    it('appends an element to an empty array', () => {
+        const old_code = "const arr = [];";
+        const new_code = CM.append_array_element(old_code, 'arr', '\'hello!\'');
+        const expected_code = "const arr = ['hello!'];";
         expect(new_code).toBe(expected_code);
     })
 });
@@ -173,16 +225,3 @@ describe('remove_object_item', () => {
 });
 
 // TODO delete object
-
-// AST METHODS (consider refactoring eventually)
-
-describe('create_const_variable', () => {
-    it('works when a "use strict" statement is present', () => {
-        const old_code = "'use strict';" + LINE_SEPARATOR + "const DUMMY = null;"
-        const old_AST = new CM.AST(old_code);
-        const new_AST = old_AST.create_const_variable('new_one');
-        const new_code = new_AST.to_string;
-        const expected_code = new CM.AST(old_code + LINE_SEPARATOR + 'const new_one = null;').to_string;
-        expect(new_code).toBe(expected_code);
-    });
-});

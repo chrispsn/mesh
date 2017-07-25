@@ -63,6 +63,39 @@ function replace_text(body_string, loc, new_text) {
     return new_code_string;
 }
 
+function create_const_variable(code, variable_name) {
+    // TODO validate variable_name?
+    // TODO be more smart about where this is created
+
+    let new_node = Builders.variableDeclaration("const", [
+        Builders.variableDeclarator(
+            Builders.identifier(variable_name), 
+            Builders.literal(null)
+        )
+    ]);
+
+    let AST = Recast.parse(code);
+
+    const id_name = "MESH_ATTACHMENTS";
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const attachment_node = path.parent.parent.get("body", path.parent.name);
+                attachment_node.insertBefore(new_node);
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST, RECAST_SETTINGS).code;
+}
+
+function add_attachment(code, id, loc) {
+    const new_attachment = `{id: \"${id}\", value: ${id}, loc: [${loc}]},`
+    const new_code = append_array_element(code, "MESH_ATTACHMENTS", new_attachment);
+    return new_code;
+}
+
 function remove_declaration(code, id_name) {
     let AST = Recast.parse(code, RECAST_SETTINGS);
     AST = Recast.visit(AST, {
@@ -90,6 +123,23 @@ function insert_array_element(code, id_name, element_num, inserted_text) {
                 } else {
                     elements_path.insertAt(element_num, inserted_node);
                 }
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST, RECAST_SETTINGS).code;
+}
+
+function append_array_element(code, id_name, inserted_text) {
+    let AST = Recast.parse(code, RECAST_SETTINGS);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const arr_path = path.get('init');
+                const elements_path = arr_path.get('elements');
+                const inserted_node = Builders.identifier(inserted_text);
+                elements_path.push(inserted_node);
                 return false;
             }
             this.traverse(path);
@@ -178,38 +228,19 @@ class AST {
         return new AST(new_code_string);
     }
 
-    create_const_variable(variable_name) {
-        // TODO validate variable_name?
-        // TODO be more smart about where this is created
-        //      eg what if multiple things on the same const line?
-        let new_code = `const ${variable_name} = null;`
-        const old_code = this.code_string;
-        if (old_code !== '') { 
-            new_code = old_code + LINE_SEPARATOR + new_code
-        }
-        return new AST(new_code);
-    }
-
-    add_attachment(variable_name, location) {
-        // TODO be more smart about where this is created
-        const old_code = this.code_string;
-        const new_code = old_code + LINE_SEPARATOR + 
-            `Mesh.attach("${variable_name}", ${variable_name}, [${location}]);`
-        return new AST(new_code);
-    }
-
     get_first_declaration_of_name(name_string) {
-        const declaration_nodes = this.program.body.filter(
-                                    node => node.type === 'VariableDeclaration')
-        for (let node of declaration_nodes) {
-            for (let declaration of node.declarations) {
-                if (declaration.id.name === name_string) {
-                    return declaration;
+    // TODO throw error if duplicate key?
+        let node_to_return;
+        Recast.visit(this.tree, {
+            visitVariableDeclarator: function (path) {
+                if (path.node.id.name == name_string) {
+                    node_to_return = path.node;
+                    return false;
                 }
+                this.traverse(path);
             }
-        }
-
-        return null;
+        });
+        return node_to_return;
     }
     
 }
@@ -217,8 +248,11 @@ class AST {
 module.exports = {
     get_text,
     replace_text,
+    create_const_variable,
+    add_attachment,
     remove_declaration,
     insert_array_element,
+    append_array_element,
     remove_array_element,
     insert_object_item,
     remove_object_item,
