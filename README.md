@@ -17,7 +17,7 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 For now, install from source:
 
-1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the LTS version of [node.js](https://nodejs.org/en/download/)
+1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the **latest** LTS version of [node.js](https://nodejs.org/en/download/)
 2. [Download the Mesh source](https://github.com/chrispsn/mesh/archive/master.zip)
 3. In the Mesh `src` directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
 
