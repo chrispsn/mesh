@@ -121,7 +121,8 @@ function create_ref_string_cell(ref_string, location, declaration_AST_node) {
         // TODO problem with this is: need to also remove the attachment
         delete_element: (state, action) => {
             const old_code = state.code_editor.value;
-            const new_code = CM.remove_declaration(old_code, ref_string);
+            let new_code = CM.remove_declaration(old_code, ref_string);
+            new_code = CM.remove_record_given_key(new_code, "MESH_ATTACHMENTS", "id", ref_string);
             return Object.assign({}, state, {
                 code_editor: Object.assign({}, state.code_editor, {value: new_code}),
                 mode: 'NEED_TO_CALCULATE'

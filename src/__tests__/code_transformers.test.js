@@ -224,4 +224,21 @@ describe('remove_object_item', () => {
     })
 });
 
+// RECORDS
+
+describe('remove_record_given_key', () => {
+    it('deletes a record based on a specified key field and key value', () => {
+        const old_code = "const records = [{key_field: 'lol', another_field: 'huh'}];";
+        let new_code = CM.remove_record_given_key(old_code, 'records', 'key_field', 'lol');
+        const expected_code = "const records = [];";
+        expect(new_code).toBe(expected_code);
+    });
+    it('still works with string literals as keys', () => {
+        const old_code = "const records = [{'key_field': 'lol', 'another_field': 'huh'}];";
+        let new_code = CM.remove_record_given_key(old_code, 'records', 'key_field', 'lol');
+        const expected_code = "const records = [];";
+        expect(new_code).toBe(expected_code);
+    });
+});
+
 // TODO delete object

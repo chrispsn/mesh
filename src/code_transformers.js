@@ -211,6 +211,33 @@ function remove_object_item(code, id_name, key) {
     return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
+function remove_record_given_key(code, id_name, element_key_name, key) {
+    let AST = Recast.parse(code, RECAST_SETTINGS);
+    AST = Recast.visit(AST, {
+        visitVariableDeclarator: function (path) {
+            if (path.node.id.name == id_name) {
+                const arr_path = path.get('init');
+                const elements_path = arr_path.get('elements');
+                for (let [index, e] of elements_path.node.elements.entries()) {
+                    for (let prop of e.properties) {
+                        if (prop.key.type === 'Identifier') {
+                            if (prop.key.name === element_key_name && prop.value.value === key) {
+                                arr_path.get('elements', index).prune();
+                            }
+                        } else if (prop.key.type === 'Literal') {
+                            if (prop.key.value === element_key_name && prop.value.value === key) {
+                                arr_path.get('elements', index).prune();
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return Recast.print(AST, RECAST_SETTINGS).code;
+}
 class AST {
     
     constructor(code_string) {
@@ -256,5 +283,6 @@ module.exports = {
     remove_array_element,
     insert_object_item,
     remove_object_item,
+    remove_record_given_key,
     AST,
 }
