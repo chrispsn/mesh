@@ -10,7 +10,16 @@ function StatusBar (props) {
     const current_mode = React.createElement('dd', {}, props.mode);
     const separator = React.createElement('dd', {}, " | ");
     const current_file = React.createElement('dd', {}, displayed_filepath);
-    return React.createElement('dl', {}, current_mode, separator, current_file);
+    const mesh_link = React.createElement('a', {
+        href: "http://mesh-ide.com", target: '_blank',
+    }, "Mesh website");
+    return React.createElement('dl', {}, 
+        current_mode, 
+        separator, 
+        current_file,
+        separator,
+        mesh_link,
+    );
 }
 
 module.exports = StatusBar;

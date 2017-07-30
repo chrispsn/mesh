@@ -5,7 +5,8 @@
   "main": "electron_setup.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . --out=dist --asar --overwrite --all",
+    "build_web": "./node_modules/.bin/webpack --config webpack.config.browser.js",
+    "build_electron": "./node_modules/.bin/webpack --config webpack.config.electron.js",
     "test": "jest"
   },
   "files": [
@@ -13,7 +14,9 @@
     "style.css"
   ],
   "jest": {
-    "testPathIgnorePatterns": [ "node_modules/" ]
+    "testPathIgnorePatterns": [
+      "node_modules/"
+    ]
   },
   "dependencies": {
     "codemirror": "^5.0.0",
@@ -28,6 +31,7 @@
     "devtron": "^1.1.0",
     "electron": "^1.4.1",
     "electron-packager": "^8.3.0",
-    "jest": "^18.0.0"
+    "jest": "^18.0.0",
+    "webpack": "^3.4.1"
   }
 }

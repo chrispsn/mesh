@@ -197,6 +197,10 @@ body {
     text-transform: uppercase;
 }
 
+#status-bar a {
+    color: white;
+}
+
 #status-bar > dl {
   -webkit-margin-before: 0px;
   -webkit-margin-after: 0px;

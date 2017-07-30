@@ -53,7 +53,7 @@ const arrow_fn = () => "cool beans";
 
 // Put your Mesh.attach code in these brackets
 // if you need it to run without Mesh
-if (require.main === module && typeof Mesh !== 'undefined') {
+if (typeof Mesh !== 'undefined') {
 
     const next_row = (function () {
         let row_count = 0;

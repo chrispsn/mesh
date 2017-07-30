@@ -2,6 +2,8 @@ const CodeTransformers = require('./code_transformers');
 const {get_cell, get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
 
+const LocalFileIO = require('./local_file_io');
+
 const INITIAL_APP = {
     mode: 'NEED_TO_CALCULATE',
     cells: {
@@ -17,6 +19,7 @@ const INITIAL_APP = {
 // # Helper functions
 
 function save_file_as(state, content) {
+    if (!LocalFileIO.io_available) { return state ;}
     let dest_filepath = LocalFileIO.get_saveas_filepath();
     if (dest_filepath !== undefined) {
         if (dest_filepath.slice(-3) !== '.js') {
@@ -48,6 +51,7 @@ const app = function (state = INITIAL_APP, action) {
         }
 
         case 'LOAD_FILE': {
+            if (!LocalFileIO.io_available) {return state;}
             const path = action.path;
             const contents = LocalFileIO.readFileSync(path, 'utf8');
             return Object.assign({}, INITIAL_APP, {
@@ -58,6 +62,7 @@ const app = function (state = INITIAL_APP, action) {
         }
 
         case 'SAVE_FILE': {
+            if (!LocalFileIO.io_available) {return state;}
             if (state.loaded_filepath !== null) {
                 LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
                 alert(`File saved: ${state.loaded_filepath}`)
@@ -75,21 +80,25 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'SELECT_CODE': return Object.assign({}, state, {mode: 'EDITING_CODE'});
 
-        case 'UNSELECT_CODE': {
-            const new_code = code_editor.getValue();
-            const new_code_editor = Object.assign({}, state.code_editor, {value: new_code})
-            return Object.assign({}, state, {
-                code_editor: new_code_editor,
-                mode: 'NEED_TO_CALCULATE'
-            })
-        }
-
         case 'TOGGLE_CODE_PANE_SHOW': {
             return Object.assign({}, state, {
                 code_editor: Object.assign({}, state.code_editor, {show: !state.code_editor.show}),
             })
         }
         
+        case 'LOAD_CODE': {
+            return Object.assign({}, state, {
+                code_editor: Object.assign({}, state.code_editor, {value: action.code}),
+                mode: 'NEED_TO_CALCULATE',
+            })
+        }
+
+        case 'LOAD_CODE_FROM_PANE': {
+            return Object.assign({}, state, {
+                mode: 'LOAD_CODE_FROM_PANE',
+            })
+        }
+
         // ============
         //  \/ SHEET \/
         // ============
@@ -118,8 +127,11 @@ const app = function (state = INITIAL_APP, action) {
         //  \/ CALCULATION STATES \/
         // ==========================
         
-        // NEED_TO_CALCULATE is used only by a subscriber function
-        // so that it knows to kick-off calculation.
+        case 'CALCULATE': {
+            return Object.assign({}, state, {
+                mode: 'NEED_TO_CALCULATE',
+            });
+        }
 
         case 'UPDATE_AST': {
             const new_AST = new CodeTransformers.AST(state.code_editor.value)

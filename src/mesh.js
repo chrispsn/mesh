@@ -124,11 +124,9 @@ store.subscribe( function calculate () {
     }
 });
 
-/*
 store.subscribe( function log_state () {
     console.log("State: ", store.getState());
 });
-*/
 
 store.subscribe( function run_side_effects () {
     const state = store.getState();
@@ -138,7 +136,9 @@ store.subscribe( function run_side_effects () {
     ReactDOM.render(React.createElement(StatusBar, state), HTML_elements.status_bar);
 
     // Document
-    if (state.loaded_filepath) {
+    if (!LocalFileIO.io_available) { 
+        document.title = `Mesh - web version`;
+    } else if (state.loaded_filepath) {
         const filename = LocalFileIO.get_basename_from_path(state.loaded_filepath);
         document.title = `Mesh - ${filename}`;
     }
@@ -163,19 +163,23 @@ store.subscribe( function run_side_effects () {
 
     // Code editor
     // TODO setting this every time is probably slow - consider React-ising
-    code_editor.setValue(state.code_editor.value);
-    const selection = state.code_editor.selection;
-    if (selection) {
-        const {start, end} = selection;
-        code_editor.setSelection(
-            {line: start.line - 1, ch: start.column},
-            {line: end.line - 1, ch: end.column},
-        );
-    }
-    if (state.code_editor.show) {
-        HTML_elements.code_editor.style.display = 'block';
+    if (state.mode === 'LOAD_CODE_FROM_PANE') {
+        store.dispatch({ type: 'LOAD_CODE', code: code_editor.getValue() });
     } else {
-        HTML_elements.code_editor.style.display = 'none';
+        code_editor.setValue(state.code_editor.value);
+        const selection = state.code_editor.selection;
+        if (selection) {
+            const {start, end} = selection;
+            code_editor.setSelection(
+                {line: start.line - 1, ch: start.column},
+                {line: end.line - 1, ch: end.column},
+            );
+        }
+        if (state.code_editor.show) {
+            HTML_elements.code_editor.style.display = 'block';
+        } else {
+            HTML_elements.code_editor.style.display = 'none';
+        }
     }
 });
 
@@ -184,9 +188,18 @@ module.exports = Mesh = {
     store,
     attach,
     HTML_elements,
+    LocalFileIO,
 }
 
 // Showtime
-// TODO should not be able to write over the blank file
-store.dispatch({ type: 'LOAD_FILE', path: './blank_sheet.js' });
+const BLANK_FILE = `'use strict';
+
+// Put your Mesh.attach code in these brackets
+// if you need it to run without Mesh
+if (typeof Mesh !== 'undefined') {
+    const MESH_ATTACHMENTS = [
+    ];
+    Mesh.attach(MESH_ATTACHMENTS);
+}`;
+store.dispatch({ type: 'LOAD_CODE', code: BLANK_FILE });
 // store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });

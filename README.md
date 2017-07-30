@@ -15,13 +15,18 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 ## How to get Mesh
 
-For now, install from source:
+You can [try Mesh online](http://chrispsn.com/try-mesh.html). You'll get best results in a recent version of Google Chrome. Note the web demo doesn't have file reading or writing right now.
+
+To work with local files (read and write), you will need to build the source and run with Electron:
 
 1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the **latest** LTS version of [node.js](https://nodejs.org/en/download/)
 2. [Download the Mesh source](https://github.com/chrispsn/mesh/archive/master.zip)
 3. In the Mesh `src` directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
+4. In the Mesh `src` directory, at the command line, type `yarn build_electron` or `npm build_electron` (as relevant) and press Enter.
 
 Then to launch, again in the `src` directory, type `yarn start` or `npm start` (as relevant) and press Enter.
+
+Repeat step 4 for every code change.
 
 ## Quick user guide
 

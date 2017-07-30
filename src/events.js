@@ -67,7 +67,7 @@ const grid_keydown_events = [
 const grid_click_events = [
     { mode: 'READY', action: { type: 'SELECT_CELL' } },
     { mode: 'EDIT', action: { type: 'INSERT_REFERENCE_FROM_CELL' } },
-    { mode: 'EDITING_CODE', action: { type: 'UNSELECT_CODE' } },
+    { mode: 'EDITING_CODE', action: { type: 'LOAD_CODE_FROM_PANE' } },
 ];
 
 function get_clicked_cell_location (event) {

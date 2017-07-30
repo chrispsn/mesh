@@ -21,7 +21,7 @@ const filtered_posts = posts.filter(filter_fn);
 
 const display_fns = require('./display.js').display_fns;
 
-if (require.main === module && typeof Mesh !== 'undefined') {
+if (typeof Mesh !== 'undefined') {
     const MESH_ATTACHMENTS = [
         {id: 'posts', value: filtered_posts, loc: [4, 0], display_fn: display_fns.records_ro},
         {id: 'post_ID', value: post_ID, loc: [0, 0]},
