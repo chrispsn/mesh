@@ -124,33 +124,6 @@ store.subscribe( function log_state () {
     console.log("State: ", store.getState());
 });
 
-store.subscribe( function file_io () {
-    const state = store.getState();
-    // TODO I think this needs to go into a platform-specific file together with the events,
-    // together with local_file_IO and maybe local settings too...
-    // that would probably also mean we can take IO out of the reducer completely
-    if (state.mode === 'SAVE_FILE') {
-        LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
-        alert(`File saved: ${state.loaded_filepath}`)
-        store.dispatch({ type: 'RETURN_TO_READY' });
-    }
-    if (state.mode === 'SAVE_FILE_AS') {
-        let dest_filepath = LocalFileIO.get_saveas_filepath();
-        if (dest_filepath !== undefined) {
-            if (dest_filepath.slice(-3) !== '.js') {
-                dest_filepath = dest_filepath + '.js';
-            }
-            LocalFileIO.writeFile(dest_filepath, state.code_editor.value);
-            alert(`File saved: ${dest_filepath}`);
-            store.dispatch({type: 'SET_FILEPATH', filepath: dest_filepath});
-        } else {
-            alert("Filepath is undefined!");
-            store.dispatch({ type: 'RETURN_TO_READY' });
-        }
-    }
-
-});
-
 store.subscribe( function update_page () {
     const state = store.getState();
     HTML_elements.formula_bar.value = state.formula_bar_value;
@@ -212,4 +185,3 @@ if (typeof Mesh !== 'undefined') {
     Mesh.attach(MESH_ATTACHMENTS);
 }`;
 store.dispatch({ type: 'LOAD_CODE', code: BLANK_FILE });
-// store.dispatch({ type: 'LOAD_FILE', path: './examples/test_sheet.js' });

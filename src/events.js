@@ -11,6 +11,11 @@
 // TODO how to stop a given event running through lots of the events? (see via a console.log)
 // Probably fixed via a carefully placed event.stopPropagation();.
 
+// TODO I think this needs to be merged with local_file_io and maybe local settings too...
+// too many commonalities
+
+const LocalFileIO = require('./local_file_io');
+
 // # HELPERS
 
 function process_keydown_event (store, bindings, event) {
@@ -24,7 +29,7 @@ function process_keydown_event (store, bindings, event) {
             if (binding.hasOwnProperty('preventDefault') && binding.preventDefault) {
                 event.preventDefault()
             }
-            store.dispatch(binding.action());
+            store.dispatch(binding.action(state));
             return;
         }
     }
@@ -121,9 +126,33 @@ const bind_grid_events = function(store, grid_element) {
     });
 }
 
+function save_file_as(state) {
+    let dest_filepath = LocalFileIO.get_saveas_filepath();
+    if (dest_filepath !== undefined) {
+        if (dest_filepath.slice(-3) !== '.js') {
+            dest_filepath = dest_filepath + '.js';
+        }
+        LocalFileIO.writeFile(dest_filepath, state.code_editor.value);
+        alert(`File saved: ${dest_filepath}`);
+        return {type: 'SET_FILEPATH', filepath: dest_filepath};
+    } else {
+        return { type: 'RETURN_TO_READY' };
+    }
+}
+
 const window_keydown_events = [
-    {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE_AS' })},
-    {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE' })},
+    {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: (state) => {
+        return save_file_as(state);
+    }},
+    {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: (state) => {
+        if (state.loaded_filepath === null) {
+            return save_file_as(state);
+        } else {
+            LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
+            alert(`File saved: ${state.loaded_filepath}`)
+            return { type: 'RETURN_TO_READY' };
+        }
+    }},
     {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: () => {
         document.getElementById('open-file-manager').click();
     }},
@@ -186,7 +215,6 @@ const bind_formula_bar_events = function(store, formula_bar) {
 
 // # FILE LOAD API
 
-const LocalFileIO = require('./local_file_io');
 const bind_load_file_events = function(store, filepicker) {
     filepicker.addEventListener('change', (event) => {
         const file = event.target.files[0]; 
@@ -195,8 +223,8 @@ const bind_load_file_events = function(store, filepicker) {
             // TODO compress into single event?
             const contents = LocalFileIO.readFileSync(path, 'utf8');
             store.dispatch({type: 'RESET_STATE'});
-            store.dispatch({type: 'LOAD_CODE', code: contents});
             store.dispatch({type: 'SET_FILEPATH', filepath: path});
+            store.dispatch({type: 'LOAD_CODE', code: contents});
         } else {
             // TODO do we not want to just restore the filename already loaded?
             store.dispatch({type: 'RETURN_TO_READY'});

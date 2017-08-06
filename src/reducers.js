@@ -24,16 +24,8 @@ const app = function (state = INITIAL_APP, action) {
         //  \/ IO \/
         // =========
         
-        case 'SAVE_FILE_AS': return Object.assign({}, state, {mode: 'SAVE_FILE_AS'});
-        case 'SAVE_FILE': {
-            if (state.loaded_filepath === null) {
-                return Object.assign({}, state, {mode: 'SAVE_FILE_AS'});
-            } else {
-                return Object.assign({}, state, {mode: 'SAVE_FILE'});
-            }
-        }
         case 'SET_FILEPATH': {
-            return Object.assign({}, state, {mode: 'READY', loaded_filepath: action.filepath});
+            return Object.assign({}, state, {loaded_filepath: action.filepath});
         }
 
         // ================
