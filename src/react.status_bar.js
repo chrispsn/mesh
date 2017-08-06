@@ -13,12 +13,19 @@ function StatusBar (props) {
     const mesh_link = React.createElement('a', {
         href: "http://mesh-ide.com", target: '_blank',
     }, "Mesh website");
+    const twitter_link_desc = React.createElement('dd', {}, "Updates: ");
+    const twitter_link = React.createElement('a', {
+        href: "https://twitter.com/mesh_ide", target: '_blank',
+    }, "@mesh_ide");
     return React.createElement('dl', {}, 
         current_mode, 
         separator, 
         current_file,
         separator,
         mesh_link,
+        separator,
+        twitter_link_desc,
+        twitter_link,
     );
 }
 
