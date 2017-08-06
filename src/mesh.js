@@ -6,7 +6,6 @@ require('codemirror/addon/selection/active-line');
 require('codemirror/mode/javascript/javascript');
 
 const Events = require('./events');
-const LocalFileIO = require('./local_file_io');
 const Reducers = require('./reducers');
 const Display = require('./display');
 const CodeTransformers = require('./code_transformers');
