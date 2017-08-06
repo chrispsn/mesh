@@ -99,20 +99,11 @@ const app = function (state = INITIAL_APP, action) {
 
         case 'MOVE_CELL_SELECTION': {
             const [old_row_idx, old_col_idx] = state.selected_cell_loc;
-            const new_location = (function () {
-                switch(action.direction) {
-                    case 'UP':
-                        return [Math.max(old_row_idx-1, 0), old_col_idx];
-                    case 'LEFT':
-                        return [old_row_idx, Math.max(old_col_idx-1, 0)];
-                    case 'DOWN':
-                        return [old_row_idx+1, old_col_idx];
-                    case 'RIGHT':
-                        return [old_row_idx, old_col_idx+1];
-                    default:
-                        // TODO raise error
-                }
-            })();
+            const [offset_r, offset_c] = action.offset;
+            const new_location = [
+                Math.max(0, old_row_idx + offset_r),
+                Math.max(0, old_col_idx + offset_c),
+            ];
 
             const new_selected_cell = get_cell(state.cells, new_location);
             return new_selected_cell.select(state, 

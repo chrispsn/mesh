@@ -44,20 +44,16 @@ const grid_keydown_events = [
 
     {mode: 'READY', keypattern: /^F2$/, action: () => ({ type: 'EDIT_CELL' })},
 
-    {mode: 'READY', keypattern: /^ArrowLeft$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' })},
-    {mode: 'READY', keypattern: /^j$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' })},
-    {mode: 'READY', keypattern: /^h$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' })},
-    {mode: 'READY', keypattern: /^k$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'UP' })},
-    {mode: 'READY', keypattern: /^l$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' })},
-    {mode: 'READY', keypattern: /^ArrowUp$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'UP' })},
-    {mode: 'READY', keypattern: /^ArrowDown$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' })},
-    {mode: 'READY', keypattern: /^ArrowRight$/, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' })},
+    {mode: 'READY', keypattern: /^ArrowLeft$/, action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [0, -1] })},
+    {mode: 'READY', keypattern: /^ArrowUp$/, action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [-1, 0] })},
+    {mode: 'READY', keypattern: /^ArrowDown$/, action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [1, 0] })},
+    {mode: 'READY', keypattern: /^ArrowRight$/, action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [0, 1] })},
 
-    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'RIGHT' })},
-    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'LEFT' })},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [0, 1] })},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [0, -1] })},
 
-    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'DOWN' })},
-    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', direction: 'UP' })},
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [1, 0] })},
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [-1, 0] })},
     
     // TODO If on the name: delete the declaration entirely
     {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'DELETE_VALUE' })},
@@ -168,7 +164,6 @@ const window_keydown_events = [
 
 // TODO move these to window KB events
 // Catch window closes
-
 
 const bind_window_events = function(store, window) {
     window.addEventListener('keydown', (event) => {
