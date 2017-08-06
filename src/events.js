@@ -101,6 +101,18 @@ const bind_grid_events = function(store, grid_element) {
         }
     });
 
+    grid_element.addEventListener('dblclick', (event) => {
+        const clicked_location = get_clicked_cell_location(event);
+        if (clicked_location === null) { return }
+
+        const state = store.getState();
+        if (state.mode === 'READY') {
+            const action = Object.assign({}, {type: 'EDIT_CELL', location: clicked_location});
+            store.dispatch(action);
+            return;
+        }
+    });
+
     grid_element.addEventListener('keydown', (event) => {
         process_keydown_event(store, grid_keydown_events, event);
     });
