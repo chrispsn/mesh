@@ -66,7 +66,10 @@ const grid_keydown_events = [
 
 const grid_click_events = [
     { mode: 'READY', action: { type: 'SELECT_CELL' } },
-    { mode: 'EDIT', action: { type: 'INSERT_REFERENCE_FROM_CELL' } },
+    // TODO would be nice to make this a generic 'LOAD_CODE'
+    // and just load with an argument of the code text in the store
+    // Problem is you actually want the text in the *code editor object*, not the state,
+    // because the state hasn't been updated yet.
     { mode: 'EDITING_CODE', action: { type: 'LOAD_CODE_FROM_PANE' } },
 ];
 
@@ -121,7 +124,9 @@ const bind_grid_events = function(store, grid_element) {
 const window_keydown_events = [
     {mode: 'READY', keypattern: /^S$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE_AS' })},
     {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SAVE_FILE' })},
-    {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'SPAWN_LOAD_DIALOG' })},
+    {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: () => {
+        document.getElementById('open-file-manager').click();
+    }},
     {mode: 'ALL', keypattern: /^U/, modifiers: (e) => (e.ctrlKey && e.shiftKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
 
     // Prevent certain Electron defaults
@@ -181,15 +186,20 @@ const bind_formula_bar_events = function(store, formula_bar) {
 
 // # FILE LOAD API
 
+const LocalFileIO = require('./local_file_io');
 const bind_load_file_events = function(store, filepicker) {
     filepicker.addEventListener('change', (event) => {
         const file = event.target.files[0]; 
         if (file && file.path) {
             const path = file.path;
             // TODO compress into single event?
-            // Reset state isn't working properly anyway given prev sheet cells stil appear
+            const contents = LocalFileIO.readFileSync(path, 'utf8');
             store.dispatch({type: 'RESET_STATE'});
-            store.dispatch({type: 'LOAD_FILE', path: path});
+            store.dispatch({type: 'LOAD_CODE', code: contents});
+            store.dispatch({type: 'SET_FILEPATH', filepath: path});
+        } else {
+            // TODO do we not want to just restore the filename already loaded?
+            store.dispatch({type: 'RETURN_TO_READY'});
         }
     });
 }

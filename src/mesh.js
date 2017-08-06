@@ -9,6 +9,7 @@ const Events = require('./events');
 const LocalFileIO = require('./local_file_io');
 const Reducers = require('./reducers');
 const Display = require('./display');
+const CodeTransformers = require('./code_transformers');
 const Settings = require('./settings');
 
 // Redux setup
@@ -62,7 +63,8 @@ Events.bind_load_file_events(store, HTML_elements.filepicker);
 function attach(attachments) {
     // Display functions return arrays of cells.
     // We collect the cells from multiple `attach` calls and send them as one batch for rendering.
-    const current_AST = store.getState().AST;
+    const state = store.getState();
+    const current_AST = new CodeTransformers.AST(state.code_editor.value)
     let new_cells;
     for (let attach_info of attachments) {
         const {id, value, loc} = attach_info;
@@ -71,9 +73,7 @@ function attach(attachments) {
 
         if (display_fn) {
             new_cells = display_fn(value, id, loc, declaration_node);
-        }
-
-        else {
+        } else {
             // TODO should we go back to having this (or at least the syntax display stuff)
             // as a switch? Would allow default case to be dummy?
             if (declaration_node) {
@@ -103,22 +103,18 @@ let cells;
 store.subscribe( function calculate () {
     const state = store.getState();
     if (state.mode === 'NEED_TO_CALCULATE') {
+        console.log("Calculating...");
         // TODO right now this dumps the user back to the code editing pane,
         // but it should depend on where the commit came from (code pane or formula bar)
         try {
-            store.dispatch({ type: 'UPDATE_AST' });
-            try {
-                // The cells array is emptied but will fill via the eval below
-                cells = [];
-                eval(state.code_editor.value);
-                store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
-                store.dispatch({ type: 'RETURN_TO_READY' });
-            } catch (e) {
-                alert(e);
-                store.dispatch({ type: 'SELECT_CODE' })
-            }
-        } catch (e) {  
+            // The cells array is emptied but will fill via the eval below
+            cells = [];
+            eval(state.code_editor.value);
+            store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
+            store.dispatch({ type: 'RETURN_TO_READY' });
+        } catch (e) {
             alert(e);
+            console.error(e);
             store.dispatch({ type: 'SELECT_CODE' })
         }
     }
@@ -128,25 +124,39 @@ store.subscribe( function log_state () {
     console.log("State: ", store.getState());
 });
 
-store.subscribe( function run_side_effects () {
+store.subscribe( function file_io () {
+    const state = store.getState();
+    // TODO I think this needs to go into a platform-specific file together with the events,
+    // together with local_file_IO and maybe local settings too...
+    // that would probably also mean we can take IO out of the reducer completely
+    if (state.mode === 'SAVE_FILE') {
+        LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
+        alert(`File saved: ${state.loaded_filepath}`)
+        store.dispatch({ type: 'RETURN_TO_READY' });
+    }
+    if (state.mode === 'SAVE_FILE_AS') {
+        let dest_filepath = LocalFileIO.get_saveas_filepath();
+        if (dest_filepath !== undefined) {
+            if (dest_filepath.slice(-3) !== '.js') {
+                dest_filepath = dest_filepath + '.js';
+            }
+            LocalFileIO.writeFile(dest_filepath, state.code_editor.value);
+            alert(`File saved: ${dest_filepath}`);
+            store.dispatch({type: 'SET_FILEPATH', filepath: dest_filepath});
+        } else {
+            alert("Filepath is undefined!");
+            store.dispatch({ type: 'RETURN_TO_READY' });
+        }
+    }
+
+});
+
+store.subscribe( function update_page () {
     const state = store.getState();
     HTML_elements.formula_bar.value = state.formula_bar_value;
         
     // Status bar should always render (??)
     ReactDOM.render(React.createElement(StatusBar, state), HTML_elements.status_bar);
-
-    // Document
-    if (!LocalFileIO.io_available) { 
-        document.title = `Mesh - web version`;
-    } else if (state.loaded_filepath) {
-        const filename = LocalFileIO.get_basename_from_path(state.loaded_filepath);
-        document.title = `Mesh - ${filename}`;
-    }
-    
-    // File loading
-    if (state.mode === 'SPAWN_LOAD_DIALOG') {
-        document.getElementById('open-file-manager').click();
-    }
 
     // Rendering and focus control
     if (state.mode === 'READY') {
@@ -188,14 +198,14 @@ module.exports = Mesh = {
     store,
     attach,
     HTML_elements,
-    LocalFileIO,
 }
 
 // Showtime
+// TODO add back require module check, etc? make a per-platform setting?
 const BLANK_FILE = `'use strict';
 
 // Put your Mesh.attach code in these brackets
-// if you need it to run without Mesh
+// if you want to also run this file without Mesh
 if (typeof Mesh !== 'undefined') {
     const MESH_ATTACHMENTS = [
     ];

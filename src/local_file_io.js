@@ -18,6 +18,7 @@ if (io_available) {
         readFileSync: FS.readFileSync,
         writeFile: FS.writeFileSync,
         get_saveas_filepath: get_saveas_filepath,
+        // TODO don't seem to use the following function - remove?
         get_basename_from_path: Path.basename,
     }
 } else {

@@ -1,8 +1,5 @@
-const CodeTransformers = require('./code_transformers');
 const {get_cell, get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
-
-const LocalFileIO = require('./local_file_io');
 
 const INITIAL_APP = {
     mode: 'NEED_TO_CALCULATE',
@@ -12,26 +9,7 @@ const INITIAL_APP = {
     selected_cell_loc: [0, 0],
     code_editor: { value: '', selection: undefined, show: true },
     loaded_filepath: null,
-    AST: null,
     formula_bar_value: '',
-}
-
-// # Helper functions
-
-function save_file_as(state, content) {
-    if (!LocalFileIO.io_available) { return state ;}
-    let dest_filepath = LocalFileIO.get_saveas_filepath();
-    if (dest_filepath !== undefined) {
-        if (dest_filepath.slice(-3) !== '.js') {
-            dest_filepath = dest_filepath + '.js';
-        }
-        LocalFileIO.writeFile(dest_filepath, state.code_editor.value);
-        alert(`File saved: ${dest_filepath}`);
-        document.title = `Mesh - ${dest_filepath}`;
-        return Object.assign({}, state, { loaded_filepath: dest_filepath });
-    } else {
-        return state;
-    }
 }
 
 // # Reducer
@@ -46,39 +24,25 @@ const app = function (state = INITIAL_APP, action) {
         //  \/ IO \/
         // =========
         
-        case 'SPAWN_LOAD_DIALOG': {
-            return Object.assign({}, state, {mode: 'SPAWN_LOAD_DIALOG'});
-        }
-
-        case 'LOAD_FILE': {
-            if (!LocalFileIO.io_available) {return state;}
-            const path = action.path;
-            const contents = LocalFileIO.readFileSync(path, 'utf8');
-            return Object.assign({}, INITIAL_APP, {
-                code_editor: Object.assign({}, state.code_editor, {value: contents}),
-                loaded_filepath: path,
-                mode: 'NEED_TO_CALCULATE',
-            });
-        }
-
+        case 'SAVE_FILE_AS': return Object.assign({}, state, {mode: 'SAVE_FILE_AS'});
         case 'SAVE_FILE': {
-            if (!LocalFileIO.io_available) {return state;}
-            if (state.loaded_filepath !== null) {
-                LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
-                alert(`File saved: ${state.loaded_filepath}`)
-                return state;
+            if (state.loaded_filepath === null) {
+                return Object.assign({}, state, {mode: 'SAVE_FILE_AS'});
             } else {
-                return save_file_as(state);
+                return Object.assign({}, state, {mode: 'SAVE_FILE'});
             }
         }
-
-        case 'SAVE_FILE_AS': return save_file_as(state);
+        case 'SET_FILEPATH': {
+            return Object.assign({}, state, {mode: 'READY', loaded_filepath: action.filepath});
+        }
 
         // ================
         //  \/ CODE PANE \/
         // ================
 
-        case 'SELECT_CODE': return Object.assign({}, state, {mode: 'EDITING_CODE'});
+        case 'SELECT_CODE': {
+            return Object.assign({}, state, {mode: 'EDITING_CODE'});
+        }
 
         case 'TOGGLE_CODE_PANE_SHOW': {
             return Object.assign({}, state, {
@@ -99,30 +63,6 @@ const app = function (state = INITIAL_APP, action) {
             })
         }
 
-        // ============
-        //  \/ SHEET \/
-        // ============
-        
-        case 'INSERT_REFERENCE_FROM_CELL': {
-            // TODO improve this - for example, clicking on one cell then another
-            // should replace the first ref with the second
-            // TODO also this is entirely side-effects - move?
-            const ref_cell = get_cell(state.cells, action.location)
-            const ref_string = ref_cell.ref_string;
-
-            // Modified version of:
-            // http://stackoverflow.com/a/34278578
-            const start = formula_bar.selectionStart
-            const end = formula_bar.selectionEnd
-            const text = formula_bar.value
-            const before = text.substring(0, start)
-            const after  = text.substring(end, text.length)
-            formula_bar.value = (before + ref_string + after)
-            formula_bar.selectionStart = formula_bar.selectionEnd = start + ref_string.length
-
-            return state;
-        }
-
         // ==========================
         //  \/ CALCULATION STATES \/
         // ==========================
@@ -130,15 +70,6 @@ const app = function (state = INITIAL_APP, action) {
         case 'CALCULATE': {
             return Object.assign({}, state, {
                 mode: 'NEED_TO_CALCULATE',
-            });
-        }
-
-        case 'UPDATE_AST': {
-            const new_AST = new CodeTransformers.AST(state.code_editor.value)
-            return Object.assign({}, state, {
-                AST: new_AST,
-                mode: 'CALCULATING',
-                cells: {},
             });
         }
 
@@ -151,9 +82,10 @@ const app = function (state = INITIAL_APP, action) {
                 const cell_id = JSON.stringify(cell.location);
                 new_cells[cell_id] = cell;
             }
-            return Object.assign({}, state, { cells: new_cells });
+            return Object.assign({}, state, { mode: 'PRE_READY', cells: new_cells });
         }
 
+        // TODO do we even need this state?
         case 'RETURN_TO_READY': {
             const selected_cell = get_selected_cell(state);
             return Object.assign({}, state, {
@@ -204,15 +136,12 @@ const app = function (state = INITIAL_APP, action) {
         case 'INSERT_ELEMENT': return get_selected_cell(state).insert_element(state);
         case 'DELETE_ELEMENT': return get_selected_cell(state).delete_element(state);
         case 'DELETE_CONTAINER': return get_selected_cell(state).delete_container(state);
-        // TODO delete attachment?
-        // TODO delete container?
 
         default:
+            console.error("NO ACTION FOUND FOR:", action)
             return state;
     }
 
 }
 
-module.exports = {
-    app: app,
-}
+module.exports = { app }
