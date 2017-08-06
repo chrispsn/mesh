@@ -43,8 +43,8 @@ class Grid extends React.Component {
         
         const cell_row_idxs = [...cells_array.map(c => c.location[0])];
         const cell_col_idxs = [...cells_array.map(c => c.location[1])];
-        const max_row_idx = Math.max(selected_row_idx, ...cell_row_idxs);
-        const max_col_idx = Math.max(selected_col_idx, ...cell_col_idxs);
+        const max_row_idx = Math.max(10, selected_row_idx, ...cell_row_idxs);
+        const max_col_idx = Math.max(10, selected_col_idx, ...cell_col_idxs);
         
         // TODO replace this with a single call to make a blank row, repeated max_col times?
         const [row_indices, col_indices] = [max_row_idx, max_col_idx].map(
