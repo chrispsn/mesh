@@ -41,6 +41,8 @@ const default_cell_props = {
     commit_edit: function (state, action) {
         // TODO Check that the commit is valid first?
         // Merge with select code somehow? (Feels like select should just be a 'refresh ready')
+        // Also, these 'row + offset, col + offset' logics are basically the same
+        // as what the main reducer is doing...
         const old_code = state.code_editor.value;
         const new_code = CM.replace_text(old_code, this.code_location, action.commit_value);
 
@@ -529,6 +531,112 @@ const display_fns = {
         }
 
         return [ref_string_cell];
+    },
+
+    OOA: (obj, ref_string, location, declaration_AST_node, headings) => {
+        // Object of arrays (aka struct of arrays).
+        // Allow user to specify an order of headings;
+        // otherwise, is taken from Object.keys(obj).
+        // Assumes all arrays are of the same length.
+        // TODO should actually output another fn that has the headings baked in
+
+        let [row_index, col_index] = location;
+
+        // Write the ref_string
+        const ref_string_cell = create_ref_string_cell(ref_string, location, declaration_AST_node);
+        row_index++;
+
+        const keys = typeof headings !== 'undefined' ? headings : Object.keys(obj);
+        const record_count = obj[keys[0]].length;
+
+        // Write the data structure
+        if (keys.length > 0) {
+            
+            // Headers
+            const header_cells = keys.map(
+                (key, col_offset) => create_cell({
+                    location: [row_index, col_index + col_offset], 
+                    repr: String(key),
+                    classes: 'heading',
+                    formula_bar_value: "TODO",
+                    code_location: undefined,
+                })
+            )
+
+            // Add key cell
+            const extra_cells = [];
+
+            // Append cell
+            const new_field_cell_location = {
+                start: {
+                    line: declaration_AST_node.init.loc.end.line,
+                    column: declaration_AST_node.init.loc.end.column - 1
+                },
+                get end() {return this.start},
+            };
+
+            const new_field_cell = create_cell({
+                location: [row_index, col_index + keys.length],
+                repr: '',
+                ref_string: ref_string,
+                classes: 'add_key',
+                formula_bar_value: '',
+                code_location: new_field_cell_location,
+                commit_edit: (state, action) => {
+                    const old_code = state.code_editor.value;
+                    const new_code = CM.OOA_add_field(old_code, ref_string, action.commit_value);
+                    return Object.assign({}, state, {
+                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+                        mode: 'NEED_TO_CALCULATE',
+                        selected_cell_loc: [
+                            state.selected_cell_loc[0] + action.offset[0], 
+                            state.selected_cell_loc[1] + action.offset[1]
+                        ]
+                    });
+                },
+            })
+            extra_cells.push(new_field_cell)
+            
+            // Records
+            row_index++;
+
+            function get_key_elements(obj_props, key) {
+                for (let prop of obj_props) {
+                    let field_id = (prop.key.type === 'Identifier') ? prop.key.name : prop.key.value;
+                    if (field_id === key) {
+                        return prop.value.elements;
+                    }
+                }
+            }
+
+            const obj_node_props = declaration_AST_node.init.properties;
+            const record_cells = [];
+            // TODO flip this around - first go by col (key), then by row
+            for (let offset_r = 0; offset_r < record_count; offset_r++) {
+                keys.map((key, offset_c) => {
+                    let key_elements = get_key_elements(obj_node_props, key);
+                    console.log(key_elements[offset_r]);
+                    record_cells.push(
+                        create_cell({
+                            location: [row_index + offset_r, col_index + offset_c],
+                            // TODO
+                            code_location: key_elements[offset_r].loc,
+                            repr: obj[key][offset_r],
+                            formula_bar_value: "TODO",
+                        })
+                    )
+                }
+            )}
+            
+            // TODO append record cells
+            // TODO append field cells
+            // TODO attach delete actions (datum, field, record, entire ooa?)
+
+            return [ref_string_cell, ...header_cells, ...record_cells, ...extra_cells];
+
+        } else {
+            return [ref_string_cell];
+        }
     },
 }
 

@@ -226,6 +226,22 @@ describe('remove_object_item', () => {
 
 // RECORDS
 
+/*
+describe('append_record', () => {
+    it('adds a new record to the end of the records with the relevant field filled in and the rest left null', () => {
+        const old_code = "const records = [{key_field: 'lol', another_field: 'huh'}];";
+        let new_code = CM.append_record(old_code, 'records', 'another_field', 'filled_in');
+        let expected_code = `const records = [
+            {key_field: 'lol', another_field: 'huh'},
+            {key_field: null, another_field: 'filled_in'},
+        ];`;
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    })
+});
+*/
+
 describe('remove_record_given_key', () => {
     it('deletes a record based on a specified key field and key value', () => {
         const old_code = "const records = [{key_field: 'lol', another_field: 'huh'}];";
@@ -241,4 +257,87 @@ describe('remove_record_given_key', () => {
     });
 });
 
+// RECORDS - OBJECT OF ARRAYS
+
+describe('OOA_append_datum', () => {
+    it('appends datum to the bottom of the right field and fills the rest with null', () => {
+        const old_code = "const OOA = {field1: ['value'], 'field2': [123]};"
+        let new_code = CM.OOA_append_datum(old_code, 'OOA', 'field1', 'new_datum');
+        let expected_code = `const OOA = {
+            field1: ['value', new_datum],
+            'field2': [123, null],
+        }`
+        const options = {tabWidth: 0};
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    });
+});
+
+describe('OOA_remove_record', () => {
+    it('removes the specified record', () => {
+        const old_code = `const ooa = {
+            field1: ['value', 'value2', 'value3'], 
+            'field2': ['he', 'hehe', 'hehehe']
+        };`
+        let new_code = CM.OOA_remove_record(old_code, 'ooa', 1);
+        let expected_code = `const ooa = {
+            field1: ['value', 'value3'], 
+            'field2': ['he', 'hehehe']
+        };`
+        const options = {tabWidth: 0};
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    });
+});
+
+describe('OOA_add_field', () => {
+    it('adds the specified field', () => {
+        const old_code = `const ooa = {
+            field1: ['value', 'value2', 'value3'], 
+        };`
+        // TODO does this need to distinguish between the two types of key?
+        let new_code = CM.OOA_add_field(old_code, 'ooa', 'field2');
+        let expected_code = `const ooa = {
+            field1: ['value', 'value2', 'value3'], 
+            field2: [null, null, null],
+        };`
+        const options = {tabWidth: 0};
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    });
+});
+
+describe('OOA_remove_field', () => {
+    it('removes the specified field', () => {
+        const old_code = `const ooa = {
+            field1: ['value', 'value2', 'value3'], 
+            'field2': ['he', 'hehe', 'hehehe']
+        };`
+        // TODO does this need to distinguish between the two types of key?
+        let new_code = CM.OOA_remove_field(old_code, 'ooa', 'field1');
+        let expected_code = `const ooa = {
+            'field2': ['he', 'hehe', 'hehehe']
+        };`
+        const options = {tabWidth: 0};
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    });
+    it('leaves an empty object if the field was the last one', () => {
+        const old_code = `const ooa = {
+            field1: ['value', 'value2', 'value3'], 
+        };`
+        // TODO does this need to distinguish between the two types of key?
+        let new_code = CM.OOA_remove_field(old_code, 'ooa', 'field1');
+        let expected_code = `const ooa = {
+        };`
+        const options = {tabWidth: 0};
+        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
+        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
+        expect(new_code).toBe(expected_code);
+    });
+});
 // TODO delete object
