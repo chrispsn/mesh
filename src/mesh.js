@@ -174,13 +174,16 @@ module.exports = Mesh = {
 
 // Showtime
 // TODO add back require module check, etc? make a per-platform setting?
-const BLANK_FILE = `'use strict';
-
-// Put your Mesh.attach code in these brackets
-// if you want to also run this file without Mesh
-if (typeof Mesh !== 'undefined') {
-    const MESH_ATTACHMENTS = [
-    ];
-    Mesh.attach(MESH_ATTACHMENTS);
-}`;
+const BLANK_FILE = [
+    "'use strict';", 
+    "",
+    "// Put your Mesh.attach code in these brackets",
+    "// if you want to also run this file without Mesh",
+    "if (typeof Mesh !== 'undefined') {",
+    "    const MESH_ATTACHMENTS = [",
+    "    ];",
+    "    Mesh.attach(MESH_ATTACHMENTS);",
+    "};"
+].join(Settings.LINE_SEPARATOR);
 store.dispatch({ type: 'LOAD_CODE', code: BLANK_FILE });
+

@@ -1,5 +1,4 @@
 module.exports = {
-    LINE_SEPARATOR: '\n',
-    // Alt: https://nodejs.org/api/os.html#os_os_eol
-    // require('os').EOL
+    LINE_SEPARATOR: require('os').EOL,
+    // '\n',
 }

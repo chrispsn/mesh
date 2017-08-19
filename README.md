@@ -20,7 +20,7 @@ You can [try Mesh online](http://chrispsn.com/try-mesh.html). You'll get best re
 To work with local files (read and write), you will need to build the source and run with Electron:
 
 1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the **latest** LTS version of [node.js](https://nodejs.org/en/download/)
-2. [Download the Mesh source](https://github.com/chrispsn/mesh/archive/master.zip)
+2. Clone the Mesh source via Git
 3. In the Mesh `src` directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
 4. In the Mesh `src` directory, at the command line, type `yarn build_electron` or `npm build_electron` (as relevant) and press Enter.
 
@@ -120,6 +120,14 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 - Cloud version
 - Custom themes
 - Optionally use TypeScript or ClojureScript as formula languages.
+
+## Notes for contributors
+
+In Electron, line endings should check out and save as per your system's default (CRLF on Windows, LF on OSX/Unix). See more discussion at:
+
+- <https://stackoverflow.com/a/4425433/996380>
+- <https://git-scm.com/docs/gitattributes>
+- <http://adaptivepatchwork.com/2012/03/01/mind-the-end-of-your-line/>
 
 ## Bugs, issues, enhancements, contact
 
