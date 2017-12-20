@@ -53,7 +53,6 @@ const state_changes = {
         return Object.assign({}, state, {
             mode: 'READY',
             formula_bar_value: selected_cell.formula_bar_value,
-            code_editor: Object.assign({}, state.code_editor, {selection: selected_cell.code_location}),
         });
     },
 
@@ -105,11 +104,3 @@ const app = function (state = INITIAL_STATE, action) {
 }
 
 module.exports = { app }
-
-if (typeof Mesh !== 'undefined') {
-    const MESH_ATTACHMENTS = [
-        {id: 'INITIAL_STATE', value: INITIAL_STATE, loc: [0, 0]},
-        {id: 'state_changes', value: state_changes, loc: [0, 3]},
-    ];
-    Mesh.attach(MESH_ATTACHMENTS);
-}

@@ -29,6 +29,7 @@ function process_keydown_event (store, bindings, event) {
             if (binding.hasOwnProperty('preventDefault') && binding.preventDefault) {
                 event.preventDefault()
             }
+            console.log(binding);
             store.dispatch(binding.action(state));
             return;
         }
@@ -39,8 +40,8 @@ function process_keydown_event (store, bindings, event) {
 // # GRID
 
 const grid_keydown_events = [
-    // TODO what else should trigger this?
-    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/]$/, modifiers: (e) => (!e.ctrlKey), action: () => ({ type: 'EDIT_CELL_REPLACE' })},
+    // TODO what else should trigger this? + etc?
+    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/=]$/, modifiers: (e) => (!e.ctrlKey), action: () => ({ type: 'EDIT_CELL_REPLACE' })},
 
     {mode: 'READY', keypattern: /^F2$/, action: () => ({ type: 'EDIT_CELL' })},
 
@@ -59,9 +60,9 @@ const grid_keydown_events = [
     {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'DELETE_VALUE' })},
 
     // Add and remove elements (eg slots in an array)
-    {mode: 'READY', keypattern: /^=$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'INSERT_ELEMENT' })},
-    {mode: 'READY', keypattern: /^-$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'DELETE_ELEMENT' })},
-    {mode: 'READY', keypattern: /^_$/, modifiers: (e) => (e.ctrlKey), action: () => ({ type: 'DELETE_CONTAINER' })},
+    {mode: 'READY', keypattern: /^\+$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'INSERT_ELEMENT' }}},
+    {mode: 'READY', keypattern: /^-$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'DELETE_ELEMENT' }}},
+    {mode: 'READY', keypattern: /^_$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function() { return { type: 'DELETE_CONTAINER' }}},
 
 ];
 
@@ -155,11 +156,7 @@ const window_keydown_events = [
     {mode: 'ALL', keypattern: /^U/, modifiers: (e) => (e.ctrlKey && e.shiftKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
 
     // Prevent certain Electron defaults
-    {mode: 'ALL', keypattern: /^-/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
-    {mode: 'ALL', keypattern: /^\+/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
-    {mode: 'ALL', keypattern: /^w/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
-
-
+   {mode: 'ALL', keypattern: /^w/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
 ]
 
 // TODO move these to window KB events

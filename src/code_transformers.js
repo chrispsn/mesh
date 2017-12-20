@@ -13,318 +13,221 @@ const Builders = Recast.types.builders;
 const {LINE_SEPARATOR} = require('./settings');
 const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR }
 
-function get_lines(body_text) {
-    // TODO figure out whether we need a better way than splitting on LINE_SEPARATOR
-    return body_text.split(LINE_SEPARATOR);
+function parse_code_string_to_AST(code_string) {
+    return Recast.parse(code_string, RECAST_SETTINGS);
 }
 
-function get_text(body_text, loc) {
-    const start_line_no = loc.start.line;
-    const end_line_no = loc.end.line;
-
-    const start_char_idx = loc.start.column;
-    const end_char_idx = loc.end.column;
-
-    const code_lines = get_lines(body_text);
-    const code_lines_subset = code_lines.slice(start_line_no - 1, end_line_no)
-    const code_line = code_lines_subset.join(LINE_SEPARATOR)
-
-    const slice_start_idx = start_char_idx;
-    const slice_end_idx = code_line.length 
-                            - (code_lines[end_line_no - 1].length - end_char_idx)
-
-    const text = code_line.slice(slice_start_idx, slice_end_idx);
-    return text;
+function print_AST_to_code_string(AST) {
+    return Recast.print(AST, RECAST_SETTINGS).code;
 }
 
-function replace_text(body_string, loc, new_text) {
-    const start_line_no = loc.start.line;
-    const end_line_no = loc.end.line;
+function get_declaration_node_init(tree_path, id) {
+    // TODO throw error if duplicate key?
+    let nodepath_to_return;
+    Recast.visit(tree_path, {
+        visitVariableDeclarator: function(path) {
+            if (path.node.id.name == id) {
+                nodepath_to_return = path;
+                return false;
+            }
+            this.traverse(path);
+        }
+    });
+    return nodepath_to_return.get('init');
+}
 
-    const start_char_idx = loc.start.column;
-    const end_char_idx = loc.end.column;
-
-    const code_lines = get_lines(body_string);
-    // Add back the line separators. Note this skips the last line.
-    // TODO is this valid if the last line actually ends in a LINE_SEPARATOR?
-    // Maybe the last line would actually be the empty string in that case.
-    for (let i = 0; i < code_lines.length - 1; i++) {
-        code_lines[i] = code_lines[i] + LINE_SEPARATOR;
+function insert_array_element(arr_path, element_num, inserted_text) {
+    const elements_path = arr_path.get('elements');
+    const inserted_node = Builders.identifier(inserted_text);
+    if (elements_path.node.elements.length === 0) {
+        elements_path.push(inserted_node);
+    } else {
+        elements_path.insertAt(element_num, inserted_node);
     }
-        
-    const code_lines_subset = code_lines.slice(start_line_no - 1, end_line_no)
-    let code_line = code_lines_subset.join();
-    const slice_start_idx = start_char_idx;
-    const slice_end_idx = code_line.length 
-                            - (code_lines[end_line_no - 1].length - end_char_idx)
-
-    const new_code_string = code_lines.slice(0, start_line_no - 1).join('')
-                            + code_line.slice(0, start_char_idx) 
-                                + new_text 
-                                + code_line.slice(slice_end_idx)
-                            + code_lines.slice(end_line_no).join('');
-
-    return new_code_string;
 }
 
-function create_const_variable(code, variable_name) {
-    // TODO validate variable_name?
-    // TODO be more smart about where this is created
+function append_array_element(arr_path, inserted_text) {
+    const elements_path = arr_path.get('elements');
+    const inserted_node = Builders.identifier(inserted_text);
+    elements_path.push(inserted_node);
+}
 
-    let new_node = Builders.variableDeclaration("const", [
-        Builders.variableDeclarator(
-            Builders.identifier(variable_name), 
-            Builders.literal(null)
-        )
+function remove_array_element(arr_path, element_num) {
+    const element_path = arr_path.get('elements', element_num);
+    element_path.prune();
+}
+
+// TODO write tests
+function delete_container(value_path) {
+    value_path.replace(Builders.literal(null));
+}
+
+// TODO write tests
+function get_object_key_from_node(obj_key_node) {
+    switch (obj_key_node.type) {
+        case 'Literal':
+            return obj_key_node.value;
+        case 'Identifier':
+            return obj_key_node.name;
+    }
+}
+
+function get_object_item(obj_path, key) {
+    const props_path = obj_path.get('properties');
+
+    for (let i=0; i < props_path.value.length; i++) {
+        let prop_path = props_path.get(i);
+        let key_node = prop_path.node.key;
+        if (get_object_key_from_node(key_node) === key) {
+            return prop_path;
+        }
+    }
+    return false;
+}
+
+function get_object_item_index(obj_path, key) {
+    const props_path = obj_path.get('properties');
+
+    for (let i=0; i < props_path.value.length; i++) {
+        let prop_path = props_path.get(i);
+        let key_node = prop_path.node.key;
+        if (get_object_key_from_node(key_node) === key) {
+            return i;
+        }
+    }
+    return false;
+}
+
+
+function replace_object_item_key(obj_item_path, new_key_text) {
+    // TODO throw error if duplicate key?
+    obj_item_path.get('key').replace(Builders.identifier(new_key_text));
+}
+
+function insert_object_item(obj_path, key_text, value_text, index) {
+    // TODO throw error if duplicate key?
+    const props_path = obj_path.get('properties');
+    const new_prop_node = Builders.property('init', 
+                            Builders.identifier(key_text), 
+                            // TODO using this instead of literal is probably a massive hack
+                            Builders.identifier(value_text));
+    if (index === undefined || props_path.node.properties.length === 0) {
+        props_path.push(new_prop_node);
+    } else {
+        props_path.insertAt(index, new_prop_node);
+    }
+}
+
+function insert_object_getter(obj_path, key_text, body_text, index) {
+    // TODO throw error if duplicate key?
+    // TODO make these self-memoising?
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get#Smart_self-overwriting_lazy_getters
+    const props_path = obj_path.get('properties');
+    const function_body = Builders.blockStatement([
+    // https://github.com/benjamn/ast-types/blob/master/def/core.js#L108
+        Builders.returnStatement( Builders.identifier(body_text))
     ]);
-
-    let AST = Recast.parse(code);
-
-    const id_name = "MESH_ATTACHMENTS";
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const attachment_node = path.parent.parent.get("body", path.parent.name);
-                attachment_node.insertBefore(new_node);
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
+    const function_expression = Builders.functionExpression(null, [], function_body);
+    const new_prop_node = Builders.property('get', 
+                            Builders.identifier(key_text), 
+                            function_expression);
+    if (index === undefined || props_path.node.properties.length === 0) {
+        props_path.push(new_prop_node);
+    } else {
+        props_path.insertAt(index, new_prop_node);
+    }
 }
 
-function add_attachment(code, id, loc) {
-    const new_attachment = `{id: \"${id}\", value: ${id}, loc: [${loc}]},`
-    const new_code = append_array_element(code, "MESH_ATTACHMENTS", new_attachment);
-    return new_code;
-}
-
-function remove_declaration(code, id_name) {
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                path.prune();
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
-}
-
-function insert_array_element(code, id_name, element_num, inserted_text) {
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const arr_path = path.get('init');
-                const elements_path = arr_path.get('elements');
-                const inserted_node = Builders.identifier(inserted_text);
-                if (elements_path.node.elements.length === 0) {
-                    elements_path.push(inserted_node);
-                } else {
-                    elements_path.insertAt(element_num, inserted_node);
-                }
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
-}
-
-function append_array_element(code, id_name, inserted_text) {
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const arr_path = path.get('init');
-                const elements_path = arr_path.get('elements');
-                const inserted_node = Builders.identifier(inserted_text);
-                elements_path.push(inserted_node);
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
-}
-
-function remove_array_element(code, id_name, element_num) {
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const arr_path = path.get('init');
-                const element_path = arr_path.get('elements', element_num);
-                element_path.prune();
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
-}
-
-function insert_object_item(code, id_name, key_text, value_text) {
-    // TODO throw error if duplicate key?
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const obj_path = path.get('init');
-                const props_path = obj_path.get('properties');
-                const new_prop_node = Builders.property('init', 
-                                        Builders.identifier(key_text), 
-                                        Builders.literal(value_text));
-                props_path.push(new_prop_node);
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
-}
-
-function remove_object_item(code, id_name, key) {
+function remove_object_item(obj_path, key) {
     // TODO throw error if missing key?
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const obj_path = path.get('init');
-                const props_path = obj_path.get('properties');
-                if (props_path.value.length > 0) {
-                    for (let i=0; i < props_path.value.length; i++) {
-                        let prop_path = props_path.get(i);
-                        let node_key = prop_path.node.key;
-                        // console.log(prop_path.node);
-                        if (
-                            (node_key.type === "Literal" && node_key.value === key) 
-                            || (node_key.type === "Identifier" && node_key.name === key)
-                        ) {
-                            prop_path.prune();
-                            return false;
-                        }
-                    }
-                }
+    const props_path = obj_path.get('properties');
+    if (props_path.value.length > 0) {
+        for (let i=0; i < props_path.value.length; i++) {
+            let prop_path = props_path.get(i);
+            let key_node = prop_path.node.key;
+            if (key === get_object_key_from_node(key_node, key)) {
+                prop_path.prune();
             }
-            this.traverse(path);
         }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
+    }
 }
 
-function OOA_append_datum(code, id_name, key_name, datum_text) {
-
-    // TODO throw error if duplicate key?
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const props_path = path.get('init').get('properties');
-                let field_id;
-                let arr_elements;
-                let inserted_node;
-                for (let prop of props_path.value) {
-                    // TODO factor this out into a separate function?
-                    field_id = (prop.key.type === 'Identifier') ? prop.key.name : prop.key.value;
-                    if (field_id === key_name) {
-                        inserted_node = Builders.identifier(datum_text);
-                    } else {
-                        inserted_node = Builders.identifier('null');
-                    }
-                    arr_elements = prop.value.elements;
-                    arr_elements.push(inserted_node);
-                }
-                return false;
+function remove_record_given_key(arr_path, element_key_name, key) {
+    const elements_path = arr_path.get('elements');
+    for (let [index, e] of elements_path.node.elements.entries()) {
+        for (let prop of e.properties) {
+            let prop_key = get_object_key_from_node(prop.key);
+            if (prop_key === element_key_name && prop.value.value === key) {
+                arr_path.get('elements', index).prune();
+            } else if (prop_key === element_key_name && prop.value.value === key) {
+                arr_path.get('elements', index).prune();
             }
-            this.traverse(path);
         }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
+    }
 }
 
-function OOA_remove_record(code, id_name, record_idx) {
+function OOA_append_datum(obj_path, key_name, datum_text) {
 
     // TODO throw error if duplicate key?
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const props_path = path.get('init').get('properties');
-                let arr_elements;
-                for (let prop of props_path.value) {
-                    arr_elements = prop.value.elements;
-                    arr_elements.splice(record_idx, 1);
-                }
-                return false;
-            }
-            this.traverse(path);
+    const props_path = obj_path.get('properties');
+    let field_id;
+    let arr_elements;
+    let inserted_node;
+    for (let prop of props_path.value) {
+        // TODO factor this out into a separate function?
+        field_id = get_object_key_from_node(prop.key);
+        if (field_id === key_name) {
+            inserted_node = Builders.identifier(datum_text);
+        } else {
+            inserted_node = Builders.identifier('null');
         }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
+        arr_elements = prop.value.elements;
+        arr_elements.push(inserted_node);
+    }
 }
 
-function OOA_add_field(code, id_name, key_name) {
-
+function OOA_remove_record(obj_path, record_idx) {
     // TODO throw error if duplicate key?
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const props_path = path.get('init').get('properties');
-                // Figure out how many elements need to be in the array
-                let field_length = 0;
-                if (props_path.value.length > 0) {
-                    field_length = props_path.value[0].value.elements.length;
-                }
-                // Create array node of required length
-                const array_node = Builders.arrayExpression(
-                                    Array(field_length).fill(Builders.literal(null))
-                );
-                const new_prop = Builders.property('init', 
-                                    Builders.identifier(key_name),
-                                    array_node)
-                props_path.push(new_prop);
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
+    const props_path = obj_path.get('properties');
+    let arr_elements;
+    for (let prop of props_path.value) {
+        arr_elements = prop.value.elements;
+        arr_elements.splice(record_idx, 1);
+    }
 }
-function OOA_remove_field(code, id_name, key_name) {
 
+function OOA_add_field(obj_path, key_name) {
     // TODO throw error if duplicate key?
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const props_path = path.get('init').get('properties');
-                let key;
-                let id_type;
-                let field_id;
-                let idx = 0;
-                for (let prop of props_path.value) {
-                    // TODO factor this out into a separate function?
-                    key = prop.key;
-                    id_type = key.type;
-                    field_id = (id_type === 'Identifier') ? key.name : key.value;
-                    if (field_id === key_name) {
-                        props_path.value.splice(idx, 1);
-                        return false;
-                    }
-                    idx++;
-                }
-                return false;
-            }
-            this.traverse(path);
+    const props_path = obj_path.get('properties');
+    // Figure out how many elements need to be in the array
+    let field_length = 0;
+    if (props_path.value.length > 0) {
+        field_length = props_path.value[0].value.elements.length;
+    }
+    // Create array node of required length
+    const array_node = Builders.arrayExpression(
+                        Array(field_length).fill(Builders.literal(null))
+    );
+    const new_prop = Builders.property('init', 
+                        Builders.identifier(key_name),
+                        array_node)
+    props_path.push(new_prop);
+}
+
+function OOA_remove_field(obj_path, key_name) {
+    // TODO throw error if duplicate key?
+    const props_path = obj_path.get('properties');
+    let key;
+    let id_type;
+    let field_id;
+    let idx = 0;
+    for (let prop of props_path.value) {
+        field_id = get_object_key_from_node(prop.key);
+        if (field_id === key_name) {
+            props_path.value.splice(idx, 1);
         }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
+        idx++;
+    }
 }
 // DATUM
 // Clear datum
@@ -379,78 +282,30 @@ function append_record(code, id_name, field_name, field_value) {
 }
 */
 
-function remove_record_given_key(code, id_name, element_key_name, key) {
-    let AST = Recast.parse(code, RECAST_SETTINGS);
-    AST = Recast.visit(AST, {
-        visitVariableDeclarator: function (path) {
-            if (path.node.id.name == id_name) {
-                const arr_path = path.get('init');
-                const elements_path = arr_path.get('elements');
-                for (let [index, e] of elements_path.node.elements.entries()) {
-                    for (let prop of e.properties) {
-                        if (prop.key.type === 'Identifier') {
-                            if (prop.key.name === element_key_name && prop.value.value === key) {
-                                arr_path.get('elements', index).prune();
-                            }
-                        } else if (prop.key.type === 'Literal') {
-                            if (prop.key.value === element_key_name && prop.value.value === key) {
-                                arr_path.get('elements', index).prune();
-                            }
-                        }
-                    }
-                }
-                return false;
-            }
-            this.traverse(path);
-        }
-    });
-    return Recast.print(AST, RECAST_SETTINGS).code;
-}
-
-class AST {
-    
-    constructor(code_string) {
-        this.tree = Recast.parse(code_string, RECAST_SETTINGS);
-        this.program = this.tree.program;
-        this.code_string = code_string;
-    }
-
-    get to_string() {
-        return Recast.print(this.tree, RECAST_SETTINGS).code;
-    }
-
-    get_first_declaration_of_name(name_string) {
-    // TODO throw error if duplicate key?
-        let node_to_return;
-        Recast.visit(this.tree, {
-            visitVariableDeclarator: function (path) {
-                if (path.node.id.name == name_string) {
-                    node_to_return = path.node;
-                    return false;
-                }
-                this.traverse(path);
-            }
-        });
-        return node_to_return;
-    }
-    
+function add_attachment(arr_node, id, loc) {
+    const new_attachment = `{id: \"${id}\", value: ${id}, loc: [${loc}]},`
+    append_array_element(arr_node, new_attachment);
 }
 
 module.exports = {
-    get_text,
-    replace_text,
-    create_const_variable,
+    parse_code_string_to_AST,
+    print_AST_to_code_string,
+    get_declaration_node_init,
     add_attachment,
-    remove_declaration,
     insert_array_element,
     append_array_element,
     remove_array_element,
+    delete_container,
+    get_object_key_from_node,
+    get_object_item,
+    get_object_item_index,
+    replace_object_item_key,
     insert_object_item,
+    insert_object_getter,
     remove_object_item,
     remove_record_given_key,
     OOA_append_datum,
     OOA_remove_record,
     OOA_add_field,
     OOA_remove_field,
-    AST,
 }
