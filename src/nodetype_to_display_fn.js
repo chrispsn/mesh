@@ -40,25 +40,21 @@ module.exports = {
 
     // some_fn()
     'CallExpression': (value, value_nodepath, id) => {
+        console.log("HIT CALLEXPRESSION");
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
-
         // TODO will need to enumerate the various kinds of objects here too...
         // TODO objects (problem is that lots of things are objects...)
         // if (value === Object(value) && !(value instanceof Function)) {
         // See also: http://stackoverflow.com/a/22482737
-
-        const constructor_display_fns = [
-            [Array, display_fns.array_ro],
-            [Object, display_fns.object_ro],
-        ];
-
-        for (let [constructor, display_fn] of constructor_display_fns) {
-            console.log(value);
-            if (value instanceof constructor) {
-                return display_fn(value, value_nodepath, id);
-            }
+        if (value instanceof Array) {
+            return display_fns.array_ro(value, value_nodepath, id);
+        } else if (typeof value === 'object') {
+            return display_fns.object_ro(value, value_nodepath, id);
+        } else if (typeof value === 'function') {
+            return display_fns.function_expression(value, value_nodepath, id);
+        } else {
+            return display_fns.value_ro(value, value_nodepath, id);
         }
-        return display_fns.value(value, value_nodepath, id);
     },
 
     // new Array([...])

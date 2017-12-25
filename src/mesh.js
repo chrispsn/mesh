@@ -60,14 +60,17 @@ Events.bind_load_file_events(store, HTML_elements.filepicker);
 
 // Mesh interaction functions
 
-function attach(attachments) {
+function attach(values, attachments) {
     // Display functions return arrays of cells.
     // We collect the cells from multiple `attach` calls and send them as one batch for rendering.
+    const cells = [];
+
     const state = store.getState();
     const old_code = state.code_editor.value;
     const AST = new CT.parse_code_string_to_AST(old_code);
     for (let attach_info of attachments) {
-        const {module_id, id, value, grid_loc} = attach_info;
+        const {id, grid_loc} = attach_info;
+        const value = values[id];
 
         let key_cell = Display.create_cell({
             location: grid_loc,
@@ -97,7 +100,7 @@ function attach(attachments) {
         });
 
         let {display_fn} = attach_info;
-        const module_obj_path = CT.get_declaration_node_init(AST, module_id);
+        const module_obj_path = CT.get_declaration_node_init(AST, 'MODULE');
         const item_nodepath = CT.get_object_item(module_obj_path, id);
         let value_nodepath = item_nodepath.get('value');
 
@@ -141,11 +144,11 @@ function attach(attachments) {
         // (and preserving the existing value after recalc if possible)
         cells.push(key_cell, ...value_cells);
     }
+
+    return cells;
 }
 
 // App side-effects
-
-let cells;
 
 store.subscribe( function calculate () {
     const state = store.getState();
@@ -154,13 +157,15 @@ store.subscribe( function calculate () {
         // TODO right now this dumps the user back to the code editing pane,
         // but it should depend on where the commit came from (code pane or formula bar)
         try {
-            // The cells array is emptied but will fill via the eval below
-            cells = [];
-            eval(state.code_editor.value);
+            const ending_return = "return {values: MODULE, attachments: MESH_ATTACHMENTS};";
+            const code_for_fn = state.code_editor.value + ending_return;
+            let {values, attachments} = (new Function(code_for_fn))();
+            let cells = attach(values, attachments);
             store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
             store.dispatch({ type: 'RETURN_TO_READY' });
         } catch (e) {
             alert(e);
+            // TODO highlight offending code?
             console.error(e);
             store.dispatch({ type: 'SELECT_CODE' })
         }
@@ -197,44 +202,19 @@ store.subscribe( function update_page () {
         store.dispatch({ type: 'LOAD_CODE', code: code_editor.getValue() });
     } else {
         code_editor.setValue(state.code_editor.value);
-        const selection = state.code_editor.selection;
-        if (selection) {
-            const {start, end} = selection;
-            code_editor.setSelection(
-                {line: start.line - 1, ch: start.column},
-                {line: end.line - 1, ch: end.column},
-            );
-        }
-        if (state.code_editor.show) {
-            HTML_elements.code_editor.style.display = 'block';
-        } else {
-            HTML_elements.code_editor.style.display = 'none';
-        }
+        HTML_elements.code_editor.style.display = state.code_editor.show ? 'block' : 'none';
     }
 });
 
-// Exports
-module.exports = Mesh = {
-    store,
-    attach,
-    HTML_elements,
-}
-
 // Showtime
-// TODO add back require module check, etc? make a per-platform setting?
 const BLANK_FILE = [
     "'use strict';", 
     "",
-    "var MODULE = {",
+    "const MODULE = {",
     "};",
     "",
-    "// Put your Mesh.attach code in these brackets",
-    "// if you want to also run this file without Mesh",
-    "if (typeof Mesh !== 'undefined') {",
-    "    const MESH_ATTACHMENTS = [",
-    "    ];",
-    "    Mesh.attach(MESH_ATTACHMENTS);",
-    "};"
+    "const MESH_ATTACHMENTS = [",
+    "];",
+    "",
 ].join(Settings.LINE_SEPARATOR);
 store.dispatch({ type: 'LOAD_CODE', code: BLANK_FILE });
-

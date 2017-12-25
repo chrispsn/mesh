@@ -110,7 +110,7 @@ const EMPTY_CELL = Object.assign(create_cell({
         CT.insert_object_item(module_obj_node, id, "null");
 
         const attachments_arr_node = CT.get_declaration_node_init(AST, 'MESH_ATTACHMENTS');
-        const new_attachment = `{module_id: \"MODULE\", id: \"${id}\", value: MODULE.${id}, grid_loc: [${state.selected_cell_loc}]},`
+        const new_attachment = `{id: \"${id}\", grid_loc: [${state.selected_cell_loc}]},`
         CT.append_array_element(attachments_arr_node, new_attachment);
 
         const new_code = CT.print_AST_to_code_string(AST);
@@ -161,11 +161,12 @@ const display_fns = {
     },
 
     value_ro: (value, value_nodepath, id) => {
+        console.log("VALUE_RO");
         const value_cell = create_cell({
             location: [0, 1], 
             ref_string: id,
             repr: String(value),
-            formula_bar_value: CT.print_AST_to_code_string(value_nodepath),
+            formula_bar_value: '=' + CT.print_AST_to_code_string(value_nodepath),
             classes: 'occupied read-only ' + typeof value + (typeof value === 'boolean' ? ' ' + String(value) : ''),
         });
         return [value_cell];
@@ -178,7 +179,7 @@ const display_fns = {
             ref_string: id,
             repr: String(value),
             formula_bar_value: "=" + formula_bar_text,
-            classes: 'occupied read-only ' + typeof value + (typeof value === 'boolean' ? ' ' + String(value) : ''),
+            classes: 'occupied read-only function',
         });
         return [value_cell];
     },

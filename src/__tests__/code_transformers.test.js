@@ -394,24 +394,3 @@ describe('OOA_remove_field', () => {
     });
 });
 // TODO delete object
-
-// ATTACHMENTS
-
-describe('add_attachment', () => {
-    it('adds to the bottom of the MESH_ATTACHMENTS array', () => {
-        const old_code = `const MESH_ATTACHMENTS = [
-            {id: "something", value: "DUMMY", loc: "DUMMY"},
-        ];`;
-        const AST = CT.parse_code_string_to_AST(old_code);
-        arr_node = CT.get_declaration_node_init(AST, 'MESH_ATTACHMENTS');
-        CT.add_attachment(arr_node, "new_id", [1, 2]);
-        let new_code = CT.print_AST_to_code_string(AST);
-        let expected_code = `const MESH_ATTACHMENTS = [
-            {id: "something", value: "DUMMY", loc: "DUMMY"},
-            {id: "new_id", value: new_id, loc: [1, 2]},
-        ];`;
-        new_code = standardise_code_formatting(new_code);
-        expected_code = standardise_code_formatting(expected_code);
-        expect(new_code).toBe(expected_code);
-    });
-});

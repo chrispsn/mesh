@@ -282,16 +282,10 @@ function append_record(code, id_name, field_name, field_value) {
 }
 */
 
-function add_attachment(arr_node, id, loc) {
-    const new_attachment = `{id: \"${id}\", value: ${id}, loc: [${loc}]},`
-    append_array_element(arr_node, new_attachment);
-}
-
 module.exports = {
     parse_code_string_to_AST,
     print_AST_to_code_string,
     get_declaration_node_init,
-    add_attachment,
     insert_array_element,
     append_array_element,
     remove_array_element,
