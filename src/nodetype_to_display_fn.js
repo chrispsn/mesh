@@ -1,3 +1,5 @@
+'use strict';
+
 // Lists of possible types:
 // https://github.com/benjamn/ast-types/blob/master/def/core.js
 // https://github.com/benjamn/ast-types/blob/master/def/es6.js

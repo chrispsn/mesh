@@ -1,3 +1,5 @@
+'use strict';
+
 const React = require('react');
 const ReactDOM = require('react-dom');
 const Redux = require('redux');
@@ -58,7 +60,7 @@ Events.bind_grid_events(store, HTML_elements.grid);
 Events.bind_code_editor_events(store, code_editor);
 Events.bind_load_file_events(store, HTML_elements.filepicker);
 
-// Mesh interaction functions
+// Map JS results to the grid
 
 function attach(values, attachments) {
     // Display functions return arrays of cells.
@@ -68,10 +70,8 @@ function attach(values, attachments) {
     const state = store.getState();
     const old_code = state.code_editor.value;
     const AST = new CT.parse_code_string_to_AST(old_code);
-    for (let attach_info of attachments) {
-        const {id, grid_loc} = attach_info;
+    for (let {id, grid_loc, display_fn} of attachments) {
         const value = values[id];
-
         let key_cell = Display.create_cell({
             location: grid_loc,
             repr: id,
@@ -88,6 +88,8 @@ function attach(values, attachments) {
                 item_nodepath.prune();
                 
                 // Remove Mesh attachment
+                // TODO make MESH_ATTACHMENTS a map of id -> grid_loc
+                // instead of a record list?
                 const attachments_nodepath = CT.get_declaration_node_init(AST, 'MESH_ATTACHMENTS');
                 CT.remove_record_given_key(attachments_nodepath, 'id', id);
 
@@ -99,7 +101,6 @@ function attach(values, attachments) {
             }
         });
 
-        let {display_fn} = attach_info;
         const module_obj_path = CT.get_declaration_node_init(AST, 'MODULE');
         const item_nodepath = CT.get_object_item(module_obj_path, id);
         let value_nodepath = item_nodepath.get('value');
@@ -133,8 +134,7 @@ function attach(values, attachments) {
             value_cells = display_fn(value, value_nodepath, id);
         }
         
-        // Value cells come through with locations as offsets to the name cell,
-        // so we need to update them.
+        // Value cells come through with locations as offsets to the name cell.
         // Consider moving back into the display fns as a parameter if this step is slow.
         for (let cell of value_cells) {
             cell.location = [cell.location[0] + grid_loc[0], cell.location[1] + grid_loc[1]];

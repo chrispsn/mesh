@@ -1,3 +1,5 @@
+'use strict';
+
 const CT = require('./code_transformers');
 const {rewrite_input} = require('./data_entry');
 

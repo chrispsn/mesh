@@ -1,3 +1,5 @@
+'use strict';
+
 // On options for local storage in electron:
 // http://stackoverflow.com/questions/30465034/where-to-store-user-settings-in-electron-atom-shell-application
 // http://stackoverflow.com/questions/4692245/html5-local-storage-fallback-solutions

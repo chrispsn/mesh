@@ -1,3 +1,5 @@
+'use strict';
+
 const {get_cell, get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
 
