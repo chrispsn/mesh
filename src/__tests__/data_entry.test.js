@@ -58,5 +58,12 @@ describe('rewrite_input', () => {
         expect(expected_output).toBe(actual_output);
     });
 
+    it('correctly interprets negative numbers', () => {
+        const input_string = '-123';
+        const expected_output = '-123';
+        const actual_output = rewrite_input(input_string);
+        expect(expected_output).toBe(actual_output);
+    });
+
     // TODO keep Dates as dates
 });

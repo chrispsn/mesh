@@ -44,9 +44,12 @@ const rewrite_rules = [
     // TODO replace with a catch-all?
     { pattern: /^\{/, rewrite: "$&" },
 
-    // Boolean
+    // Booleans
     { pattern: /true/, rewrite: "$&" },
     { pattern: /false/, rewrite: "$&" },
+    
+    // Numbers
+    { pattern: /-?[0-9]+\.?[0-9]+/, rewrite: "$&" },
 
     // Strings
     { pattern: /^[\D]+/, rewrite: "`$&`" },
