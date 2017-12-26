@@ -42,37 +42,31 @@ module.exports = {
 
     // some_fn()
     'CallExpression': (value, value_nodepath, id) => {
-        console.log("HIT CALLEXPRESSION");
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
-        // TODO will need to enumerate the various kinds of objects here too...
-        // TODO objects (problem is that lots of things are objects...)
-        // if (value === Object(value) && !(value instanceof Function)) {
-        // See also: http://stackoverflow.com/a/22482737
+        let display_fn = display_fns.value_ro;
+        // TODO need to enumerate the other built-in objects here too... eg Map, Set
         if (value instanceof Array) {
-            return display_fns.array_ro(value, value_nodepath, id);
+            display_fn = display_fns.array_ro;
         } else if (typeof value === 'object') {
-            return display_fns.object_ro(value, value_nodepath, id);
+        // If the above isn't capturing things that should be objects, see:
+        // http://stackoverflow.com/a/22482737
+            display_fn = display_fns.object_ro;
         } else if (typeof value === 'function') {
-            return display_fns.function_expression(value, value_nodepath, id);
-        } else {
-            return display_fns.value_ro(value, value_nodepath, id);
+            display_fn = display_fns.function_expression;
         }
+        return display_fn(value, value_nodepath, id);
     },
 
     // new Array([...])
     'NewExpression': (value, value_nodepath, id) => {
-
         const new_callee_display_fns = {
             'Map': display_fns.map,
         }
-        
-        const callee_name = value_node.callee.name;
+        const callee_name = value_nodepath.callee.name;
+        let display_fn = display_fns.value_ro; 
         if (new_callee_display_fns.hasOwnProperty(callee_name)) {
-            const display_fn = new_callee_display_fns[callee_name];
-            return display_fn(value, value_nodepath, id);
-        } else {
-            return display_fns.value(value, value_nodepath, id);
+            display_fn = new_callee_display_fns[callee_name];
         }
+        return display_fn(value, value_nodepath, id);
     },
 
 }

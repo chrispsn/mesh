@@ -209,12 +209,7 @@ store.subscribe( function update_page () {
 // Showtime
 const BLANK_FILE = [
     "'use strict';", 
-    "",
-    "const MODULE = {",
-    "};",
-    "",
-    "const MESH_ATTACHMENTS = [",
-    "];",
-    "",
-].join(Settings.LINE_SEPARATOR);
+    "const MODULE = {};",
+    "const MESH_ATTACHMENTS = [];",
+].join(Settings.LINE_SEPARATOR + Settings.LINE_SEPARATOR);
 store.dispatch({ type: 'LOAD_CODE', code: BLANK_FILE });

@@ -7,21 +7,37 @@
 // Useful:
 // astexplorer.net
 
+/* PRIVATE (setup) */
+
 const Recast = require('recast');
 const Builders = Recast.types.builders;
 
 const {LINE_SEPARATOR} = require('./settings');
 const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR }
 
-function parse_code_string_to_AST(code_string) {
+// TODO write tests
+function get_object_key_from_node(obj_key_node) {
+    switch (obj_key_node.type) {
+        case 'Literal':
+            return obj_key_node.value;
+        case 'Identifier':
+            return obj_key_node.name;
+    }
+}
+
+/* PUBLIC API */
+
+module.exports = {
+    
+parse_code_string_to_AST: function(code_string) {
     return Recast.parse(code_string, RECAST_SETTINGS);
-}
+},
 
-function print_AST_to_code_string(AST) {
+print_AST_to_code_string: function(AST) {
     return Recast.print(AST, RECAST_SETTINGS).code;
-}
+},
 
-function get_declaration_node_init(tree_path, id) {
+get_declaration_node_init: function(tree_path, id) {
     // TODO throw error if duplicate key?
     let nodepath_to_return;
     Recast.visit(tree_path, {
@@ -34,9 +50,9 @@ function get_declaration_node_init(tree_path, id) {
         }
     });
     return nodepath_to_return.get('init');
-}
+},
 
-function insert_array_element(arr_path, element_num, inserted_text) {
+insert_array_element: function(arr_path, element_num, inserted_text) {
     const elements_path = arr_path.get('elements');
     const inserted_node = Builders.identifier(inserted_text);
     if (elements_path.node.elements.length === 0) {
@@ -44,35 +60,25 @@ function insert_array_element(arr_path, element_num, inserted_text) {
     } else {
         elements_path.insertAt(element_num, inserted_node);
     }
-}
+},
 
-function append_array_element(arr_path, inserted_text) {
+append_array_element: function(arr_path, inserted_text) {
     const elements_path = arr_path.get('elements');
     const inserted_node = Builders.identifier(inserted_text);
     elements_path.push(inserted_node);
-}
+},
 
-function remove_array_element(arr_path, element_num) {
+remove_array_element: function(arr_path, element_num) {
     const element_path = arr_path.get('elements', element_num);
     element_path.prune();
-}
+},
 
 // TODO write tests
-function delete_container(value_path) {
+delete_container: function(value_path) {
     value_path.replace(Builders.literal(null));
-}
+},
 
-// TODO write tests
-function get_object_key_from_node(obj_key_node) {
-    switch (obj_key_node.type) {
-        case 'Literal':
-            return obj_key_node.value;
-        case 'Identifier':
-            return obj_key_node.name;
-    }
-}
-
-function get_object_item(obj_path, key) {
+get_object_item: function(obj_path, key) {
     const props_path = obj_path.get('properties');
 
     for (let i=0; i < props_path.value.length; i++) {
@@ -83,9 +89,9 @@ function get_object_item(obj_path, key) {
         }
     }
     return false;
-}
+},
 
-function get_object_item_index(obj_path, key) {
+get_object_item_index: function(obj_path, key) {
     const props_path = obj_path.get('properties');
 
     for (let i=0; i < props_path.value.length; i++) {
@@ -96,15 +102,14 @@ function get_object_item_index(obj_path, key) {
         }
     }
     return false;
-}
+},
 
-
-function replace_object_item_key(obj_item_path, new_key_text) {
+replace_object_item_key: function(obj_item_path, new_key_text) {
     // TODO throw error if duplicate key?
     obj_item_path.get('key').replace(Builders.identifier(new_key_text));
-}
+},
 
-function insert_object_item(obj_path, key_text, value_text, index) {
+insert_object_item: function(obj_path, key_text, value_text, index) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     const new_prop_node = Builders.property('init', 
@@ -116,9 +121,9 @@ function insert_object_item(obj_path, key_text, value_text, index) {
     } else {
         props_path.insertAt(index, new_prop_node);
     }
-}
+},
 
-function insert_object_getter(obj_path, key_text, body_text, index) {
+insert_object_getter: function(obj_path, key_text, body_text, index) {
     // TODO throw error if duplicate key?
     // TODO make these self-memoising?
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get#Smart_self-overwriting_lazy_getters
@@ -136,9 +141,9 @@ function insert_object_getter(obj_path, key_text, body_text, index) {
     } else {
         props_path.insertAt(index, new_prop_node);
     }
-}
+},
 
-function remove_object_item(obj_path, key) {
+remove_object_item: function(obj_path, key) {
     // TODO throw error if missing key?
     const props_path = obj_path.get('properties');
     if (props_path.value.length > 0) {
@@ -150,24 +155,21 @@ function remove_object_item(obj_path, key) {
             }
         }
     }
-}
+},
 
-function remove_record_given_key(arr_path, element_key_name, key) {
+remove_record_given_key: function(arr_path, element_key_name, key) {
     const elements_path = arr_path.get('elements');
     for (let [index, e] of elements_path.node.elements.entries()) {
         for (let prop of e.properties) {
             let prop_key = get_object_key_from_node(prop.key);
             if (prop_key === element_key_name && prop.value.value === key) {
                 arr_path.get('elements', index).prune();
-            } else if (prop_key === element_key_name && prop.value.value === key) {
-                arr_path.get('elements', index).prune();
             }
         }
     }
-}
+},
 
-function OOA_append_datum(obj_path, key_name, datum_text) {
-
+OOA_append_datum: function(obj_path, key_name, datum_text) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     let field_id;
@@ -184,9 +186,9 @@ function OOA_append_datum(obj_path, key_name, datum_text) {
         arr_elements = prop.value.elements;
         arr_elements.push(inserted_node);
     }
-}
+},
 
-function OOA_remove_record(obj_path, record_idx) {
+OOA_remove_record: function(obj_path, record_idx) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     let arr_elements;
@@ -194,9 +196,9 @@ function OOA_remove_record(obj_path, record_idx) {
         arr_elements = prop.value.elements;
         arr_elements.splice(record_idx, 1);
     }
-}
+},
 
-function OOA_add_field(obj_path, key_name) {
+OOA_add_field: function(obj_path, key_name) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     // Figure out how many elements need to be in the array
@@ -208,13 +210,11 @@ function OOA_add_field(obj_path, key_name) {
     const array_node = Builders.arrayExpression(
                         Array(field_length).fill(Builders.literal(null))
     );
-    const new_prop = Builders.property('init', 
-                        Builders.identifier(key_name),
-                        array_node)
+    const new_prop = Builders.property('init', Builders.identifier(key_name), array_node)
     props_path.push(new_prop);
-}
+},
 
-function OOA_remove_field(obj_path, key_name) {
+OOA_remove_field: function(obj_path, key_name) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     let key;
@@ -228,7 +228,7 @@ function OOA_remove_field(obj_path, key_name) {
         }
         idx++;
     }
-}
+},
 // DATUM
 // Clear datum
 // Rewrite datum
@@ -236,7 +236,7 @@ function OOA_remove_field(obj_path, key_name) {
 // Insert record (single datum known) at location
 
 /*
-function append_record(code, id_name, field_name, field_value) {
+append_record: function(code, id_name, field_name, field_value) {
     // Get to the relevant records
     // Get the field titles
     // Construct a record with all fields set to null
@@ -281,25 +281,4 @@ function append_record(code, id_name, field_name, field_value) {
     return Recast.print(AST, RECAST_SETTINGS).code;
 }
 */
-
-module.exports = {
-    parse_code_string_to_AST,
-    print_AST_to_code_string,
-    get_declaration_node_init,
-    insert_array_element,
-    append_array_element,
-    remove_array_element,
-    delete_container,
-    get_object_key_from_node,
-    get_object_item,
-    get_object_item_index,
-    replace_object_item_key,
-    insert_object_item,
-    insert_object_getter,
-    remove_object_item,
-    remove_record_given_key,
-    OOA_append_datum,
-    OOA_remove_record,
-    OOA_add_field,
-    OOA_remove_field,
-}
+};

@@ -35,7 +35,7 @@ class Cell extends React.PureComponent {
     
 }
 
-class Grid extends React.Component {
+class Grid extends React.PureComponent {
     
     render() {
                
@@ -48,17 +48,13 @@ class Grid extends React.Component {
         const max_row_idx = Math.max(10, selected_row_idx, ...cell_row_idxs);
         const max_col_idx = Math.max(10, selected_col_idx, ...cell_col_idxs);
         
-        // TODO replace this with a single call to make a blank row, repeated max_col times?
-        const [row_indices, col_indices] = [max_row_idx, max_col_idx].map(
-            max_idx => Array(max_idx + 1).fill(0).map((_, idx) => idx)
-        );
-
-        const rows = row_indices.map(row_idx => {
-            const row_cells = col_indices.map(col_idx => {
-                const location = [row_idx, col_idx];
-                const id = JSON.stringify(location);
+        const rows = [];
+        for (let row_idx = 0; row_idx <= max_row_idx; row_idx++) {
+            let row_cells = [];
+            for (let col_idx = 0; col_idx <= max_col_idx; col_idx++) {
+                const id = JSON.stringify([row_idx, col_idx]);
                 const cell = cells[id] ? cells[id] : EMPTY_CELL;
-                return React.createElement(
+                row_cells.push(React.createElement(
                     Cell, 
                     Object.assign({}, cell, {
                         key: id + '|' + cell.repr, 
@@ -67,10 +63,10 @@ class Grid extends React.Component {
                         // just the selected one
                         selected: (row_idx === selected_row_idx && col_idx === selected_col_idx)
                     })
-                )
-            });
-            return React.createElement('tr', {key: row_idx.toString()}, row_cells)
-        });
+                ))
+            };
+            rows.push(React.createElement('tr', {key: row_idx.toString()}, row_cells));
+        }
 
         const TBody = React.createElement("tbody", null, rows)
         // tabindex="0" allows the grid to be focused: http://stackoverflow.com/a/3149416

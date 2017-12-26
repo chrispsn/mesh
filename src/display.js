@@ -101,7 +101,6 @@ function create_cell (cell_props) {
 }
 
 const EMPTY_CELL = Object.assign(create_cell({
-
     // TODO does it need only some of the reducers?
     commit_edit: function (state, action) {
         const id = action.commit_value;
