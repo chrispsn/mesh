@@ -110,7 +110,7 @@ const EMPTY_CELL = Object.assign(create_cell({
         const module_obj_node = CT.get_declaration_node_init(AST, 'MODULE');
         CT.insert_object_item(module_obj_node, id, "null");
 
-        const attachments_arr_node = CT.get_declaration_node_init(AST, 'MESH_ATTACHMENTS');
+        const attachments_arr_node = CT.get_declaration_node_init(AST, 'ATTACHMENTS');
         const new_attachment = `{id: \"${id}\", grid_loc: [${state.selected_cell_loc}]},`
         CT.append_array_element(attachments_arr_node, new_attachment);
 

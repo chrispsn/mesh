@@ -88,9 +88,9 @@ function attach(values, attachments) {
                 item_nodepath.prune();
                 
                 // Remove Mesh attachment
-                // TODO make MESH_ATTACHMENTS a map of id -> grid_loc
+                // TODO make ATTACHMENTS a map of id -> grid_loc
                 // instead of a record list?
-                const attachments_nodepath = CT.get_declaration_node_init(AST, 'MESH_ATTACHMENTS');
+                const attachments_nodepath = CT.get_declaration_node_init(AST, 'ATTACHMENTS');
                 CT.remove_record_given_key(attachments_nodepath, 'id', id);
 
                 const new_code = CT.print_AST_to_code_string(AST);
@@ -153,20 +153,17 @@ function attach(values, attachments) {
 store.subscribe( function calculate () {
     const state = store.getState();
     if (state.mode === 'NEED_TO_CALCULATE') {
-        console.log("Calculating...");
-        // TODO right now this dumps the user back to the code editing pane,
-        // but it should depend on where the commit came from (code pane or formula bar)
         try {
-            const ending_return = "return {values: MODULE, attachments: MESH_ATTACHMENTS};";
-            const code_for_fn = state.code_editor.value + ending_return;
-            let {values, attachments} = (new Function(code_for_fn))();
-            let cells = attach(values, attachments);
+            let {MODULE, ATTACHMENTS} = eval(state.code_editor.value + "({MODULE, ATTACHMENTS});");
+            let cells = attach(MODULE, ATTACHMENTS);
             store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
             store.dispatch({ type: 'RETURN_TO_READY' });
         } catch (e) {
             alert(e);
             // TODO highlight offending code?
             console.error(e);
+            // TODO right now this dumps the user back to the code editing pane,
+            // but it should depend on where the commit came from (code pane or formula bar)
             store.dispatch({ type: 'SELECT_CODE' })
         }
     }
@@ -210,6 +207,6 @@ store.subscribe( function update_page () {
 const BLANK_FILE = [
     "'use strict';", 
     "const MODULE = {};",
-    "const MESH_ATTACHMENTS = [];",
+    "const ATTACHMENTS = [];",
 ].join(Settings.LINE_SEPARATOR + Settings.LINE_SEPARATOR);
 store.dispatch({ type: 'LOAD_CODE', code: BLANK_FILE });
