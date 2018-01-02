@@ -9,49 +9,24 @@ const default_cell_props = {
     formula_bar_value: '',
     classes: '', 
 
-    select: function (state, action) {
-        return Object.assign({}, state, {
-            selected_cell_loc: action.location,
-            formula_bar_value: this.formula_bar_value,
-        });
-    },
-
-    edit: function (state) {
-        if (state.mode === 'EDIT') {
-            return state;
-        } else {
-            return Object.assign({}, state, { mode: 'EDIT' });
-        }
-    },
-
-    edit_replace: function (state) {
-        if (state.mode === 'EDIT') {
-            return state;
-        } else {
-            return Object.assign({}, state, {
-                mode: 'EDIT',
-                formula_bar_value: '',
-            });
-        }
-    },
-
     commit_edit: function (state, action) {
         // TODO Check that the commit is valid first?
-        // Also, these 'row + offset, col + offset' logics are basically the same
-        // as what the main reducer is doing...
+
+        // Setup for AST manipulation
         const old_code = state.code_editor.value;
         const AST = CT.parse_code_string_to_AST(old_code);
         const obj_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-
         const key = this.ref_string;
         const index = CT.get_object_item_index(obj_nodepath, key);
+
+        // Remove old property
         CT.remove_object_item(obj_nodepath, key);
+
+        // Add new property in same place
         const inserted_code = rewrite_input(action.commit_value);
-        if (action.commit_value[0] === "=") {
-            CT.insert_object_getter(obj_nodepath, key, inserted_code, index);
-        } else {
-            CT.insert_object_item(obj_nodepath, key, inserted_code, index);
-        }
+        const first_char = action.commit_value[0];
+        const insert_fn = (first_char === "=") ? CT.insert_object_getter : CT.insert_object_item;
+        insert_fn(obj_nodepath, key, inserted_code, index);
 
         const new_code = CT.print_AST_to_code_string(AST);
 
@@ -61,6 +36,8 @@ const default_cell_props = {
         return Object.assign({}, state, {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE',
+            // TODO these 'row + offset, col + offset' logics are basically the same
+            // as what the main reducer is doing...
             selected_cell_loc: [
                 old_row + action.offset[0], 
                 old_col + action.offset[1]
@@ -77,16 +54,13 @@ const default_cell_props = {
 
     delete_value: function (state) {
         // TODO
-        console.log("No 'delete value' action defined.")
-        return Object.assign({}, state, {
-            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-            mode: 'NEED_TO_CALCULATE'
-        });
+        alert("No 'delete value' action defined.")
+        return state;
     },
 
     delete_element: function (state) {
         // TODO
-        console.log("No 'delete element' action defined.")
+        alert("No 'delete element' action defined.")
         return state;
     }
 
@@ -115,7 +89,6 @@ const EMPTY_CELL = Object.assign(create_cell({
         CT.append_array_element(attachments_arr_node, new_attachment);
 
         const new_code = CT.print_AST_to_code_string(AST);
-
         return Object.assign({}, state, {
             code_editor: Object.assign({}, state.code_editor, {value: new_code}),
             mode: 'NEED_TO_CALCULATE',

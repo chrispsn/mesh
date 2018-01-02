@@ -204,6 +204,7 @@ store.subscribe( function update_page () {
 });
 
 // Showtime
+
 const BLANK_FILE = [
     "'use strict';", 
     "const MODULE = {};",
