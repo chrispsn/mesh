@@ -4,7 +4,7 @@ const React = require('react');
 
 function StatusBar (props) {
 
-    let displayed_filepath = props.loaded_filepath;
+    let displayed_filepath = props.filepath;
     if (displayed_filepath === null) {
         displayed_filepath = 'No file loaded';
     }

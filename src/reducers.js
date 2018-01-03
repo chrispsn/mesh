@@ -10,12 +10,11 @@ const INITIAL_STATE = {
     },
     selected_cell_loc: [0, 0],
     code_editor: { value: '', selection: undefined, show: true },
-    loaded_filepath: null,
-    formula_bar_value: '',
+    filepath: null,
 }
 
 // TODO is there a more brief alternative to Object.assign?
-
+// TODO can we get rid of all the (state, action) signatures?
 const state_changes = {
 
     'RESET_STATE': (state, action) => Object.assign({}, state, INITIAL_STATE),
@@ -24,14 +23,14 @@ const state_changes = {
 
     'SELECT_CODE': (state, action) => Object.assign({}, state, {mode: 'EDITING_CODE'}),
 
-    'TOGGLE_CODE_PANE_SHOW': (state, action) => Object.assign({}, state, {
-        code_editor: Object.assign({}, state.code_editor, 
-            {show: !state.code_editor.show}),
-    }),
+    'TOGGLE_CODE_PANE_SHOW': (state, action) => {
+        const bool = !state.code_editor.show;
+        const code_editor = Object.assign({}, state.code_editor, {show: bool});
+        return Object.assign({}, state, code_editor);
+    },
 
     'LOAD_CODE': (state, action) => Object.assign({}, state, {
-        code_editor: Object.assign({}, state.code_editor, 
-            {value: action.code}),
+        code_editor: Object.assign({}, state.code_editor, {value: action.code}),
         mode: 'NEED_TO_CALCULATE',
     }),
 
@@ -52,15 +51,13 @@ const state_changes = {
         return Object.assign({}, state, { mode: 'PRE_READY', cells: new_cells })
     },
     
-    'RETURN_TO_READY': (state, action) => {
-        return Object.assign({}, state, { mode: 'READY', });
-    },
+    'RETURN_TO_READY': (state, action) => Object.assign({}, state, {mode: 'READY'}),
 
     /* CELL BEHAVIOUR */
 
-    'SELECT_CELL': (state, action) => {
-        return Object.assign({}, state, {selected_cell_loc: action.location});
-    },
+    'SELECT_CELL': (state, action) => Object.assign({}, state, {
+        selected_cell_loc: action.location
+    }),
 
     'MOVE_CELL_SELECTION': (state, action) => {
         const [old_row_idx, old_col_idx] = state.selected_cell_loc;
@@ -93,7 +90,7 @@ const state_changes = {
 
     /* OTHER */
 
-    'SET_FILEPATH': (state, action) => Object.assign({}, state, {loaded_filepath: action.filepath}),
+    'SET_FILEPATH': (state, action) => Object.assign({}, state, {filepath: action.filepath}),
 
 }
 

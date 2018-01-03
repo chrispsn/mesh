@@ -144,11 +144,11 @@ const window_keydown_events = [
         return save_file_as(state);
     }},
     {mode: 'READY', keypattern: /^s$/, modifiers: (e) => (e.ctrlKey), action: (state) => {
-        if (state.loaded_filepath === null) {
+        if (state.filepath === null) {
             return save_file_as(state);
         } else {
-            LocalFileIO.writeFile(state.loaded_filepath, state.code_editor.value);
-            alert(`File saved: ${state.loaded_filepath}`)
+            LocalFileIO.writeFile(state.filepath, state.code_editor.value);
+            alert(`File saved: ${state.filepath}`)
             return { type: 'RETURN_TO_READY' };
         }
     }},
