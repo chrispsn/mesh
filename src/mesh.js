@@ -12,6 +12,7 @@ const Reducers = require('./reducers');
 const Display = require('./display');
 const CT = require('./code_transformers');
 const Settings = require('./settings');
+const Selectors = require('./selectors');
 const nodetype_to_display_fn = require('./nodetype_to_display_fn');
 
 // Redux setup
@@ -185,16 +186,19 @@ store.subscribe( function update_page () {
         // TODO maybe we should return to having focus tracked in the app state?
         HTML_elements.grid.focus();
         ReactDOM.render(React.createElement(Grid, state), HTML_elements.grid_container);
-        HTML_elements.formula_bar.value = state.formula_bar_value;
     }
     
     // Formula bar
     if (state.mode === 'EDIT') {
         HTML_elements.formula_bar.focus();
+    } else if (state.mode === 'READY') {
+        const selected_cell = Selectors.get_selected_cell(state);
+        HTML_elements.formula_bar.value = selected_cell.formula_bar_value;
     }
 
     // Code editor
     // TODO setting this every time is probably slow - consider React-ising
+    // can't we just make the events file know about the code editor?
     if (state.mode === 'LOAD_CODE_FROM_PANE') {
         store.dispatch({ type: 'LOAD_CODE', code: code_editor.getValue() });
     } else {

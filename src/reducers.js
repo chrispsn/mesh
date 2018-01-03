@@ -23,15 +23,18 @@ const state_changes = {
     /* CODE PANE */
 
     'SELECT_CODE': (state, action) => Object.assign({}, state, {mode: 'EDITING_CODE'}),
+
     'TOGGLE_CODE_PANE_SHOW': (state, action) => Object.assign({}, state, {
         code_editor: Object.assign({}, state.code_editor, 
             {show: !state.code_editor.show}),
     }),
+
     'LOAD_CODE': (state, action) => Object.assign({}, state, {
         code_editor: Object.assign({}, state.code_editor, 
             {value: action.code}),
         mode: 'NEED_TO_CALCULATE',
     }),
+
     'LOAD_CODE_FROM_PANE': (state, action) => Object.assign({}, state, {
         mode: 'LOAD_CODE_FROM_PANE', 
     }),
@@ -39,6 +42,7 @@ const state_changes = {
     /* CALCULATION */
 
     'CALCULATE': (state, action) => Object.assign({}, state, { mode: 'NEED_TO_CALCULATE', }),
+
     'ADD_CELLS_TO_SHEET': (state, action) => {
         const new_cells = {};
         for (let cell of action.cells) {
@@ -47,24 +51,15 @@ const state_changes = {
         }
         return Object.assign({}, state, { mode: 'PRE_READY', cells: new_cells })
     },
-
-    // TODO do we even need RETURN_TO_READY?
+    
     'RETURN_TO_READY': (state, action) => {
-        const selected_cell = get_selected_cell(state);
-        return Object.assign({}, state, {
-            mode: 'READY',
-            formula_bar_value: selected_cell.formula_bar_value,
-        });
+        return Object.assign({}, state, { mode: 'READY', });
     },
 
     /* CELL BEHAVIOUR */
 
     'SELECT_CELL': (state, action) => {
-        const new_selected_cell = get_cell(state.cells, action.location);
-        return Object.assign({}, state, {
-            selected_cell_loc: action.location,
-            formula_bar_value: new_selected_cell.formula_bar_value,
-        });
+        return Object.assign({}, state, {selected_cell_loc: action.location});
     },
 
     'MOVE_CELL_SELECTION': (state, action) => {
@@ -74,14 +69,11 @@ const state_changes = {
             Math.max(0, old_row_idx + offset_r),
             Math.max(0, old_col_idx + offset_c),
         ];
-        const new_selected_cell = get_cell(state.cells, new_location);
-        return Object.assign({}, state, {
-            selected_cell_loc: new_location,
-            formula_bar_value: new_selected_cell.formula_bar_value,
-        });
+        return Object.assign({}, state, {selected_cell_loc: new_location});
     },
 
     'EDIT_CELL': (state, action) => Object.assign({}, state, {mode: 'EDIT'}),
+
     'EDIT_CELL_REPLACE': (state, action) => {
         let new_props;
         if (state.mode === 'EDIT') {
