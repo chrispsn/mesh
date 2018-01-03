@@ -176,7 +176,6 @@ store.subscribe( function log_state () {
 
 store.subscribe( function update_page () {
     const state = store.getState();
-    HTML_elements.formula_bar.value = state.formula_bar_value;
         
     // Status bar should always render (??)
     ReactDOM.render(React.createElement(StatusBar, state), HTML_elements.status_bar);
@@ -191,6 +190,9 @@ store.subscribe( function update_page () {
     // Formula bar
     if (state.mode === 'EDIT') {
         HTML_elements.formula_bar.focus();
+    } else if (state.mode === 'EDIT_REPLACE') {
+        HTML_elements.formula_bar.value = '';
+        store.dispatch({ type: 'EDIT_CELL' });
     } else if (state.mode === 'READY') {
         const selected_cell = Selectors.get_selected_cell(state);
         HTML_elements.formula_bar.value = selected_cell.formula_bar_value;

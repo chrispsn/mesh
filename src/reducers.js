@@ -72,12 +72,7 @@ const state_changes = {
     'EDIT_CELL': (state, action) => Object.assign({}, state, {mode: 'EDIT'}),
 
     'EDIT_CELL_REPLACE': (state, action) => {
-        let new_props;
-        if (state.mode === 'EDIT') {
-            new_props = {};
-        } else {
-            new_props = { mode: 'EDIT', formula_bar_value: '', }
-        }
+        let new_props = (state.mode === 'EDIT') ? {} : {mode: 'EDIT_REPLACE'};
         return Object.assign({}, state, new_props);
     },
 
