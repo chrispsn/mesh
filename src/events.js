@@ -59,12 +59,12 @@ const grid_keydown_events = [
     {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [-1, 0] })},
     
     // TODO If on the name: delete the declaration entirely
-    {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'DELETE_VALUE' })},
+    {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'EDIT_AST', AST_edit_type: 'DELETE_VALUE' })},
 
     // Add and remove elements (eg slots in an array)
-    {mode: 'READY', keypattern: /^\+$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'INSERT_ELEMENT' }}},
-    {mode: 'READY', keypattern: /^-$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'DELETE_ELEMENT' }}},
-    {mode: 'READY', keypattern: /^_$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function() { return { type: 'DELETE_CONTAINER' }}},
+    {mode: 'READY', keypattern: /^\+$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'INSERT_ELEMENT', offset: [0, 0] }}},
+    {mode: 'READY', keypattern: /^-$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'DELETE_ELEMENT', offset: [0, 0]}}},
+    {mode: 'READY', keypattern: /^_$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function() { return { type: 'EDIT_AST', AST_edit_type: 'DELETE_CONTAINER', offset: [0, 0] }}},
 
 ];
 
@@ -188,13 +188,13 @@ const formula_bar_keydown_events = [
     // TOOD how can a user insert a line into the formula bar 
     // without triggering commit? Same way as in Excel?
     {mode: 'EDIT', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, 
-        action: () => ({ type: 'COMMIT_CELL_EDIT', commit_value: formula_bar.value, offset: [1, 0] })},
+        action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [1, 0] })},
     {mode: 'EDIT', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, 
-        action: () => ({ type: 'COMMIT_CELL_EDIT', commit_value: formula_bar.value, offset: [0, 1] })},
+        action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [0, 1] })},
     {mode: 'EDIT', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), preventDefault: true, 
-        action: () => ({ type: 'COMMIT_CELL_EDIT', commit_value: formula_bar.value, offset: [-1, 0] })},
+        action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [-1, 0] })},
     {mode: 'EDIT', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, 
-        action: () => ({ type: 'COMMIT_CELL_EDIT', commit_value: formula_bar.value, offset: [0, -1] })},
+        action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [0, -1] })},
     {mode: 'EDIT', keypattern: /^Escape$/, action: () => ({ type: 'DISCARD_CELL_EDIT' })},
 ];
 

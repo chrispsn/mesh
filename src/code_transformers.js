@@ -37,16 +37,12 @@ print_AST_to_code_string: function(AST) {
     return Recast.print(AST, RECAST_SETTINGS).code;
 },
 
-get_declaration_node_init: function(tree_path, id) {
-    // TODO throw error if duplicate key?
+get_root_mesh_obj_node: function(AST) {
     let nodepath_to_return;
-    Recast.visit(tree_path, {
+    Recast.visit(AST, {
         visitVariableDeclarator: function(path) {
-            if (path.node.id.name == id) {
-                nodepath_to_return = path;
-                return false;
-            }
-            this.traverse(path);
+            nodepath_to_return = path;
+            return false;
         }
     });
     return nodepath_to_return.get('init');

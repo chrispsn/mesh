@@ -1,15 +1,28 @@
 'use strict';
 
-const {get_cell, get_selected_cell} = require('./selectors');
+const CT = require('./code_transformers');
+const {get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
+const {LINE_SEPARATOR} = require('./settings');
+const {cell_AST_change_bindings} = require('./cell_AST_change_bindings');
+
+const BLANK_FILE = [
+// Maybe get rid of this line if always intended to be consumed as ES6 modules?
+    "'use strict';", 
+    "const SHEET_ROOT = {",
+    "    __mesh_grid__: {}",
+    "}"
+// Add ES6 export line?
+].join(LINE_SEPARATOR + LINE_SEPARATOR);
 
 const INITIAL_STATE = {
-    mode: 'NEED_TO_CALCULATE',
-    cells: {
-        '[0, 0]': Object.assign({}, EMPTY_CELL, {location: [0, 0]})
-    },
+    mode: 'READY',
+    // TODO do I have to tell cells where they are? Alt: do I have to use locations as keys?
+    // Alt 2: why can't the cells come through as a key-value map? Then really can skip
+    // duplication of location... unless needed by React?
+    cells: { '[0, 0]': Object.assign({}, EMPTY_CELL, {location: [0, 0]}) },
     selected_cell_loc: [0, 0],
-    code_editor: { value: '', selection: undefined, show: true },
+    code_editor: { value: BLANK_FILE, selection: undefined, show: true },
     filepath: null,
 }
 
@@ -76,12 +89,39 @@ const state_changes = {
         return Object.assign({}, state, new_props);
     },
 
-    'COMMIT_CELL_EDIT': (state, action) => get_selected_cell(state).commit_edit(state, action),
-    'DISCARD_CELL_EDIT': (state, action) => get_selected_cell(state).discard_edit(state),
-    'DELETE_VALUE':  (state, action) => get_selected_cell(state).delete_value(state),
-    'INSERT_ELEMENT': (state, action) => get_selected_cell(state).insert_element(state),
-    'DELETE_ELEMENT': (state, action) => get_selected_cell(state).delete_element(state),
-    'DELETE_CONTAINER': (state, action) => get_selected_cell(state).delete_container(state),
+    'DISCARD_CELL_EDIT': (state, action) => Object.assign({}, state, {
+        mode: 'READY',
+        formula_bar_value: this.formula_bar_value,
+    }),
+
+    'EDIT_AST': (state, action) => {
+        const old_code = state.code_editor.value;
+        const AST = CT.parse_code_string_to_AST(old_code);
+        const mesh_obj_node = CT.get_root_mesh_obj_node(AST);
+
+        const fns_label = get_selected_cell(state).cell_AST_changes_type;
+        const AST_change_fns = cell_AST_change_bindings[fns_label];
+        const AST_change_fn = AST_change_fns[action.AST_edit_type] 
+
+        // TODO pass in fn arguments etc, instead of whole action? (Probs need whole action)
+        // TODO should this also pass in the selected cell,
+        // instead of the whole state?
+        const selection_offset = AST_change_fn(mesh_obj_node, state, action);
+
+        const [old_row, old_col] = state.selected_cell_loc;
+        const new_code = CT.print_AST_to_code_string(AST);
+        return Object.assign({}, state, {
+            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+            mode: 'NEED_TO_CALCULATE',
+            // TODO Merge with select code somehow? (Feels like select should just be a 'refresh ready')
+            // TODO these 'row + offset, col + offset' logics are basically the same
+            // as what the main reducer is doing...
+            selected_cell_loc: [
+                old_row + selection_offset[0], 
+                old_col + selection_offset[1]
+            ],
+        });
+    },
 
     /* OTHER */
 

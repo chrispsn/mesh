@@ -1,298 +1,112 @@
 'use strict';
 
 const CT = require('./code_transformers');
-const {rewrite_input} = require('./data_entry');
 
-const default_cell_props = {
+// TODO Do we really need an explicit 'empty' cell?
+// Surely the React component can adjust for that
+const EMPTY_CELL = {
     repr: '', 
     ref_string: null, 
     formula_bar_value: '',
     classes: '', 
-
-    commit_edit: function (state, action) {
-        // TODO Check that the commit is valid first?
-
-        // Setup for AST manipulation
-        const old_code = state.code_editor.value;
-        const AST = CT.parse_code_string_to_AST(old_code);
-        const obj_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-        const key = this.ref_string;
-        const index = CT.get_object_item_index(obj_nodepath, key);
-
-        // Remove old property
-        CT.remove_object_item(obj_nodepath, key);
-
-        // Add new property in same place
-        const inserted_code = rewrite_input(action.commit_value);
-        const first_char = action.commit_value[0];
-        const insert_fn = (first_char === "=") ? CT.insert_object_getter : CT.insert_object_item;
-        insert_fn(obj_nodepath, key, inserted_code, index);
-
-        const new_code = CT.print_AST_to_code_string(AST);
-
-        // TODO Merge with select code somehow? (Feels like select should just be a 'refresh ready')
-        const [old_row, old_col] = state.selected_cell_loc;
-
-        return Object.assign({}, state, {
-            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-            mode: 'NEED_TO_CALCULATE',
-            // TODO these 'row + offset, col + offset' logics are basically the same
-            // as what the main reducer is doing...
-            selected_cell_loc: [
-                old_row + action.offset[0], 
-                old_col + action.offset[1]
-            ],
-        });
-    },
-
-    discard_edit: function (state) {
-        return Object.assign({}, state, {
-            mode: 'READY',
-            formula_bar_value: this.formula_bar_value,
-        });
-    },
-
-    delete_value: function (state) {
-        // TODO
-        alert("No 'delete value' action defined.")
-        return state;
-    },
-
-    delete_element: function (state) {
-        // TODO
-        alert("No 'delete element' action defined.")
-        return state;
-    }
-
+    cell_AST_changes_type: 'EMPTY',
 }
-
-function create_cell (cell_props) {
-    if (arguments.length === 0) {
-        return Object.assign({}, default_cell_props);
-    } else {
-        return Object.assign({}, default_cell_props, arguments[0]);
-    }
-}
-
-const EMPTY_CELL = Object.assign(create_cell({
-    // TODO does it need only some of the reducers?
-    commit_edit: function (state, action) {
-        const id = action.commit_value;
-        const old_code = state.code_editor.value;
-        const AST = CT.parse_code_string_to_AST(old_code);
-
-        const module_obj_node = CT.get_declaration_node_init(AST, 'MODULE');
-        CT.insert_object_item(module_obj_node, id, "null");
-
-        const attachments_arr_node = CT.get_declaration_node_init(AST, 'ATTACHMENTS');
-        const new_attachment = `{id: \"${id}\", grid_loc: [${state.selected_cell_loc}]},`
-        CT.append_array_element(attachments_arr_node, new_attachment);
-
-        const new_code = CT.print_AST_to_code_string(AST);
-        return Object.assign({}, state, {
-            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-            mode: 'NEED_TO_CALCULATE',
-            selected_cell_loc: [
-                state.selected_cell_loc[0] + action.offset[0],
-                state.selected_cell_loc[1] + action.offset[1],
-            ]
-        });
-    }
-}))
-
-// TODO I don't like how we effectively run ASTs twice:
-// once at the display step, to get the value node for the new code,
-// and once when doing code transformations off the back of UI interaction.
-// It's not crazy to assume that the AST won't change between when cells are created
-// and when cells are interacted with; in that case we could pass in the old AST
-// and use it to build the 'delete' (etc) functions.
-// *Maybe* you'd need to be careful with buttons that change the AST? (eg loading in new JSON)
-// but maybe the loader function would force a refresh of the grid at that time, to rebuild it.
-// I'll leave this for another day.
 
 const display_fns = {
-    
-    dummy: (value, value_nodepath, id) => {
+
+    dummy: (value, value_nodepath, id, AST) => {
         // For use where you don't know what to use for the formula bar value
         // and code location values yet.
-        return [create_cell({
+        return [{
             location: [0, 1],
             ref_string: id,
             repr: 'TODO',
             formula_bar_value: "TODO",
-        })];
+            classes: '',
+            cell_AST_changes_type: 'DEFAULT', 
+        }];
     },
 
-    value: (value, value_nodepath, id) => {
-        const value_cell = create_cell({
+    value: (value, value_nodepath, id, AST) => {
+        const value_cell = {
             location: [0, 1], 
             ref_string: id,
             repr: String(value),
             formula_bar_value: CT.print_AST_to_code_string(value_nodepath),
-            classes: 'occupied editable ' + typeof value + (typeof value === 'boolean' ? ' ' + String(value) : ''),
-        });
+            classes: 'occupied editable ' + typeof value 
+                + (typeof value === 'boolean' ? ' ' + String(value) : ''),
+            cell_AST_changes_type: 'DEFAULT', 
+            AST_props: {key: id},
+        };
         return [value_cell];
     },
 
-    value_ro: (value, value_nodepath, id) => {
+    value_ro: (value, value_nodepath, id, AST) => {
         console.log("VALUE_RO");
-        const value_cell = create_cell({
+        const value_cell = {
             location: [0, 1], 
             ref_string: id,
             repr: String(value),
             formula_bar_value: '=' + CT.print_AST_to_code_string(value_nodepath),
-            classes: 'occupied read-only ' + typeof value + (typeof value === 'boolean' ? ' ' + String(value) : ''),
-        });
+            classes: 'occupied read-only ' + typeof value 
+                + (typeof value === 'boolean' ? ' ' + String(value) : ''),
+            cell_AST_changes_type: 'DEFAULT', 
+        };
         return [value_cell];
     },
 
-    function_expression: (value, value_nodepath, id) => {
+    function_expression: (value, value_nodepath, id, AST) => {
         const formula_bar_text = CT.print_AST_to_code_string(value_nodepath);
-        const value_cell = create_cell({
+        const value_cell = {
             location: [0, 1], 
             ref_string: id,
             repr: String(value),
             formula_bar_value: "=" + formula_bar_text,
             classes: 'occupied read-only function',
-        });
+            cell_AST_changes_type: 'DEFAULT', 
+        };
         return [value_cell];
     },
 
 /* ARRAY */
 
-    array_ro: (array, array_nodepath, id) => {
+    array_ro: (array, array_nodepath, id, AST) => {
     // TODO it may be nice if: when you click on this, it selects the whole array.
-        return array.map((value, row_offset) => create_cell({
+        return array.map((value, row_offset) => ({
             location: [1 + row_offset, 0],
             repr: String(value),
             ref_string: id,
             formula_bar_value: CT.print_AST_to_code_string(array_nodepath.node),
             classes: "read-only",
+            cell_AST_changes_type: 'DEFAULT', 
         }));
     },
 
-    array_rw: (array, array_nodepath, id) => {
+    array_rw: (array, array_nodepath, id, AST) => {
 
         const array_node = array_nodepath.node;
 
         const value_cells = array.map((value, row_offset) => {
             const element_node = array_node.elements[row_offset];
-            return create_cell({
+            return ({
                 location: [1 + row_offset, 0],
                 repr: String(value),
+                AST_props: {index: row_offset, key: id},
                 ref_string: id,
                 formula_bar_value: CT.print_AST_to_code_string(element_node),
                 classes: 'editable',
-                commit_edit: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const arr_nodepath = item_nodepath.get('value');
-                    CT.remove_array_element(arr_nodepath, row_offset);
-                    CT.insert_array_element(arr_nodepath, row_offset, action.commit_value);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE',
-                        selected_cell_loc: [
-                            state.selected_cell_loc[0] + action.offset[0], 
-                            state.selected_cell_loc[1] + action.offset[1],
-                        ],
-                    });
-                },
-                insert_element: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const arr_nodepath = item_nodepath.get('value');
-                    CT.insert_array_element(arr_nodepath, row_offset, "null");
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
-                delete_element: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const arr_nodepath = item_nodepath.get('value');
-                    CT.remove_array_element(arr_nodepath, row_offset);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
-                delete_container: (state) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const arr_nodepath = item_nodepath.get('value');
-                    CT.delete_container(arr_nodepath);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
+                cell_AST_changes_type: 'ARRAY_LITERAL_DATA_CELL',
             });
         })
 
-        const append_cell = create_cell({
+        const append_cell = ({
             location: [1 + array.length, 0],
             repr: '',
+            AST_props: {index: 1 + array.length, key: id},
             ref_string: id,
             classes: 'append',
             formula_bar_value: '',
-            commit_edit: (state, action) => {
-                const old_code = state.code_editor.value;
-                const AST = CT.parse_code_string_to_AST(old_code);
-                const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                const item_nodepath = CT.get_object_item(module_nodepath, id);
-                const arr_nodepath = item_nodepath.get('value');
-                // TODO allow for formula cells
-                CT.append_array_element(arr_nodepath, action.commit_value);
-                const new_code = CT.print_AST_to_code_string(AST);
-                return Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE',
-                    selected_cell_loc: [
-                        state.selected_cell_loc[0] + action.offset[0], 
-                        state.selected_cell_loc[1] + action.offset[1],
-                    ],
-                });
-            },
-            insert_element: (state, action) => {
-                const old_code = state.code_editor.value;
-                const AST = CT.parse_code_string_to_AST(old_code);
-                const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                const item_nodepath = CT.get_object_item(module_nodepath, id);
-                const arr_nodepath = item_nodepath.get('value');
-                CT.insert_array_element(arr_nodepath, array.length, "null");
-                const new_code = CT.print_AST_to_code_string(AST);
-                return Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE'
-                });
-            },
-            delete_container: function (state) {
-                const old_code = state.code_editor.value;
-                const AST = CT.parse_code_string_to_AST(old_code);
-                const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                const item_nodepath = CT.get_object_item(module_nodepath, id);
-                const arr_nodepath = item_nodepath.get('value');
-                CT.delete_container(arr_nodepath);
-                const new_code = CT.print_AST_to_code_string(AST);
-                return Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE'
-                });
-            },
+            cell_AST_changes_type: 'ARRAY_LITERAL_APPEND_CELL',
         })
         
         return [...value_cells, append_cell];
@@ -301,7 +115,7 @@ const display_fns = {
 /* OBJECT */
 
     // TODO needs work - maybe look at how array_ro works
-    object_ro: (object, object_nodepath, id) => {
+    object_ro: (object, object_nodepath, id, AST) => {
 
         // TODO fact that we need to add the = here suggests
         // doing it in a function that is not supposed to know about it containing a formula,
@@ -311,20 +125,22 @@ const display_fns = {
         const cells = [];
         Object.entries(object).forEach(([key, value], row_offset) => {
 
-            const key_cell = create_cell({
+            const key_cell = ({
                 location: [1 + row_offset, 0],
                 repr: String(key), 
                 ref_string: id,
                 formula_bar_value: formula_bar_text,
                 classes: 'object key read-only',
+                cell_AST_changes_type: 'DEFAULT',
             });
 
-            const value_cell = create_cell({
+            const value_cell = ({
                 location: [1 + row_offset, 1],
                 repr: String(value), 
                 ref_string: id,
                 formula_bar_value: formula_bar_text,
                 classes: 'object value read-only',
+                cell_AST_changes_type: 'DEFAULT',
             });
 
             cells.push(key_cell, value_cell);
@@ -334,7 +150,7 @@ const display_fns = {
 
     },
 
-    object_rw: (object, object_nodepath, id) => {
+    object_rw: (object, object_nodepath, id, AST) => {
 
         const cells = [];
 
@@ -342,72 +158,16 @@ const display_fns = {
             const pair_node = object_nodepath.node.properties[row_offset];
 
             const key_node = pair_node.key;
-            const key_cell = create_cell({
+            const key_cell = ({
                 location: [1 + row_offset, 0],
                 // TODO visually show the difference between keys surrounded by "" and those not?
                 repr: String(key), 
                 ref_string: id,
                 formula_bar_value: CT.print_AST_to_code_string(key_node),
                 classes: 'object key editable',
+                AST_props: {key: id, item_key: key},
                 // TODO computed keys?
-                commit_edit: (state, action) => {
-                    const new_id = action.commit_value;
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_obj_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_obj_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    const obj_item_nodepath = CT.get_object_item(obj_nodepath, key);
-                    CT.replace_object_item_key(obj_item_nodepath, new_id);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE',
-                        selected_cell_loc: [
-                            state.selected_cell_loc[0] + action.offset[0],
-                            state.selected_cell_loc[1] + action.offset[1],
-                        ],
-                    });
-                },
-                insert_element: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    CT.insert_object_item(obj_nodepath, 'new_key', 'null');
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
-                delete_element: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    CT.remove_object_item(obj_nodepath, key);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
-                delete_container: function (state) {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    CT.delete_container(obj_nodepath);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
+                cell_AST_changes_type: 'OBJECT_LITERAL_KEY_CELL',
             });
 
             let value_node = pair_node.value;
@@ -416,8 +176,7 @@ const display_fns = {
                 value_node = value_node.body.body[0].argument;
                 is_formula = true;
             }
-            console.log(is_formula);
-            const value_cell = create_cell({
+            const value_cell = ({
                 location: [1 + row_offset, 1],
                 // TODO show function bodies (currently show as blank)
                 // Maybe we need a 'show as leaf' function
@@ -425,131 +184,27 @@ const display_fns = {
                 ref_string: id,
                 formula_bar_value: (is_formula ? '=' : '') + CT.print_AST_to_code_string(value_node),
                 classes: 'object value' + (is_formula ? '' : ' editable'),
-                commit_edit: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_obj_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_obj_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-
-                   // Should be able to merge with the code for commits to the module object
-                    const index = CT.get_object_item_index(obj_nodepath, key);
-                    CT.remove_object_item(obj_nodepath, key);
-                    const inserted_code = rewrite_input(action.commit_value);
-                    if (action.commit_value[0] === "=") {
-                        CT.insert_object_getter(obj_nodepath, key, inserted_code, index);
-                    } else {
-                        CT.insert_object_item(obj_nodepath, key, inserted_code, index);
-                    }
-
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE',
-                        selected_cell_loc: [
-                            state.selected_cell_loc[0] + action.offset[0],
-                            state.selected_cell_loc[1] + action.offset[1],
-                        ],
-                    });
-                },
-                insert_element: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    CT.insert_object_item(obj_nodepath, "new_key", "null");
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
-                delete_element: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    CT.remove_object_item(obj_nodepath, key);
-                    const new_code = CT.print_AST_to_code_string(AST);
- 
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
-                delete_container: function (state) {
-                    const old_code = state.code_editor.value;
-                    const AST = CT.parse_code_string_to_AST(old_code);
-                    const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                    const item_nodepath = CT.get_object_item(module_nodepath, id);
-                    const obj_nodepath = item_nodepath.get('value');
-                    CT.delete_container(obj_nodepath);
-                    const new_code = CT.print_AST_to_code_string(AST);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE'
-                    });
-                },
+                AST_props: {key: id, item_key: key},
+                cell_AST_changes_type: 'OBJECT_LITERAL_VALUE_CELL',
             });
 
             cells.push(key_cell, value_cell);
         });
 
-        const append_cell = create_cell({
+        const append_cell = ({
             location: [1 + cells.length / 2, 0],
             repr: '',
             ref_string: id,
             classes: 'add_key',
             formula_bar_value: '',
-            commit_edit: (state, action) => {
-                const old_code = state.code_editor.value;
-                const AST = CT.parse_code_string_to_AST(old_code);
-                const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                const item_nodepath = CT.get_object_item(module_nodepath, id);
-                const obj_nodepath = item_nodepath.get('value');
-                CT.insert_object_item(obj_nodepath, action.commit_value, "null");
-                const new_code = CT.print_AST_to_code_string(AST);
-                return Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE',
-                    selected_cell_loc: [
-                        state.selected_cell_loc[0] + action.offset[0], 
-                        state.selected_cell_loc[1] + action.offset[1]
-                    ]
-                });
-            },
-            insert_element: (state, action) => {
-                const old_code = state.code_editor.value;
-                const AST = CT.parse_code_string_to_AST(old_code);
-                const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                const item_nodepath = CT.get_object_item(module_nodepath, id);
-                const obj_nodepath = item_nodepath.get('value');
-                CT.insert_object_item(obj_nodepath, "new_key", "null");
-                const new_code = CT.print_AST_to_code_string(AST);
-                return Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE'
-                });
-            },
-            delete_container: function (state) {
-                const old_code = state.code_editor.value;
-                const AST = CT.parse_code_string_to_AST(old_code);
-                const module_nodepath = CT.get_declaration_node_init(AST, 'MODULE');
-                const item_nodepath = CT.get_object_item(module_nodepath, id);
-                const obj_nodepath = item_nodepath.get('value');
-                CT.delete_container(obj_nodepath);
-                const new_code = CT.print_AST_to_code_string(AST);
-                return Object.assign({}, state, {
-                    code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                    mode: 'NEED_TO_CALCULATE'
-                });
-            },
+            AST_props: {key: id},
+            cell_AST_changes_type: 'OBJECT_LITERAL_APPEND_CELL',
         })
 
         return [...cells, append_cell];
     },
+
+// TODO Pretty much everything below this line is completely broken right now
 
 /* OTHER TYPES */
 
@@ -566,7 +221,7 @@ const display_fns = {
             
             // Headers
             headers_to_add = Object.keys(records[0]).map(
-                (key, col_offset) => create_cell({
+                (key, col_offset) => ({
                     location: [row_index, col_index + col_offset], 
                     repr: String(key),
                     classes: 'heading',
@@ -580,7 +235,7 @@ const display_fns = {
                 (record, row_offset) => {
                     const current_row_index = row_index + row_offset;
                     return Object.values(record).map(
-                        (val, col_offset) => create_cell({
+                        (val, col_offset) => ({
                             location: [current_row_index, col_index + col_offset],
                             repr: val,
                             formula_bar_value: "TODO",
@@ -595,18 +250,14 @@ const display_fns = {
         return [];
     },
 
-    OOA: (obj, ref_string, grid_loc, value_node, headings) => {
-        // Object of arrays (aka struct of arrays).
-        // Allow user to specify an order of headings;
-        // otherwise, is taken from Object.keys(obj).
-        // Assumes all arrays are of the same length.
-        // TODO should actually output another fn that has the headings baked in
+    table_object: (obj, ref_string, grid_loc, value_node) => {
+        // Table structured as object of arrays: {heading: [values], ...}
 
         let [row_index, col_index] = grid_loc;
 
         row_index++;
 
-        const keys = typeof headings !== 'undefined' ? headings : Object.keys(obj);
+        const keys = Object.keys(obj);
         const record_count = obj[keys[0]].length;
 
         // Write the data structure
@@ -614,7 +265,7 @@ const display_fns = {
             
             // Headers
             const header_cells = keys.map(
-                (key, col_offset) => create_cell({
+                (key, col_offset) => ({
                     location: [row_index, col_index + col_offset], 
                     repr: String(key),
                     classes: 'heading',
@@ -626,7 +277,7 @@ const display_fns = {
             const extra_cells = [];
 
             // Append cell
-            const new_field_cell = create_cell({
+            const new_field_cell = ({
                 location: [row_index, col_index + keys.length],
                 repr: '',
                 ref_string: ref_string,
@@ -634,15 +285,8 @@ const display_fns = {
                 formula_bar_value: '',
                 commit_edit: (state, action) => {
                     const old_code = state.code_editor.value;
-                    const new_code = CT.OOA_add_field(old_code, ref_string, action.commit_value);
-                    return Object.assign({}, state, {
-                        code_editor: Object.assign({}, state.code_editor, {value: new_code}),
-                        mode: 'NEED_TO_CALCULATE',
-                        selected_cell_loc: [
-                            state.selected_cell_loc[0] + action.offset[0], 
-                            state.selected_cell_loc[1] + action.offset[1]
-                        ]
-                    });
+                    CT.OOA_add_field(old_code, ref_string, action.commit_value);
+                    return new_state_after_AST_transforms(state, AST, action.offset);
                 },
             })
             extra_cells.push(new_field_cell)
@@ -666,7 +310,7 @@ const display_fns = {
                 keys.map((key, offset_c) => {
                     let key_elements = get_key_elements(obj_node_props, key);
                     record_cells.push(
-                        create_cell({
+                        ({
                             location: [row_index + offset_r, col_index + offset_c],
                             // TODO
                             repr: obj[key][offset_r],
@@ -686,10 +330,11 @@ const display_fns = {
             return [];
         }
     },
+
+    table_object_rw: (value, value_nodepath, id) => {
+        // TODO
+    },
+
 }
 
-module.exports = {
-    create_cell,
-    EMPTY_CELL,
-    display_fns,
-};
+module.exports = { display_fns, EMPTY_CELL };
