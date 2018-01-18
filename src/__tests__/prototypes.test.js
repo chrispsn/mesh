@@ -139,4 +139,25 @@ describe('TableObject', () => {
         expect(records.length).toBe(5);
         expect(records[2].power).toBe(9);
     });
+    it('can be iterated twice', () => {
+        const table = {
+            __proto__: Prototypes.TableObject,
+            get number() { return [1, 2, 3, 4, 5]; }
+        }
+        const [...records] = table;
+        const [...records2] = table;
+        expect(records[4].number).toBe(5);
+        expect(records2[4].number).toBe(5);
+    });
+
+    // In the current state of JS, I think people need to just
+    // specify [...table] every time they want to use it.
+    // I don't think that (outside of generators that define table
+    // columns!) things will need to refer to specific rows or columns;
+    // they usually want a map/reduce/filter. Default iterator methods may come to JS later.
+    //
+    // Will it even have the right prototype anymore?
+    // (I think it will - TableArray is enough;
+    // but may need a different one, maybe TableObjectConsumed?
+
 })

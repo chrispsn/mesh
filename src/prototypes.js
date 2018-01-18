@@ -1,16 +1,19 @@
 const TableObject = {
+    // Syntactically defined as {heading: iterable, ...} pairs;
+    // when consumed, yields {heading: value, ...} row records
+    // which are added to the table by their index upon first iteration
+    // (so can be accessed by table[row index][col name]).
+    // The TableObject is now an array for prototype purposes.
     [Symbol.iterator]: function* () {
         const orig_headings = Object.keys(this);
         // Get iterator equivalents of each column
         const iterators = {};
-        const GeneratorFunction = Object.getPrototypeOf(function*(){}).constructor;
         for ([heading, iterable] of Object.entries(this)) {
             let iterator = iterable[Symbol.iterator]();
             iterators[heading] = iterator;
         }
-        // Delete original headings - access the table props via [row index][col name] from here
+        // Delete original headings
         for (let h of orig_headings) { delete this[h] }
-        // Zero columns case
         if (Object.keys(iterators).length === 0) {return}
         // Generate rows ( {heading: value} )
         let index = 0;
@@ -19,17 +22,11 @@ const TableObject = {
             let row = {};
             // Remember past rows
             this[index] = row;
-            // Set up property access on this row so that we only
-            // yield from the relevant column when someone tries
-            // to access that row property; when that happens,
-            // cache that value and don't try to yield from that
-            // column again for this row
-            for (let [h, iterator] of Object.entries(iterators)) {
+           for (let [h, iterator] of Object.entries(iterators)) {
                 Object.defineProperty(row, h, {
                     enumerable: true, // So the prop will show up in Object.keys
                     configurable: true, // So we can delete the prop later
                     get() {
-                        delete this[h];
                         // TODO should we pass the current index through via next?
                         // Would it make it easier to write generators?
                         const item = iterator.next();
@@ -37,6 +34,8 @@ const TableObject = {
                             done = true;
                             return;
                         } else {
+                            // Yield only once from each column; store the values
+                            delete this[h];
                             this[h] = item.value;
                             return item.value;
                         }
@@ -48,6 +47,9 @@ const TableObject = {
             if (done) {
                 // Delete last row - the last iteration was unsuccessful
                 delete this[index];
+                // TODO Should it be a TableArray prototype?
+                Object.setPrototypeOf(this, Array.prototype);
+                this.length = index;
                 return;
             } else {
                 yield row;
