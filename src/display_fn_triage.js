@@ -47,7 +47,7 @@ triage_table: [
     {nodetype: 'CallExpression', instanceof: 'ALL', typeof: 'object', fn: display_fns.object_ro,},
     // If above isn't capturing things some objects, see http://stackoverflow.com/a/22482737
     {nodetype: 'CallExpression', instanceof: 'ALL', typeof: 'function', fn: display_fns.object_ro,},
-    {nodetype: 'CallExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value_ro,},
+    {nodetype: 'CallExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
 
     /*
     // TODO add a 'callee' column to the above records?

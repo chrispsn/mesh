@@ -42,7 +42,7 @@ const display_fns = {
             formula_bar_value: (is_formula ? '=' : '') + formula_bar_text,
             classes: 'occupied ' + typeof value 
                 + (typeof value === 'boolean' ? ' ' + String(value) : '')
-                + is_formula ? ' editable' : '',
+                + (is_formula ? '' : ' editable'),
             cell_AST_changes_type: 'DEFAULT', 
             AST_props: {key: id},
         };
