@@ -3,17 +3,8 @@
 const CT = require('./code_transformers');
 const {get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
-const {LINE_SEPARATOR} = require('./settings');
+const {BLANK_FILE} = require('./settings');
 const {cell_AST_change_bindings} = require('./cell_AST_change_bindings');
-
-const BLANK_FILE = [
-// Maybe get rid of this line if always intended to be consumed as ES6 modules?
-    "'use strict';", 
-    "const SHEET_ROOT = {",
-    "    __mesh_grid__: {}",
-    "}"
-// Add ES6 export line?
-].join(LINE_SEPARATOR + LINE_SEPARATOR);
 
 const INITIAL_STATE = {
     mode: 'READY',

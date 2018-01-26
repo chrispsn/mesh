@@ -7,12 +7,10 @@ const {LINE_SEPARATOR} = require('../settings');
 
 describe('get_root_mesh_obj_node', () => {
     it('gets the right node', () => {
-        const old_code = "var name = {hello: 'world'}"
+        const old_code = "const DATA = []; const SHEET = {};"
         const old_AST = CT.parse_code_string_to_AST(old_code);
         const received_node = CT.get_root_mesh_obj_node(old_AST);
-        const first_prop = received_node.get('properties', 0)
-        const first_key = first_prop.get('key').value.name;
-        expect(first_key).toBe('hello');
+        expect(received_node.value.type).toBe('ArrayExpression');
     });
 });
 
@@ -165,26 +163,45 @@ run_tests('insert_object_getter', CT.insert_object_getter, [
         desc: 'inserts text when object is empty',
         in: "({})",
         args: ['num', '123'],
-        out: "({ get num() {return 123} })"
+        out: `({ get num() {return 123} })`
     },
     {
         desc: 'inserts text at chosen location when object is empty', 
         in: "({})", 
         args: ['num', '123', 0], 
-        out: "({ get num() {return 123} })"
+        out: `({ get num() {return 123} })`
     },
     {
         desc: 'inserts text at chosen location when object is not empty',
         in: "({a_key: 123})", 
         args: ['num', '123', 0], 
-        out: "({ get num() {return 123}, a_key: 123 })"
+        out: `({ get num() {return 123}, a_key: 123 })`
     },
 ])
 
+// RECORDS - ARRAY OF ARRAYS
 
-// RECORDS
+run_tests('AOA_append_record', CT.AOA_append_record, [
+    {
+        desc: 'adds array to the end of the array with specified values',
+        in: "[[1, 2, 3]]",
+        args: [['4', '5', '6']],
+        out: "[[1, 2, 3], [4, 5, 6]]"
+    }
+]);
 
-run_tests('remove_record_given_key', CT.remove_record_given_key, [
+describe('AOA_get_record_given_key', () => {
+    it('gets the array with the value in the specified position', () => {
+        const nodepath = get_expr_nodepath("[['a', 1], ['b', 2]]");
+        const obj_item_nodepath = CT.AOA_get_record_given_key(nodepath, 0, 'b');
+        expect(obj_item_nodepath.node.elements[1].value).toBe(2);
+    });
+});
+
+// RECORDS - ARRAY OF OBJECTS
+
+// TODO should be the more generic 'get_record_given_key'
+run_tests('AOO_remove_record_given_key', CT.AOO_remove_record_given_key, [
     {
         desc: 'removes based on key field and key value',
         in: "[{key_field: 'lol', another_field: 'huh'}]",
@@ -199,21 +216,19 @@ run_tests('remove_record_given_key', CT.remove_record_given_key, [
     },
 ])
 
-/*
-describe('append_record', () => {
-    it('adds a new record to the end of the records with the relevant field filled in and the rest left null', () => {
-        const old_code = "const records = [{key_field: 'lol', another_field: 'huh'}];";
-        let new_code = CT.append_record(old_code, 'records', 'another_field', 'filled_in');
-        let expected_code = `const records = [
-            {key_field: 'lol', another_field: 'huh'},
-            {key_field: null, another_field: 'filled_in'},
-        ];`;
-        new_code = Recast.prettyPrint(Recast.parse(new_code), options).code;
-        expected_code = Recast.prettyPrint(Recast.parse(expected_code), options).code;
-        expect(new_code).toBe(expected_code);
-    })
-});
-*/
+run_tests('AOO_append_record', CT.AOO_append_record, [
+    {
+        desc: 'adds a new record to the end of the records with the relevant field filled in and the rest left null',
+        in: `[
+            {"key_field": 'lol', "another_field": 'huh'},
+        ]`,
+        args: [{"another_field": 'filled_in'}],
+        out: `[
+            {"key_field": 'lol', "another_field": 'huh'},
+            {"key_field": null, "another_field": 'filled_in'},
+        ]`,
+    }
+]);
 
 // RECORDS - OBJECT OF ARRAYS
 
@@ -223,7 +238,19 @@ run_tests('OOA_append_datum', CT.OOA_append_datum, [
         in: "({field1: ['value'], 'field2': [123]})",
         args: ['field1', 'new_datum'],
         out: "({field1: ['value', new_datum], 'field2': [123, null]})"
-    }
+    },
+    {
+        desc: "skips arrays that are not literals",
+        in: `({
+            field1: ['value'],
+            'field2': fn_call()
+        })`,
+        args: ['field1', 'new_datum'],
+        out: `({
+            field1: ['value', new_datum], 
+            'field2': fn_call(),
+        })`
+    },
 ])
 
 run_tests('OOA_remove_record', CT.OOA_remove_record, [
@@ -238,7 +265,19 @@ run_tests('OOA_remove_record', CT.OOA_remove_record, [
             field1: ['value', 'value3'],
             'field2': ['he', 'hehehe'],
         })`,
-    }
+    },
+    {
+        desc: "skips arrays that aren't literals",
+        in: `({
+            field1: ['value', 'value2', 'value3'],
+            'field2': func_call(),
+        })`,
+        args: [1],
+        out: `({
+            field1: ['value', 'value3'],
+            'field2': func_call(),
+        })`,
+    },
 ])
 
 run_tests('OOA_add_field', CT.OOA_add_field, [

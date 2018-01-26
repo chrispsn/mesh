@@ -71,9 +71,10 @@ store.subscribe( function calculate () {
             const AST = new CT.parse_code_string_to_AST(code);
 
             // http://www.mattzeunert.com/2017/01/10/whats-a-statement-completion-value-in-javascript.html
-            let SHEET_ROOT = eval(state.code_editor.value + LINE_SEPARATOR + "SHEET_ROOT");
+            let [DATA, SHEET] = eval(state.code_editor.value 
+                + LINE_SEPARATOR + "[DATA, SHEET]");
 
-            let cells = generate_cells(SHEET_ROOT, AST);
+            let cells = generate_cells(DATA, SHEET, AST);
             store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
             store.dispatch({ type: 'RETURN_TO_READY' });
         } catch (e) {

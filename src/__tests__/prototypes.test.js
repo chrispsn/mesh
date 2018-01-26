@@ -1,5 +1,7 @@
 const Prototypes = require('../prototypes.js');
 
+// Helper function for tests
+
 function* take(n, iterable) {
     for (const x of iterable) {
         if (n <= 0) return;
@@ -8,8 +10,6 @@ function* take(n, iterable) {
     }
 }
 
-
-// TODO should we look at cases where not all columns are the same length?
 describe('TableObject', () => {
     it('deals with a table with no headings or data', () => {
         const table = {__proto__: Prototypes.TableObject};
@@ -150,14 +150,10 @@ describe('TableObject', () => {
         expect(records2[4].number).toBe(5);
     });
 
-    // In the current state of JS, I think people need to just
-    // specify [...table] every time they want to use it.
-    // I don't think that (outside of generators that define table
-    // columns!) things will need to refer to specific rows or columns;
-    // they usually want a map/reduce/filter. Default iterator methods may come to JS later.
-    //
-    // Will it even have the right prototype anymore?
-    // (I think it will - TableArray is enough;
-    // but may need a different one, maybe TableObjectConsumed?
+    // What if the TableObject prototype has a proxy wrapper for its get
+    // that, if the table is still a TableObject, triggers its unravelling?
+    // If nothing refers to it - it's still a TableObject.
+    // If something refers to it - it's a TableArray or TableObjectConsumed
+    // (latter in case it needs to understand its values in the AST are arrays).
 
 })

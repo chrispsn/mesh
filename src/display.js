@@ -24,6 +24,7 @@ const display_fns = {
             formula_bar_value: "TODO",
             classes: '',
             cell_AST_changes_type: 'DEFAULT', 
+            AST_props: {key: id},
         }];
     },
 
@@ -51,6 +52,7 @@ const display_fns = {
             classes: 'occupied read-only ' + typeof value 
                 + (typeof value === 'boolean' ? ' ' + String(value) : ''),
             cell_AST_changes_type: 'DEFAULT', 
+            AST_props: {key: id},
         };
         return [value_cell];
     },
@@ -249,16 +251,12 @@ const display_fns = {
 
         return [];
     },
-
-    table_object: (obj, ref_string, grid_loc, value_node) => {
+    table_object_rw: (arr, obj_nodepath, id, AST) => {
         // Table structured as object of arrays: {heading: [values], ...}
 
-        let [row_index, col_index] = grid_loc;
+        let [row_index, col_index] = [1, 0];
 
-        row_index++;
-
-        const keys = Object.keys(obj);
-        const record_count = obj[keys[0]].length;
+        const headings = Object.keys(obj);
 
         // Write the data structure
         if (keys.length > 0) {
@@ -292,6 +290,7 @@ const display_fns = {
             extra_cells.push(new_field_cell)
             
             // Records
+            const record_count = obj[headings[0]].length;
             row_index++;
 
             function get_key_elements(obj_props, key) {

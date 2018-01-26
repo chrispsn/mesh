@@ -7,7 +7,7 @@
 const Prototypes = require('./prototypes');
 const display_fns = require('./display').display_fns;
 
-const SHEET_ROOT = {
+const ROOT = {
 
 triage_table: [
 
@@ -18,7 +18,8 @@ triage_table: [
     {nodetype: 'Identifier', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
 
     // 1 + 2
-    {nodetype: 'BinaryExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
+    {nodetype: 'BinaryExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value_ro,},
+    {nodetype: 'ExpressionStatement', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value_ro,},
 
     // `Hello ${name}`
     {nodetype: 'TemplateLiteral', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
@@ -32,11 +33,12 @@ triage_table: [
 
     // TODO consider whether this will deal with array spread notation
     // [1, 2, 3]
+    // {nodetype: 'ArrayExpression', instanceof: Prototypes.TableArray, typeof: 'ALL', fn: display_fns.table_array_rw,},
     {nodetype: 'ArrayExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.array_rw,},
 
     // TODO consider whether this will deal with object spread notation
     // {hello: 'world'} or {__proto__: Prototypes.TableObject, ...}
-    // {nodetype: 'ObjectExpression', instanceof: Prototypes.TableObject, typeof: 'ALL', fn: display_fns.table_object_rw,},
+    // {nodetype: 'ObjectExpression', instanceof: Prototypes.TableArray, typeof: 'ALL', fn: display_fns.table_object_rw,},
     {nodetype: 'ObjectExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.object_rw,},
 
     // some_fn()
@@ -70,6 +72,7 @@ get triage() {
     const sheet = this;
     return function(nodetype, value) {
         for (let row of sheet.triage_table) {
+            console.log(row);
             if (
                 ((row.nodetype === 'ALL') || (nodetype === row.nodetype))
                 && ((row.instanceof === 'ALL') || (value instanceof row.instanceof))
@@ -83,4 +86,4 @@ get triage() {
 
 }
 
-module.exports = { triage: SHEET_ROOT.triage };
+module.exports = { triage: ROOT.triage };
