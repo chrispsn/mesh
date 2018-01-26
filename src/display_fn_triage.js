@@ -18,8 +18,8 @@ triage_table: [
     {nodetype: 'Identifier', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
 
     // 1 + 2
-    {nodetype: 'BinaryExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value_ro,},
-    {nodetype: 'ExpressionStatement', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value_ro,},
+    {nodetype: 'BinaryExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
+    {nodetype: 'ExpressionStatement', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
 
     // `Hello ${name}`
     {nodetype: 'TemplateLiteral', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
@@ -29,7 +29,7 @@ triage_table: [
 
     // TODO what else is covered by this?
     // get sum() { return 1 + 2; }
-    {nodetype: 'FunctionExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.function_expression,},
+    {nodetype: 'FunctionExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
 
     // TODO consider whether this will deal with array spread notation
     // [1, 2, 3]
@@ -72,7 +72,6 @@ get triage() {
     const sheet = this;
     return function(nodetype, value) {
         for (let row of sheet.triage_table) {
-            console.log(row);
             if (
                 ((row.nodetype === 'ALL') || (nodetype === row.nodetype))
                 && ((row.instanceof === 'ALL') || (value instanceof row.instanceof))

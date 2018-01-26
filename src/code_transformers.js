@@ -81,6 +81,11 @@ append_array_element: function(arr_path, inserted_text) {
     elements_path.push(inserted_node);
 },
 
+replace_array_element: function(arr_path, element_num, inserted_text) {
+    const elements_path = arr_path.get('elements');
+    elements_path.get(element_num).replace(B.identifier(inserted_text));
+},
+
 remove_array_element: function(arr_path, element_num) {
     const element_path = arr_path.get('elements', element_num);
     element_path.prune();
@@ -152,6 +157,11 @@ insert_object_getter: function(obj_path, key_text, body_text, index) {
     } else {
         props_path.insertAt(index, new_prop_node);
     }
+},
+
+replace_object_getter_return_val(obj_getter_prop_path, new_return_value_text) {
+    const val = obj_getter_prop_path.get('value', 'body', 'body', 0, 'argument');
+    val.replace(B.identifier(new_return_value_text));
 },
 
 remove_object_item: function(obj_path, key) {

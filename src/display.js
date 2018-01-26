@@ -12,6 +12,10 @@ const EMPTY_CELL = {
     cell_AST_changes_type: 'EMPTY',
 }
 
+function leaf_is_formula(node) {
+    return !['Literal', 'TemplateLiteral'].includes(node.type);
+}
+
 const display_fns = {
 
     dummy: (value, value_nodepath, id, AST) => {
@@ -29,43 +33,18 @@ const display_fns = {
     },
 
     value: (value, value_nodepath, id, AST) => {
-        const value_cell = {
-            location: [0, 1], 
-            ref_string: id,
-            repr: String(value),
-            formula_bar_value: CT.print_AST_to_code_string(value_nodepath),
-            classes: 'occupied editable ' + typeof value 
-                + (typeof value === 'boolean' ? ' ' + String(value) : ''),
-            cell_AST_changes_type: 'DEFAULT', 
-            AST_props: {key: id},
-        };
-        return [value_cell];
-    },
-
-    value_ro: (value, value_nodepath, id, AST) => {
-        console.log("VALUE_RO");
-        const value_cell = {
-            location: [0, 1], 
-            ref_string: id,
-            repr: String(value),
-            formula_bar_value: '=' + CT.print_AST_to_code_string(value_nodepath),
-            classes: 'occupied read-only ' + typeof value 
-                + (typeof value === 'boolean' ? ' ' + String(value) : ''),
-            cell_AST_changes_type: 'DEFAULT', 
-            AST_props: {key: id},
-        };
-        return [value_cell];
-    },
-
-    function_expression: (value, value_nodepath, id, AST) => {
         const formula_bar_text = CT.print_AST_to_code_string(value_nodepath);
+        const is_formula = leaf_is_formula(value_nodepath.node);
         const value_cell = {
             location: [0, 1], 
             ref_string: id,
             repr: String(value),
-            formula_bar_value: "=" + formula_bar_text,
-            classes: 'occupied read-only function',
+            formula_bar_value: (is_formula ? '=' : '') + formula_bar_text,
+            classes: 'occupied ' + typeof value 
+                + (typeof value === 'boolean' ? ' ' + String(value) : '')
+                + is_formula ? ' editable' : '',
             cell_AST_changes_type: 'DEFAULT', 
+            AST_props: {key: id},
         };
         return [value_cell];
     },
@@ -78,7 +57,7 @@ const display_fns = {
             location: [1 + row_offset, 0],
             repr: String(value),
             ref_string: id,
-            formula_bar_value: CT.print_AST_to_code_string(array_nodepath.node),
+            formula_bar_value: "=" + CT.print_AST_to_code_string(array_nodepath.node),
             classes: "read-only",
             cell_AST_changes_type: 'DEFAULT', 
         }));
@@ -90,13 +69,14 @@ const display_fns = {
 
         const value_cells = array.map((value, row_offset) => {
             const element_node = array_node.elements[row_offset];
+            const is_formula = leaf_is_formula(element_node);
             return ({
                 location: [1 + row_offset, 0],
                 repr: String(value),
                 AST_props: {index: row_offset, key: id},
                 ref_string: id,
-                formula_bar_value: CT.print_AST_to_code_string(element_node),
-                classes: 'editable',
+                formula_bar_value: (is_formula ? '=' : '') + CT.print_AST_to_code_string(element_node),
+                classes: is_formula ? '' : 'editable',
                 cell_AST_changes_type: 'ARRAY_LITERAL_DATA_CELL',
             });
         })
@@ -172,12 +152,8 @@ const display_fns = {
                 cell_AST_changes_type: 'OBJECT_LITERAL_KEY_CELL',
             });
 
-            let value_node = pair_node.value;
-            let is_formula = false;
-            if (pair_node.kind === 'get') {
-                value_node = value_node.body.body[0].argument;
-                is_formula = true;
-            }
+            let value_node = pair_node.value.body.body[0].argument;
+            const is_formula = leaf_is_formula(value_node);
             const value_cell = ({
                 location: [1 + row_offset, 1],
                 // TODO show function bodies (currently show as blank)

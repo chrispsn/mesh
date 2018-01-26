@@ -163,6 +163,10 @@ body {
     color: black;
 }
 
+#grid td.function {
+    font-style: italic;
+}
+
 #grid td.editable {
     color: blue;
 }

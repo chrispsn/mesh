@@ -68,6 +68,15 @@ run_tests('append_array_element', CT.append_array_element, [
     {desc: "appends to a non-empty array", in: "[1, 2]", args:['3'], out: "[1, 2, 3]"},
 ])
 
+run_tests('replace_array_element', CT.replace_array_element, [
+    {
+        desc: "replaces correct element",
+        in: "[1, 2, 3]",
+        args: [1, "'hello'"],
+        out: "[1, 'hello', 3]",
+    },
+]);
+
 run_tests('remove_array_element', CT.remove_array_element, [
     {desc: "removes from middle of array", in: "[1, 2, 3]", args: [1], out: "[1, 3]"},
     {desc: "keeps array if arr is now empty", in: "[1]", args: [0], out: "[]"},
@@ -139,6 +148,22 @@ run_tests('insert_object_item', CT.insert_object_item, [
         out: "({a_key: 123, old_key: 456})"
     },
 ])
+
+describe('replace_object_getter_return_val', () => {
+    it('replaces the return value', () => {
+        const old_code = "({ get a() { return 123 } })";
+        const obj_nodepath = get_expr_nodepath(old_code);
+        const obj_item_nodepath = CT.get_object_item(obj_nodepath, 'a');
+
+        CT.replace_object_getter_return_val(obj_item_nodepath, '456');
+        let new_code = CT.print_AST_to_code_string(obj_nodepath);
+        let expected_code = "({ get a() { return 456 } })";
+
+        new_code = standardise_code_formatting(new_code);
+        expected_code = standardise_code_formatting(expected_code);
+        expect(new_code).toBe(expected_code);
+    });
+});
 
 run_tests('remove_object_item', CT.remove_object_item, [
     {

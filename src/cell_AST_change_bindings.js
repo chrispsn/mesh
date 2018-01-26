@@ -7,7 +7,7 @@ function transform_formula_bar_input(raw_input) {
     if (raw_input[0] === "=") {
         return "(" + raw_input.slice(1) + ")";
     } else {
-        return "(" + rewrite_input(raw_input) + ")";
+        return rewrite_input(raw_input);
     }
 }
 
@@ -22,8 +22,7 @@ DEFAULT: {
         // TODO move to 'update array element'?
         // TODO need to change *fn* return value
         const inserted_code = transform_formula_bar_input(action.commit_value);
-        CT.remove_array_element(array_nodepath, 2);
-        CT.insert_array_element(array_nodepath, 2, "$ => " + inserted_code);
+        CT.replace_array_element(array_nodepath, 2, "$ => " + inserted_code);
 
         return action.offset;
     },
@@ -69,8 +68,7 @@ ARRAY_LITERAL_DATA_CELL: {
         const array_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
         const inserted_code = transform_formula_bar_input(action.commit_value);
-        CT.remove_array_element(array_nodepath, index);
-        CT.insert_array_element(array_nodepath, index, inserted_code);
+        CT.replace_array_element(array_nodepath, index, inserted_code);
         return action.offset;
     },
     INSERT_ELEMENT: function(mesh_obj_node, state, action) {
@@ -168,10 +166,9 @@ OBJECT_LITERAL_VALUE_CELL: {
         const {key, item_key} = get_selected_cell(state).AST_props;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        const index = CT.get_object_item_index(obj_nodepath, key);
+        const obj_prop_node = CT.get_object_item(obj_nodepath, item_key);
         const inserted_code = transform_formula_bar_input(action.commit_value);
-        CT.remove_object_item(obj_nodepath, item_key);
-        CT.insert_object_getter(obj_nodepath, item_key, inserted_code, index);
+        CT.replace_object_getter_return_val(obj_prop_node, inserted_code);
         return action.offset;
     },
     INSERT_ELEMENT: (mesh_obj_node, state, action) => {
