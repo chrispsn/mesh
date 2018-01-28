@@ -9,10 +9,8 @@ require('codemirror/mode/javascript/javascript');
 
 const Events = require('./events');
 const Reducers = require('./reducers');
-const CT = require('./code_transformers');
 const {LINE_SEPARATOR} = require('./settings');
 const Selectors = require('./selectors');
-const generate_cells = require('./generate_cells');
 
 // Redux setup
 
@@ -64,28 +62,8 @@ Events.bind_load_file_events(store, HTML_elements.filepicker);
 // App side-effects
 
 store.subscribe( function calculate () {
-    const state = store.getState();
-    if (state.mode === 'NEED_TO_CALCULATE') {
-        try {
-            const code = state.code_editor.value;
-            const AST = new CT.parse_code_string_to_AST(code);
-
-            // http://www.mattzeunert.com/2017/01/10/whats-a-statement-completion-value-in-javascript.html
-            let [DATA, SHEET] = eval(state.code_editor.value 
-                + LINE_SEPARATOR + "[DATA, SHEET]");
-
-            let cells = generate_cells(DATA, SHEET, AST);
-            store.dispatch({ type: 'ADD_CELLS_TO_SHEET', cells: cells });
-            store.dispatch({ type: 'RETURN_TO_READY' });
-        } catch (e) {
-            alert(e);
-            // TODO highlight offending code?
-            console.error(e);
-            // TODO right now this dumps the user back to the code editing pane,
-            // but it should depend on where the commit came from (code pane or formula bar)
-            store.dispatch({ type: 'SELECT_CODE' })
-        }
-    }
+    const mode = store.getState().mode;
+    if (mode === 'NEED_TO_CALCULATE') { store.dispatch({type: 'CALCULATE'}) };
 });
 
 store.subscribe( function log_state () {
@@ -120,6 +98,8 @@ store.subscribe( function update_page () {
 
     // Code editor
     // can't we just make the events file know about the code editor?
+    // (ie load the code directly into the event props from the HTML element
+    // instead of loading it in via a subscription)
     if (state.mode === 'LOAD_CODE_FROM_PANE') {
         store.dispatch({ type: 'LOAD_CODE', code: code_editor.getValue() });
     } else {

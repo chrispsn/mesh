@@ -1,9 +1,10 @@
 'use strict';
 
 const CT = require('./code_transformers');
+const generate_cells = require('./generate_cells');
 const {get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
-const {BLANK_FILE} = require('./settings');
+const {LINE_SEPARATOR, BLANK_FILE} = require('./settings');
 const {cell_AST_change_bindings} = require('./cell_AST_change_bindings');
 
 const INITIAL_STATE = {
@@ -30,7 +31,7 @@ const state_changes = {
     'TOGGLE_CODE_PANE_SHOW': (state, action) => {
         const bool = !state.code_editor.show;
         const code_editor = Object.assign({}, state.code_editor, {show: bool});
-        return Object.assign({}, state, code_editor);
+        return Object.assign({}, state, {code_editor});
     },
 
     'LOAD_CODE': (state, action) => Object.assign({}, state, {
@@ -44,17 +45,31 @@ const state_changes = {
 
     /* CALCULATION */
 
-    'CALCULATE': (state, action) => Object.assign({}, state, { mode: 'NEED_TO_CALCULATE', }),
-
-    'ADD_CELLS_TO_SHEET': (state, action) => {
-        const new_cells = {};
-        for (let cell of action.cells) {
-            const cell_id = JSON.stringify(cell.location);
-            new_cells[cell_id] = cell;
+    'CALCULATE': (state, action) => {
+        const code = state.code_editor.value;
+        try {
+            const AST = new CT.parse_code_string_to_AST(code);
+            // http://www.mattzeunert.com/2017/01/10/whats-a-statement-completion-value-in-javascript.html
+            let [DATA, SHEET] = eval(code + LINE_SEPARATOR + "[DATA, SHEET]");
+            let cells = generate_cells(DATA, SHEET, AST);
+            const new_cells = {};
+            for (let cell of cells) {
+                const cell_id = JSON.stringify(cell.location);
+                new_cells[cell_id] = cell;
+            }
+            return Object.assign({}, state, { mode: 'READY', cells: new_cells })
+        } catch (e) {
+            alert(e);
+            // TODO highlight offending code?
+            console.error(e);
+            // TODO right now this dumps the user back to the code editing pane,
+            // but it should depend on where the commit came from (code pane or formula bar)
+            // maybe this is indicated via the action?
+            return Object.assign({}, state, { mode: 'EDITING_CODE', })
         }
-        return Object.assign({}, state, { mode: 'PRE_READY', cells: new_cells })
     },
-    
+
+    // TODO eliminate this?
     'RETURN_TO_READY': (state, action) => Object.assign({}, state, {mode: 'READY'}),
 
     /* CELL BEHAVIOUR */
