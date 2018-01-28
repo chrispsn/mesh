@@ -139,7 +139,7 @@ OBJECT_LITERAL_KEY_CELL: {
         const {key} = get_selected_cell(state).AST_props;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.insert_object_item(obj_nodepath, 'new_key', 'null');
+        CT.insert_object_getter(obj_nodepath, "new_key", "null");
         return action.offset;
     },
     DELETE_ELEMENT: (mesh_obj_node, state, action) => {
@@ -175,7 +175,7 @@ OBJECT_LITERAL_VALUE_CELL: {
         const {key} = get_selected_cell(state).AST_props;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.insert_object_item(obj_nodepath, "new_key", "null");
+        CT.insert_object_getter(obj_nodepath, "new_key", "null");
         return action.offset;
     },
     DELETE_ELEMENT: (mesh_obj_node, state, action) => {
@@ -208,7 +208,7 @@ OBJECT_LITERAL_APPEND_CELL: {
         const {key} = get_selected_cell(state).AST_props;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.insert_object_item(obj_nodepath, "new_key", "null");
+        CT.insert_object_getter(obj_nodepath, "new_key", "null");
         return action.offset;
     },
     DELETE_CONTAINER: (mesh_obj_node, state) => {
