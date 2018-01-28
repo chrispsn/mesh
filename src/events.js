@@ -74,6 +74,7 @@ const grid_click_events = [
     // and just load with an argument of the code text in the store
     // Problem is you actually want the text in the *code editor object*, not the state,
     // because the state hasn't been updated yet.
+    // So you need to give the event a binding to the code editor object.
     { mode: 'EDITING_CODE', action: { type: 'LOAD_CODE_FROM_PANE' } },
 ];
 
@@ -155,7 +156,7 @@ const window_keydown_events = [
     {mode: 'READY', keypattern: /^o$/, modifiers: (e) => (e.ctrlKey), action: () => {
         document.getElementById('open-file-manager').click();
     }},
-    {mode: 'ALL', keypattern: /^U/, modifiers: (e) => (e.ctrlKey && e.shiftKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
+    {mode: 'ALL', keypattern: /^F11$/, modifiers: (e) => (e.altKey), action: () => ({ type: 'TOGGLE_CODE_PANE_SHOW' })},
 
     // Prevent certain Electron defaults
    {mode: 'ALL', keypattern: /^w/,  preventDefault: true, modifiers: (e) => (e.ctrlKey), action: () => undefined},
