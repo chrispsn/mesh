@@ -5,7 +5,7 @@ const {get_selected_cell} = require('./selectors');
 function transform_formula_bar_input(raw_input) {
     // Change property in-place
     if (raw_input[0] === "=") {
-        return "(" + raw_input.slice(1) + ")";
+        return raw_input.slice(1);
     } else {
         return rewrite_input(raw_input);
     }
