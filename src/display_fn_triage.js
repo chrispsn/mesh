@@ -13,6 +13,9 @@ triage_table: [
 
     // 'Hello world'
     {nodetype: 'Literal', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
+    
+    // -123
+    {nodetype: 'UnaryExpression', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},
 
     // undefined
     {nodetype: 'Identifier', instanceof: 'ALL', typeof: 'ALL', fn: display_fns.value,},

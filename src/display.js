@@ -13,7 +13,7 @@ const EMPTY_CELL = {
 }
 
 function leaf_is_formula(node) {
-    return !['Literal', 'TemplateLiteral'].includes(node.type);
+    return !['Literal', 'TemplateLiteral', 'UnaryExpression'].includes(node.type);
 }
 
 const display_fns = {
@@ -60,6 +60,7 @@ const display_fns = {
             formula_bar_value: "=" + CT.print_AST_to_code_string(array_nodepath.node),
             classes: "read-only",
             cell_AST_changes_type: 'DEFAULT', 
+            AST_props: {key: id},
         }));
     },
 
