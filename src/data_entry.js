@@ -38,12 +38,14 @@ const rewrite_rules = [
 
     // Arrays
     // TODO replace with a catch-all?
-    { pattern: /^\[[.|\n|\r]*\]$/, rewrite: "$&" },
+    // TODO make allow newlines
+    { pattern: /^\[.*\]$/, rewrite: "$&" },
 
     // Objects
     // TODO replace with a catch-all?
+    // TODO make allow newlines
     // Note the brackets around the object
-    { pattern: /^\{[.|\n|\r]*\}$/, rewrite: "($&)" },
+    { pattern: /^\{.*\}$/, rewrite: "($&)" },
 
     // Booleans
     // TODO make case-insensitive
