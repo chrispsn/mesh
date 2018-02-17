@@ -5,7 +5,7 @@ const TableObject = {
     // (so can be accessed by table[row index][col name]).
     // The TableObject is now an array for prototype purposes.
     [Symbol.iterator]: function* () {
-        Object.setPrototypeOf(this, Array.prototype);
+        Object.setPrototypeOf(this, TableArray);
         const orig_headings = Object.keys(this);
         // Get an iterator from each column (each assumed to be iterable)
         const iterators = {};

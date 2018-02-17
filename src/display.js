@@ -16,6 +16,10 @@ function leaf_is_formula(node) {
     return !['Literal', 'TemplateLiteral', 'UnaryExpression'].includes(node.type);
 }
 
+function leaf_classes(value) {
+    return typeof value + (typeof value === 'boolean' ? ' ' + String(value) : '');
+}
+
 const display_fns = {
 
     dummy: (value, value_nodepath, id, AST) => {
@@ -40,9 +44,7 @@ const display_fns = {
             ref_string: id,
             repr: String(value),
             formula_bar_value: (is_formula ? '=' : '') + formula_bar_text,
-            classes: 'occupied ' + typeof value 
-                + (typeof value === 'boolean' ? ' ' + String(value) : '')
-                + (is_formula ? '' : ' editable'),
+            classes: 'occupied ' + leaf_classes(value) + (is_formula ? '' : ' editable'),
             cell_AST_changes_type: 'DEFAULT', 
             AST_props: {key: id},
         };
@@ -58,7 +60,7 @@ const display_fns = {
             repr: String(value),
             ref_string: id,
             formula_bar_value: "=" + CT.print_AST_to_code_string(array_nodepath.node),
-            classes: "read-only",
+            classes: "read-only " + leaf_classes(value),
             cell_AST_changes_type: 'DEFAULT', 
             AST_props: {key: id},
         }));
@@ -77,7 +79,7 @@ const display_fns = {
                 AST_props: {index: row_offset, key: id},
                 ref_string: id,
                 formula_bar_value: (is_formula ? '=' : '') + CT.print_AST_to_code_string(element_node),
-                classes: is_formula ? '' : 'editable',
+                classes: leaf_classes(value) + (is_formula ? '' : ' editable'),
                 cell_AST_changes_type: 'ARRAY_LITERAL_DATA_CELL',
             });
         })
@@ -115,6 +117,7 @@ const display_fns = {
                 formula_bar_value: formula_bar_text,
                 classes: 'object key read-only',
                 cell_AST_changes_type: 'DEFAULT',
+                AST_props: {key: id},
             });
 
             const value_cell = ({
@@ -122,8 +125,9 @@ const display_fns = {
                 repr: String(value), 
                 ref_string: id,
                 formula_bar_value: formula_bar_text,
-                classes: 'object value read-only',
+                classes: 'object read-only ' + leaf_classes(value),
                 cell_AST_changes_type: 'DEFAULT',
+                AST_props: {key: id},
             });
 
             cells.push(key_cell, value_cell);
@@ -138,9 +142,9 @@ const display_fns = {
         const cells = [];
 
         Object.entries(object).forEach(([key, value], row_offset) => {
-            const pair_node = object_nodepath.node.properties[row_offset];
+            const prop_node = object_nodepath.node.properties[row_offset];
 
-            const key_node = pair_node.key;
+            const key_node = prop_node.key;
             const key_cell = ({
                 location: [1 + row_offset, 0],
                 // TODO visually show the difference between keys surrounded by "" and those not?
@@ -153,16 +157,22 @@ const display_fns = {
                 cell_AST_changes_type: 'OBJECT_LITERAL_KEY_CELL',
             });
 
-            let value_node = pair_node.value.body.body[0].argument;
+            let value_node;
+            if (prop_node.type === 'getter') {
+                value_node = pair_node.value.body.body[0].argument;
+            } else {
+                value_node = prop_node.value;
+            };
             const is_formula = leaf_is_formula(value_node);
             const value_cell = ({
                 location: [1 + row_offset, 1],
                 // TODO show function bodies (currently show as blank)
                 // Maybe we need a 'show as leaf' function
+                // to get the right styling etc
                 repr: String(value), 
                 ref_string: id,
                 formula_bar_value: (is_formula ? '=' : '') + CT.print_AST_to_code_string(value_node),
-                classes: 'object value' + (is_formula ? '' : ' editable'),
+                classes: 'object value ' + leaf_classes(value) + (is_formula ? '' : ' editable'),
                 AST_props: {key: id, item_key: key},
                 cell_AST_changes_type: 'OBJECT_LITERAL_VALUE_CELL',
             });
@@ -229,14 +239,18 @@ const display_fns = {
         return [];
     },
     table_object_rw: (arr, obj_nodepath, id, AST) => {
-        // Table structured as object of arrays: {heading: [values], ...}
+        // Table structured as object of arrays: {heading: [values], ...}.
+        // By the time it gets to here, it's actually an array,
+        // but the nodepath is still an object literal.
+        // TODO
 
         let [row_index, col_index] = [1, 0];
 
-        const headings = Object.keys(obj);
+        const headings = obj_nodepath.get("properties").value.map(
+                            n => CT.get_object_key_from_node(n));
 
         // Write the data structure
-        if (keys.length > 0) {
+        if (headings.length > 0) {
             
             // Headers
             const header_cells = keys.map(
@@ -305,10 +319,6 @@ const display_fns = {
         } else {
             return [];
         }
-    },
-
-    table_object_rw: (value, value_nodepath, id) => {
-        // TODO
     },
 
 }

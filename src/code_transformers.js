@@ -124,6 +124,10 @@ replace_object_item_key: function(obj_item_path, new_key_text) {
     obj_item_path.get('key').replace(B.identifier(new_key_text));
 },
 
+replace_object_item_value: function(obj_item_path, new_value_text) {
+    obj_item_path.get('value').replace(B.identifier(new_value_text));
+},
+
 insert_object_item: function(obj_path, key_text, value_text, index) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
