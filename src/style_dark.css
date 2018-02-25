@@ -1,0 +1,221 @@
+/* TODO
+ * - when the grid overflows, it should have its own scrollbar,
+ *   not use the whole page's
+ * - the grid and text area should reach down to the bottom of the page
+ *   - currently this is a fixed em number
+*/
+
+html {
+    font-family: sans-serif, monospace;
+    font-size: 12px;
+    height: 100%;
+}
+
+body {
+    background-color: rgb(38, 38, 38);
+    color: white;
+    margin: 0;
+    box-sizing: border-box;
+    height: 100%;
+	display: flex;
+    flex-direction: column;
+}
+
+#header {
+    /* Retained in case we add a status bar */
+    padding-top: 0.83em;
+    padding-bottom: 0.83em;
+    padding-right: 8px;
+    font-family: Calibri;
+}
+
+#row-container {
+	display: flex;
+    flex-direction: row;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+#spreadsheet {
+    margin-top: 4px;
+    margin-left: 8px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-right: 0.5em;
+    margin-right: 0.5em;
+    overflow-y: auto;
+}
+
+#formula-bar {
+    background-color: rgb(55, 55, 55);
+    color: white;
+    width: 100%;
+    margin-bottom: 0.5em;
+    font-family: Consolas, monospace;
+    resize: vertical;
+    min-height: 1.2em;
+    height: 1.2em;
+    border-color: rgb(170, 170, 170);
+}
+
+/* Grid */
+
+#grid-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-right: 0.5em;
+}
+
+#grid {
+    border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    outline: none; /* removes the border if focused */
+}
+
+#grid td {
+    border: 1px solid rgb(99, 97, 98);
+    min-width: 1.2em;
+    height: 1.2em;
+    padding: 3px;
+    
+    /* experimenting with big values */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 8em;
+}
+
+#grid td.occupied {
+    /* background-color: rgb(245, 245, 245); */
+    min-width: 8em;
+}
+
+#grid td.identifier {
+    color: LightCoral;
+}
+
+#grid td.heading {
+    background-color: rgb(91, 155, 213);
+    color: white;
+    font-weight: bold;
+}
+
+#grid td.selected {
+    background-color: rgb(88, 90, 89) !important;
+
+}
+
+#grid td.append {
+    /* idea: stronger, but dashed, border? */
+    background-color: rgb(134, 83, 83);
+    /* background-color: rgb(255, 204, 153); */
+    /* color: rgb(255, 181, 70); */
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+#grid td.add_key {
+    /* idea: stronger, but dashed, border? */
+    background-color: rgb(134, 83, 83);
+    /* background-color: rgb(255, 204, 153); */
+    /* color: rgb(255, 181, 70); */
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+/* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof */
+#grid td.append:before {
+    content: "Append"
+}
+
+#grid td.add_key:before {
+    content: "Add key"
+}
+
+#grid td.string {
+    text-align: left;
+}
+
+#grid td.number {
+    text-align: right;
+}
+
+#grid td.boolean {
+    text-align: center;
+}
+
+#grid td.true {
+    background-color: rgb(200, 255, 166);
+}
+
+#grid td.false {
+    background-color: rgb(255, 198, 198);
+}
+
+#grid td.null {
+    text-align: center;
+}
+
+#grid td.undefined {
+    text-align: center;
+}
+
+#grid td.read-only {
+    color: white;
+}
+
+#grid td.function {
+    font-style: italic;
+}
+
+#grid td.editable {
+    color: #599eff;
+}
+
+#grid td.key {
+    /* background-color: #FFE4B5; */
+}
+
+/* Code editor */
+
+#code-editor {
+    width: 70em;
+}
+
+.CodeMirror {
+    height: 100%;
+}
+
+.CodeMirror-scroll {
+    /* http://stackoverflow.com/questions/30098071/codemirror-autoresize-upto-a-given-number-of-lines */
+    /* max-height: 100%; */
+}
+
+/* Status bar */
+
+#status-bar {
+    font-size: 11px;
+    background-color: DarkSlateBlue;
+    color: white;
+    padding: 4px;
+    font-family: Calibri;
+    text-transform: uppercase;
+}
+
+#status-bar a {
+    color: white;
+}
+
+#status-bar > dl {
+  -webkit-margin-before: 0px;
+  -webkit-margin-after: 0px;
+}
+
+#status-bar > dl > dd {
+    -webkit-margin-start: 0px;
+    display: inline;
+}

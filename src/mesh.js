@@ -42,7 +42,8 @@ const HTML_elements = {
 const codemirror_settings = {
     value: '',
     mode: "javascript",
-    theme: "neo",
+    theme: "neo", // light theme
+    // theme: "lesser-dark", // dark theme
     styleActiveLine: true,
     lineWrapping: true,
     lineNumbers: true,
