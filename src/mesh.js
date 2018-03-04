@@ -42,8 +42,6 @@ const HTML_elements = {
 const codemirror_settings = {
     value: '',
     mode: "javascript",
-    theme: "neo", // light theme
-    // theme: "lesser-dark", // dark theme
     styleActiveLine: true,
     lineWrapping: true,
     lineNumbers: true,
@@ -51,6 +49,29 @@ const codemirror_settings = {
 }
 
 const code_editor = CodeMirror(HTML_elements.code_editor, codemirror_settings);
+
+// Themes
+
+const themes = {
+    light: {css: 'light', codemirror: 'neo'},
+    dark: {css: 'dark', codemirror: 'lesser-dark'},
+}
+
+function assign_theme(chosen_theme) {
+    document.getElementById("theme-mesh")
+        .href = "themes/" + themes[chosen_theme].css + ".css";
+    document.getElementById("theme-codemirror")
+        .href = "node_modules/codemirror/theme/" + themes[chosen_theme].codemirror + '.css';
+    code_editor.setOption("theme", themes[chosen_theme].codemirror);
+}
+let current_theme = 'light';
+assign_theme(current_theme);
+ReactDOM.render(React.createElement(StatusBar, store.getState()), HTML_elements.status_bar);
+const theme_button = document.getElementById("theme_changer");
+theme_button.onclick = function () {
+    current_theme = (current_theme === 'light') ? 'dark' : 'light';
+    assign_theme(current_theme);
+}
 
 // Event bindings
 

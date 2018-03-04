@@ -52,10 +52,7 @@ body {
     resize: vertical;
     min-height: 1.2em;
     height: 1.2em;
-    border-color: #d3d3d3;
 }
-
-/* Grid */
 
 #grid-container {
     flex-grow: 1;
@@ -71,7 +68,6 @@ body {
 }
 
 #grid td {
-    border: 1px solid #d3d3d3;
     min-width: 1.2em;
     height: 1.2em;
     padding: 3px;
@@ -88,40 +84,6 @@ body {
     min-width: 8em;
 }
 
-#grid td.identifier {
-    color: red;
-}
-
-#grid td.heading {
-    background-color: rgb(91, 155, 213);
-    color: white;
-    font-weight: bold;
-}
-
-#grid td.selected {
-    background-color: rgb(255, 243, 153) !important;
-}
-
-#grid td.append {
-    /* idea: stronger, but dashed, border? */
-    background-color: rgb(255, 235, 204);
-    /* background-color: rgb(255, 204, 153); */
-    /* color: rgb(255, 181, 70); */
-    text-align: center;
-    text-transform: uppercase;
-    font-size: 11px;
-}
-
-#grid td.add_key {
-    /* idea: stronger, but dashed, border? */
-    background-color: rgb(255, 235, 204);
-    /* background-color: rgb(255, 204, 153); */
-    /* color: rgb(255, 181, 70); */
-    text-align: center;
-    text-transform: uppercase;
-    font-size: 11px;
-}
-
 /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof */
 #grid td.append:before {
     content: "Append"
@@ -129,50 +91,6 @@ body {
 
 #grid td.add_key:before {
     content: "Add key"
-}
-
-#grid td.string {
-    text-align: left;
-}
-
-#grid td.number {
-    text-align: right;
-}
-
-#grid td.boolean {
-    text-align: center;
-}
-
-#grid td.true {
-    background-color: rgb(200, 255, 166);
-}
-
-#grid td.false {
-    background-color: rgb(255, 198, 198);
-}
-
-#grid td.null {
-    text-align: center;
-}
-
-#grid td.undefined {
-    text-align: center;
-}
-
-#grid td.read-only {
-    color: black;
-}
-
-#grid td.function {
-    font-style: italic;
-}
-
-#grid td.editable {
-    color: blue;
-}
-
-#grid td.key {
-    /* background-color: #FFE4B5; */
 }
 
 /* Code editor */
@@ -194,15 +112,7 @@ body {
 
 #status-bar {
     font-size: 11px;
-    background-color: rgb(0, 63, 147);
-    color: white;
     padding: 4px;
-    font-family: Calibri;
-    text-transform: uppercase;
-}
-
-#status-bar a {
-    color: white;
 }
 
 #status-bar > dl {

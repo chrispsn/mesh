@@ -19,6 +19,7 @@ function StatusBar (props) {
     const twitter_link = React.createElement('a', {
         href: "https://twitter.com/mesh_ide", target: '_blank',
     }, "@mesh_ide");
+    const change_theme = React.createElement('a', {id: "theme_changer", href: "#"}, "Change theme")
     return React.createElement('dl', {}, 
         current_mode, 
         separator, 
@@ -28,6 +29,8 @@ function StatusBar (props) {
         separator,
         twitter_link_desc,
         twitter_link,
+        separator,
+        change_theme,
     );
 }
 
