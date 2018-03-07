@@ -46,7 +46,7 @@ triage_table: [
 
     // some_fn()
         // TODO need to enumerate the other built-in objects here too... eg Map, Set
-    {nodetype: 'CallExpression', prototype: Array, typeof: 'ALL', fn: display_fns.array_ro,},
+    {nodetype: 'CallExpression', prototype: Array.prototype, typeof: 'ALL', fn: display_fns.array_ro,},
     {nodetype: 'CallExpression', prototype: 'ALL', typeof: 'object', fn: display_fns.object_ro,},
     // If above isn't capturing things some objects, see http://stackoverflow.com/a/22482737
     {nodetype: 'CallExpression', prototype: 'ALL', typeof: 'function', fn: display_fns.object_ro,},
