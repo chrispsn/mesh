@@ -2,7 +2,7 @@ const {triage} = require('./display_fn_triage');
 const CT = require('./code_transformers');
 
 // TODO move this back to reducers?
-module.exports = function(DATA, SHEET, AST) {
+module.exports = function(DATA, SHEET, AST, ConsumedTablePrototype) {
     const cells = [];
     for (let [id, loc, _] of DATA) {
         const value = SHEET[id];
@@ -26,7 +26,7 @@ module.exports = function(DATA, SHEET, AST) {
         // 3. ID is needed so the cells' fns can access their module item to work on it;
         // technically recoverable from value_nodepath.parent, but feels more efficient to pass now.
         // As ID is not *required*, have listed last so it's easier to delete later if desired.
-        const display_fn = triage(value_nodepath.node.type, value);
+        const display_fn = triage(value_nodepath.node.type, value, ConsumedTablePrototype);
         const value_cells = display_fn(value, value_nodepath, id);
         
         // Value cells come through with locations as offsets to the name cell.

@@ -4,7 +4,6 @@
 // https://github.com/benjamn/ast-types/blob/master/def/core.js
 // https://github.com/benjamn/ast-types/blob/master/def/es6.js
 
-const Prototypes = require('./prototypes');
 const display_fns = require('./display').display_fns;
 
 const ROOT = {
@@ -36,12 +35,10 @@ triage_table: [
 
     // TODO consider whether this will deal with array spread notation
     // [1, 2, 3]
-    {nodetype: 'ArrayExpression', prototype: Prototypes.TableArray, typeof: 'ALL', fn: display_fns.table_array_rw,},
     {nodetype: 'ArrayExpression', prototype: 'ALL', typeof: 'ALL', fn: display_fns.array_rw,},
 
     // TODO consider whether this will deal with object spread notation
-    // {hello: 'world'} or {__proto__: Prototypes.TableObject, ...}
-    {nodetype: 'ObjectExpression', prototype: Prototypes.TableArray, typeof: 'ALL', fn: display_fns.table_object_rw,},
+    // {hello: 'world'} or {__proto__: ConsumedTable, ...}
     {nodetype: 'ObjectExpression', prototype: 'ALL', typeof: 'ALL', fn: display_fns.object_rw,},
 
     // some_fn()
@@ -70,13 +67,19 @@ triage_table: [
 
 get triage() {
     const sheet = this;
-    return function(nodetype, value) {
-        for (let row of sheet.triage_table) {
+    return function(nodetype, value, ConsumedTable) {
+        for (let row of [
+            // TODO this is hideous. What is this 'having to thread the prototype through'
+            // telling us about the program structure?
+            {nodetype: 'ObjectExpression', prototype: ConsumedTable, 
+                typeof: 'ALL', fn: display_fns.table_rw,},
+            ...sheet.triage_table]
+            ) {
             if (
                 ((row.nodetype === 'ALL') || (nodetype === row.nodetype))
                 && ((row.prototype === 'ALL') || (row.prototype.isPrototypeOf(value)))
                 && ((row.typeof === 'ALL') || (typeof value === row.typeof))
-            ) return row.fn;
+            ) {return row.fn;}
         }
         console.log("Not sure how to display this expression type: ", nodetype);
         return display_fns.dummy;

@@ -238,29 +238,49 @@ const display_fns = {
 
         return [];
     },
-    table_object_rw: (arr, obj_nodepath, id, AST) => {
+    table_rw: (arr, obj_nodepath, id, AST) => {
         // Table structured as object of arrays: {heading: [values], ...}.
-        // By the time it gets to here, it's actually an array,
+        // By the time it gets to here, the data is an array,
         // but the nodepath is still an object literal.
         // TODO
 
         let [row_index, col_index] = [1, 0];
+        const formula_bar_text = "=" + CT.print_AST_to_code_string(obj_nodepath);
 
-        const headings = obj_nodepath.get("properties").value.map(
-                            n => CT.get_object_key_from_node(n));
+        const headings = obj_nodepath.get("properties").value
+                        .filter(k => !(k.key.name === "__proto__"))
+                        .map(k => k.key.value);
 
         // Write the data structure
         if (headings.length > 0) {
             
             // Headers
-            const header_cells = keys.map(
+            const header_cells = headings.map(
                 (key, col_offset) => ({
                     location: [row_index, col_index + col_offset], 
                     repr: String(key),
                     classes: 'heading',
-                    formula_bar_value: "TODO",
+                    formula_bar_value: formula_bar_text, // TODO
                 })
             )
+            row_index++;
+
+            // Records
+            const record_cells = [];
+            // TODO flip this around - first go by col (key), then by row
+            for (let offset_r = 0; offset_r < arr.length; offset_r++) {
+                headings.map((heading, offset_c) => {
+                    record_cells.push(
+                        ({
+                            location: [row_index + offset_r, col_index + offset_c],
+                            // TODO
+                            repr: arr[offset_r][heading],
+                            formula_bar_value: "TODO",
+                        })
+                    )
+                }
+            )}
+            /*
 
             // Add key cell
             const extra_cells = [];
@@ -294,27 +314,15 @@ const display_fns = {
             }
 
             const obj_node_props = value_node.properties;
-            const record_cells = [];
-            // TODO flip this around - first go by col (key), then by row
-            for (let offset_r = 0; offset_r < record_count; offset_r++) {
-                keys.map((key, offset_c) => {
-                    let key_elements = get_key_elements(obj_node_props, key);
-                    record_cells.push(
-                        ({
-                            location: [row_index + offset_r, col_index + offset_c],
-                            // TODO
-                            repr: obj[key][offset_r],
-                            formula_bar_value: "TODO",
-                        })
-                    )
-                }
-            )}
             
             // TODO append record cells
             // TODO append field cells
             // TODO attach delete actions (datum, field, record, entire ooa?)
+            //
+            // */
 
-            return [...header_cells, ...record_cells, ...extra_cells];
+            // return [...header_cells, ...record_cells, ...extra_cells];
+            return [...header_cells, ...record_cells];
 
         } else {
             return [];
