@@ -20,6 +20,15 @@ function leaf_classes(value) {
     return typeof value + (typeof value === 'boolean' ? ' ' + String(value) : '');
 }
 
+function get_formula_bar_text(is_formula, raw_text) {
+    if (is_formula) {
+        return '=' + raw_text;
+    } else if (raw_text[0] === "`" && raw_text.slice(-1) === "`") {
+        return raw_text.slice(1, -1);
+    }
+    return raw_text;
+}
+
 const display_fns = {
 
     dummy: (value, value_nodepath, id, AST) => {
@@ -37,13 +46,13 @@ const display_fns = {
     },
 
     value: (value, value_nodepath, id, AST) => {
-        const formula_bar_text = CT.print_AST_to_code_string(value_nodepath);
+        const raw_text = CT.print_AST_to_code_string(value_nodepath);
         const is_formula = leaf_is_formula(value_nodepath.node);
         const value_cell = {
             location: [0, 1], 
             ref_string: id,
             repr: String(value),
-            formula_bar_value: (is_formula ? '=' : '') + formula_bar_text,
+            formula_bar_value: get_formula_bar_text(is_formula, raw_text),
             classes: 'occupied ' + leaf_classes(value) + (is_formula ? '' : ' editable'),
             cell_AST_changes_type: 'DEFAULT', 
             AST_props: {key: id},
@@ -55,15 +64,20 @@ const display_fns = {
 
     array_ro: (array, array_nodepath, id, AST) => {
     // TODO it may be nice if: when you click on this, it selects the whole array.
-        return array.map((value, row_offset) => ({
-            location: [1 + row_offset, 0],
-            repr: String(value),
-            ref_string: id,
-            formula_bar_value: "=" + CT.print_AST_to_code_string(array_nodepath.node),
-            classes: "read-only " + leaf_classes(value),
-            cell_AST_changes_type: 'DEFAULT', 
-            AST_props: {key: id},
-        }));
+        const raw_text = CT.print_AST_to_code_string(array_nodepath.node);
+        const is_formula = leaf_is_formula(array_nodepath.node);
+        const formula_bar_value = get_formula_bar_text(is_formula, raw_text);
+        return array.map((value, row_offset) => {
+            return {
+                location: [1 + row_offset, 0],
+                repr: String(value),
+                ref_string: id,
+                formula_bar_value: formula_bar_value,
+                classes: "read-only " + leaf_classes(value),
+                cell_AST_changes_type: 'DEFAULT', 
+                AST_props: {key: id},
+            }
+        });
     },
 
     array_rw: (array, array_nodepath, id, AST) => {
@@ -73,12 +87,13 @@ const display_fns = {
         const value_cells = array.map((value, row_offset) => {
             const element_node = array_node.elements[row_offset];
             const is_formula = leaf_is_formula(element_node);
+            const raw_text = CT.print_AST_to_code_string(element_node);
             return ({
                 location: [1 + row_offset, 0],
                 repr: String(value),
                 AST_props: {index: row_offset, key: id},
                 ref_string: id,
-                formula_bar_value: (is_formula ? '=' : '') + CT.print_AST_to_code_string(element_node),
+                formula_bar_value: get_formula_bar_text(is_formula, raw_text),
                 classes: leaf_classes(value) + (is_formula ? '' : ' editable'),
                 cell_AST_changes_type: 'ARRAY_LITERAL_DATA_CELL',
             });
@@ -105,7 +120,8 @@ const display_fns = {
         // TODO fact that we need to add the = here suggests
         // doing it in a function that is not supposed to know about it containing a formula,
         // is the wrong approach
-        const formula_bar_text = "=" + CT.print_AST_to_code_string(object_nodepath);
+        const raw_text = CT.print_AST_to_code_string(object_nodepath);
+        const formula_bar_text = get_formula_bar_text(true, raw_text);
 
         const cells = [];
         Object.entries(object).forEach(([key, value], row_offset) => {
@@ -145,12 +161,14 @@ const display_fns = {
             const prop_node = object_nodepath.node.properties[row_offset];
 
             const key_node = prop_node.key;
+            let raw_text = CT.print_AST_to_code_string(key_node);
+            let formula_bar_text = get_formula_bar_text(false, raw_text);
             const key_cell = ({
                 location: [1 + row_offset, 0],
                 // TODO visually show the difference between keys surrounded by "" and those not?
                 repr: String(key), 
                 ref_string: id,
-                formula_bar_value: CT.print_AST_to_code_string(key_node),
+                formula_bar_value: formula_bar_text,
                 classes: 'object key editable',
                 AST_props: {key: id, item_key: key},
                 // TODO computed keys?
@@ -164,6 +182,8 @@ const display_fns = {
                 value_node = prop_node.value;
             };
             const is_formula = leaf_is_formula(value_node);
+            raw_text = CT.print_AST_to_code_string(value_node);
+            formula_bar_text = get_formula_bar_text(is_formula, raw_text);
             const value_cell = ({
                 location: [1 + row_offset, 1],
                 // TODO show function bodies (currently show as blank)
@@ -171,7 +191,7 @@ const display_fns = {
                 // to get the right styling etc
                 repr: String(value), 
                 ref_string: id,
-                formula_bar_value: (is_formula ? '=' : '') + CT.print_AST_to_code_string(value_node),
+                formula_bar_value: formula_bar_text, 
                 classes: 'object value ' + leaf_classes(value) + (is_formula ? '' : ' editable'),
                 AST_props: {key: id, item_key: key},
                 cell_AST_changes_type: 'OBJECT_LITERAL_VALUE_CELL',
@@ -245,7 +265,8 @@ const display_fns = {
         // TODO
 
         let [row_index, col_index] = [1, 0];
-        const formula_bar_text = "=" + CT.print_AST_to_code_string(obj_nodepath);
+        const raw_text = CT.print_AST_to_code_string(obj_nodepath);
+        const formula_bar_text = get_formula_bar_text(true, raw_text);
 
         const headings = obj_nodepath.get("properties").value
                         .filter(k => !(k.key.name === "__proto__"))
@@ -268,6 +289,8 @@ const display_fns = {
             // Records
             const record_cells = [];
             // TODO flip this around - first go by col (key), then by row
+            // that way we can have different behaviour for array literals
+            // versus results of function calls / generators
             for (let offset_r = 0; offset_r < arr.length; offset_r++) {
                 headings.map((heading, offset_c) => {
                     record_cells.push(
@@ -300,10 +323,6 @@ const display_fns = {
             })
             extra_cells.push(new_field_cell)
             
-            // Records
-            const record_count = obj[headings[0]].length;
-            row_index++;
-
             function get_key_elements(obj_props, key) {
                 for (let prop of obj_props) {
                     let field_id = (prop.key.type === 'Identifier') ? prop.key.name : prop.key.value;
