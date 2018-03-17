@@ -64,7 +64,7 @@ function assign_theme(chosen_theme) {
         .href = "node_modules/codemirror/theme/" + themes[chosen_theme].codemirror + '.css';
     code_editor.setOption("theme", themes[chosen_theme].codemirror);
 }
-let current_theme = 'light';
+let current_theme = 'dark';
 assign_theme(current_theme);
 ReactDOM.render(React.createElement(StatusBar, store.getState()), HTML_elements.status_bar);
 const theme_button = document.getElementById("theme_changer");
