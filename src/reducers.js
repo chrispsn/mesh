@@ -14,7 +14,7 @@ const INITIAL_STATE = {
     // duplication of location... unless needed by React?
     cells: { '[0, 0]': Object.assign({}, EMPTY_CELL, {location: [0, 0]}) },
     selected_cell_loc: [0, 0],
-    code_editor: { value: BLANK_FILE, selection: undefined, show: true },
+    code_editor: { value: BLANK_FILE, prev_value: "", selection: undefined, show: true },
     filepath: null,
 }
 
@@ -35,7 +35,14 @@ const state_changes = {
     },
 
     'LOAD_CODE': (state, action) => Object.assign({}, state, {
-        code_editor: Object.assign({}, state.code_editor, {value: action.code}),
+        code_editor: Object.assign({}, state.code_editor, {
+            // TODO this 'recording of past valid state' is a bit of a hack.
+            // If the change we made in the code pane was not valid,
+            // we still want to see the broken code
+            // before it's committed in the pane, not go back to the last valid state.
+            // Seems to also have bugs around moving the selected cell.
+            value: action.code, prev_value: state.code_editor.value
+        }),
         mode: 'NEED_TO_CALCULATE',
     }),
 
@@ -46,6 +53,7 @@ const state_changes = {
     /* CALCULATION */
 
     'CALCULATE': (state, action) => {
+        // TODO errors need to be caught *before* the code editor state changes
         const code = state.code_editor.value;
         try {
             const AST = new CT.parse_code_string_to_AST(code);
@@ -65,7 +73,12 @@ const state_changes = {
             // TODO right now this dumps the user back to the code editing pane,
             // but it should depend on where the commit came from (code pane or formula bar)
             // maybe this is indicated via the action?
-            return Object.assign({}, state, { mode: 'EDITING_CODE', })
+            // Actually - could probs get via undo/redo
+            return Object.assign({}, state, {
+                mode: 'EDIT',
+                selected_cell_loc: state.prev_selected_cell_loc,
+                code_editor: Object.assign({}, state.code_editor, {value: state.code_editor.prev_value})
+            });
         }
     },
 
@@ -117,7 +130,7 @@ const state_changes = {
         const [old_row, old_col] = state.selected_cell_loc;
         const new_code = CT.print_AST_to_code_string(AST);
         return Object.assign({}, state, {
-            code_editor: Object.assign({}, state.code_editor, {value: new_code}),
+            code_editor: Object.assign({}, state.code_editor, {value: new_code, prev_value: old_code}),
             mode: 'NEED_TO_CALCULATE',
             // TODO Merge with select code somehow? (Feels like select should just be a 'refresh ready')
             // TODO these 'row + offset, col + offset' logics are basically the same
@@ -126,6 +139,7 @@ const state_changes = {
                 old_row + selection_offset[0], 
                 old_col + selection_offset[1]
             ],
+            prev_selected_cell_loc: [old_row, old_col],
         });
     },
 
