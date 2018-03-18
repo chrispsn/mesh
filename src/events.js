@@ -188,12 +188,13 @@ const formula_bar = document.getElementById("formula-bar");
 const formula_bar_keydown_events = [
     // TOOD how can a user insert a line into the formula bar 
     // without triggering commit? Same way as in Excel?
+    {mode: 'EDIT', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), preventDefault: false, action: () => ({ type: '',})},
     {mode: 'EDIT', keypattern: /^Enter$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, 
         action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [1, 0] })},
     {mode: 'EDIT', keypattern: /^Tab$/, modifiers: (e) => (!e.shiftKey), preventDefault: true, 
         action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [0, 1] })},
-    {mode: 'EDIT', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), preventDefault: true, 
-        action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [-1, 0] })},
+    // {mode: 'EDIT', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), preventDefault: true, 
+    //    action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [-1, 0] })},
     {mode: 'EDIT', keypattern: /^Tab$/, modifiers: (e) => (e.shiftKey), preventDefault: true, 
         action: () => ({ type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [0, -1] })},
     {mode: 'EDIT', keypattern: /^Escape$/, action: () => ({ type: 'DISCARD_CELL_EDIT' })},
