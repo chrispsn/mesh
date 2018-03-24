@@ -58,7 +58,7 @@ const state_changes = {
         try {
             const AST = new CT.parse_code_string_to_AST(code);
             // http://www.mattzeunert.com/2017/01/10/whats-a-statement-completion-value-in-javascript.html
-            let [DATA, SHEET, ConsumedTablePrototype] = eval(code + LINE_SEPARATOR + "[DATA, SHEET, ConsumedTable]");
+            let [DATA, SHEET, ConsumedTablePrototype] = eval(code + LINE_SEPARATOR + "[DATA, $, ConsumedTable]");
             let cells = generate_cells(DATA, SHEET, AST, ConsumedTablePrototype);
             const new_cells = {};
             for (let cell of cells) {
