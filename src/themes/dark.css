@@ -79,6 +79,10 @@ body {
     background-color: rgb(255, 198, 198);
 }
 
+#grid td.error {
+    background-color: red;
+}
+
 #grid td.null {
     text-align: center;
 }

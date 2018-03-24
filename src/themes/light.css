@@ -64,6 +64,11 @@
     background-color: rgb(255, 198, 198);
 }
 
+#grid td.error {
+    background-color: IndianRed;
+    color: white !important;
+}
+
 #grid td.null {
     text-align: center;
 }

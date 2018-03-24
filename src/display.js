@@ -17,7 +17,9 @@ function leaf_is_formula(node) {
 }
 
 function leaf_classes(value) {
-    return typeof value + (typeof value === 'boolean' ? ' ' + String(value) : '');
+    return typeof value 
+            + (typeof value === 'boolean' ? ' ' + String(value) : '')
+            + (Error.prototype.isPrototypeOf(value) ? ' error' : '');
 }
 
 function get_formula_bar_text(is_formula, raw_text) {
