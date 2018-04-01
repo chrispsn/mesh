@@ -44,6 +44,16 @@
     font-size: 11px;
 }
 
+#grid td.add_col {
+    /* idea: stronger, but dashed, border? */
+    background-color: rgb(255, 235, 204);
+    /* background-color: rgb(255, 204, 153); */
+    /* color: rgb(255, 181, 70); */
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
 #grid td.string {
     text-align: left;
 }

@@ -93,6 +93,10 @@ body {
     content: "Add key"
 }
 
+#grid td.add_col:before {
+    content: "→"
+}
+
 /* Code editor */
 
 #code-editor {

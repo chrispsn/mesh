@@ -28,6 +28,8 @@ function get_object_key_from_node(obj_key_node) {
 /* PUBLIC API */
 
 module.exports = {
+
+get_object_key_from_node: get_object_key_from_node,
     
 parse_code_string_to_AST: function(code_string) {
     return Recast.parse(code_string, RECAST_SETTINGS);
@@ -242,6 +244,11 @@ AOO_remove_record_given_key: function(arr_path, element_key_name, key) {
 
 /* OBJECT OF ARRAYS */
 
+// Datum: element in a column array
+// Record: element in same position across column arrays
+// Field: whole column
+
+// TODO extend to 'insert' instead of just append?
 OOA_append_datum: function(obj_path, key_name, datum_text) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
@@ -275,13 +282,17 @@ OOA_remove_record: function(obj_path, record_idx) {
     }
 },
 
+// TODO this is really 'append' right now - need to extend?
 OOA_add_field: function(obj_path, key_name) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     // Figure out how many elements need to be in the array
     let field_length = 0;
     if (props_path.value.length > 0) {
-        field_length = props_path.value[0].value.elements.length;
+        field_length = props_path.value
+                        // TODO Make this __proto__ filter a generic function
+                        .filter(n => get_object_key_from_node(n.key) !== "__proto__")[0]
+                        .value.elements.length;
     }
     // Create array node of required length
     const array_node = B.arrayExpression(
