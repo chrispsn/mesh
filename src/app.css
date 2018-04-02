@@ -86,7 +86,7 @@ body {
 
 /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof */
 #grid td.append:before {
-    content: "Append"
+    content: "↓"
 }
 
 #grid td.add_key:before {
