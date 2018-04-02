@@ -27,7 +27,8 @@ class Cell extends React.PureComponent {
         let props = this.props;
         const repr = props.repr;
         props = {
-            className: props.classes + (props.selected ? ' selected' : ''),
+            className: ((props.classes.length === 0 ? 'empty' : props.classes) 
+                       + (props.selected ? ' selected' : '')),
             id: props.id,
         }
         return React.createElement("td", props, this.props.repr);
