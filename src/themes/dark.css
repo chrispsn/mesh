@@ -14,8 +14,16 @@ body {
 
 /* Grid */
 
+#grid {
+    border: 1px solid rgb(170, 170, 170);
+}
+
 #grid td {
-    border: 1px solid rgb(99, 97, 98);
+    border: 1px solid rgb(78, 78, 78);
+}
+
+#grid td.empty {
+    border: 1px dotted rgb(58, 58, 58);
 }
 
 #grid td.identifier {
@@ -23,41 +31,37 @@ body {
 }
 
 #grid td.heading {
-    background-color: rgb(91, 155, 213);
+    background-color: rgb(78, 121, 158);
+    border: 1px solid rgb(78, 121, 158);
     color: white;
     font-weight: bold;
 }
 
 #grid td.selected {
-    background-color: rgb(88, 90, 89) !important;
-
+    background-color: rgb(168, 135, 43) !important;
+    border: 1px solid rgb(168, 135, 43) !important;
+    color: white !important;
 }
 
 #grid td.append {
-    background-color: rgb(134, 83, 83);
     text-align: center;
     text-transform: uppercase;
     font-size: 11px;
+    color: rgb(138, 138, 138);
 }
 
 #grid td.add_key {
-    /* idea: stronger, but dashed, border? */
-    background-color: rgb(134, 83, 83);
-    /* background-color: rgb(255, 204, 153); */
-    /* color: rgb(255, 181, 70); */
     text-align: center;
     text-transform: uppercase;
     font-size: 11px;
+    color: rgb(138, 138, 138);
 }
 
 #grid td.add_col {
-    /* idea: stronger, but dashed, border? */
-    background-color: rgb(134, 83, 83);
-    /* background-color: rgb(255, 204, 153); */
-    /* color: rgb(255, 181, 70); */
     text-align: center;
     text-transform: uppercase;
     font-size: 11px;
+    color: rgb(138, 138, 138);
 }
 
 /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof */
@@ -74,11 +78,13 @@ body {
 }
 
 #grid td.true {
-    background-color: rgb(200, 255, 166);
+    background-color: rgb(103, 139, 81);
+    border: 1px solid rgb(103, 139, 81)
 }
 
 #grid td.false {
-    background-color: rgb(255, 198, 198);
+    background-color: rgb(134, 83, 83);
+    border: 1px solid rgb(134, 83, 83);
 }
 
 #grid td.error {
