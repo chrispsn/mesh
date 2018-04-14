@@ -317,6 +317,12 @@ run_tests('OOA_add_field', CT.OOA_add_field, [
             field2: [null, null, null],
         })`,
     },
+    {
+        desc: 'adds field to empty object',
+        in: `( {} )`,
+        args: ['field1'],
+        out: `({ field1: [] })`,
+    },
 ])
 
 run_tests('OOA_remove_field', CT.OOA_remove_field, [

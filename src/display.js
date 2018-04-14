@@ -266,7 +266,6 @@ const display_fns = {
         // but the nodepath is still an object literal.
         // TODO
 
-        let [row_index, col_index] = [1, 0];
         const raw_text = CT.print_AST_to_code_string(obj_nodepath);
         const formula_bar_text = get_formula_bar_text(true, raw_text);
 
@@ -275,115 +274,73 @@ const display_fns = {
                         .filter(k => !(k.key.name === "__proto__"))
                         .map(k => k.key.value);
 
-        // Write the data structure
-        if (headings.length > 0) {
-            
-            // Headers
-            const header_cells = headings.map(
-                (heading, col_offset) => ({
-                    // TODO
-                    location: [row_index, col_index + col_offset], 
-                    repr: String(heading),
-                    classes: 'heading',
-                    formula_bar_value: heading,
-                    AST_props: {key: id, heading: heading},
-                    cell_AST_changes_type: 'OOA_LITERAL_COLUMN_CELL',
-                })
-            )
-            
-            // Add column
-            const add_column_cell = {
-                location: [row_index, col_index + headings.length],
-                repr: '',
-                classes: 'add_col',
-                formula_bar_value: '',
-                cell_AST_changes_type: 'OOA_LITERAL_ADD_COLUMN_CELL',
-                AST_props: {key: id},
-            };
-
-            row_index++;
-
-            // Records
-            const record_cells = [];
-            const col_nodes = {};
-            for (let prop_node of obj_nodepath.get("properties").value) {
-                let key = CT.get_object_key_from_node(prop_node.key);
-                col_nodes[key] = prop_node.value;
-            }
-            // TODO flip this around - first go by col (key), then by row
-            // that way we can have different behaviour for array literals
-            // versus results of function calls / generators
-            for (let offset_r = 0; offset_r < arr.length; offset_r++) {
-                headings.map((heading, offset_c) => {
-                    let elem_node = col_nodes[heading].elements[offset_r];
-                    let is_formula = leaf_is_formula(elem_node);
-                    let raw_text = CT.print_AST_to_code_string(elem_node);
-                    let formula_bar_text = get_formula_bar_text(is_formula, raw_text);
-                    let value = arr[offset_r][heading];
-                    record_cells.push(
-                        ({
-                            location: [row_index + offset_r, col_index + offset_c],
-                            repr: value,
-                            formula_bar_value: formula_bar_text,
-                            cell_AST_changes_type: 'OOA_LITERAL_VALUE_CELL',
-                            AST_props: {key: id, item_key: heading, index: offset_r},
-                            classes: 'object value ' + leaf_classes(value) 
-                                     + (is_formula ? '' : ' editable'),
-                        })
-                    )
-                }
-            )}
-            
-            // Append cell
-            const append_record_cells = headings.map((heading, offset_c) => ({
-                location: [row_index + arr.length, col_index + offset_c],
-                repr: '',
-                classes: 'append',
-                formula_bar_value: "",
-                cell_AST_changes_type: 'OOA_LITERAL_APPEND_CELL',
-                AST_props: {key: id, item_key: heading},
-            }))
-            /*
-
-            // Add key cell
-            const extra_cells = [];
-
-            const new_field_cell = ({
-                location: [row_index, col_index + keys.length],
-                repr: '',
-                ref_string: ref_string,
-                classes: 'add_key',
-                formula_bar_value: '',
-                commit_edit: (state, action) => {
-                    const old_code = state.code_editor.value;
-                    CT.OOA_add_field(old_code, ref_string, action.commit_value);
-                    return new_state_after_AST_transforms(state, AST, action.offset);
-                },
+        // Headers
+        const header_cells = headings.map(
+            (heading, col_offset) => ({
+                // TODO
+                location: [1, col_offset], 
+                repr: String(heading),
+                classes: 'heading',
+                formula_bar_value: heading,
+                AST_props: {key: id, heading: heading},
+                cell_AST_changes_type: 'OOA_LITERAL_COLUMN_CELL',
             })
-            extra_cells.push(new_field_cell)
-            
-            function get_key_elements(obj_props, key) {
-                for (let prop of obj_props) {
-                    let field_id = (prop.key.type === 'Identifier') ? prop.key.name : prop.key.value;
-                    if (field_id === key) {
-                        return prop.value.elements;
-                    }
-                }
-            }
-
-            const obj_node_props = value_node.properties;
-            
-            // TODO append record cells
-            // TODO attach delete actions (datum, field, record, entire ooa?)
-            //
-            // */
-
-            // return [...header_cells, ...record_cells, ...extra_cells];
-            return [...header_cells, add_column_cell, ...record_cells, ...append_record_cells];
-
-        } else {
-            return [];
+        )
+        
+        // Add column
+        // TODO get working for 'no headings' case
+        const add_column_cell = {
+            location: [1, headings.length],
+            repr: '',
+            classes: 'add_col',
+            formula_bar_value: '',
+            cell_AST_changes_type: 'OOA_LITERAL_ADD_COLUMN_CELL',
+            AST_props: {key: id},
+        };
+        
+        // Records
+        const col_nodes = {};
+        for (let prop_node of obj_nodepath.get("properties").value) {
+            let key = CT.get_object_key_from_node(prop_node.key);
+            col_nodes[key] = prop_node.value;
         }
+        // TODO flip this around - first go by col (key), then by row
+        // that way we can have different behaviour for array literals
+        // versus results of function calls / generators
+        const record_cells = [];
+        for (let offset_r = 0; offset_r < arr.length; offset_r++) {
+            headings.map((heading, offset_c) => {
+                let elem_node = col_nodes[heading].elements[offset_r];
+                let is_formula = leaf_is_formula(elem_node);
+                let raw_text = CT.print_AST_to_code_string(elem_node);
+                let formula_bar_text = get_formula_bar_text(is_formula, raw_text);
+                let value = arr[offset_r][heading];
+                record_cells.push(
+                    ({
+                        location: [2 + offset_r, offset_c],
+                        repr: value,
+                        formula_bar_value: formula_bar_text,
+                        cell_AST_changes_type: 'OOA_LITERAL_VALUE_CELL',
+                        AST_props: {key: id, item_key: heading, index: offset_r},
+                        classes: 'object value ' + leaf_classes(value) 
+                                    + (is_formula ? '' : ' editable'),
+                    })
+                )
+            }
+        )}
+        
+        // Append cell
+        const append_record_cells = headings.map((heading, offset_c) => ({
+            location: [2 + arr.length, offset_c],
+            repr: '',
+            classes: 'append',
+            formula_bar_value: "",
+            cell_AST_changes_type: 'OOA_LITERAL_APPEND_CELL',
+            AST_props: {key: id, item_key: heading},
+        }))
+
+        return [...header_cells, add_column_cell, ...record_cells, ...append_record_cells];
+
     },
 
 }

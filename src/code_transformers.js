@@ -287,13 +287,12 @@ OOA_add_field: function(obj_path, key_name) {
     // TODO throw error if duplicate key?
     const props_path = obj_path.get('properties');
     // Figure out how many elements need to be in the array
-    let field_length = 0;
-    if (props_path.value.length > 0) {
-        field_length = props_path.value
+    let non_proto_fields = props_path.value
                         // TODO Make this __proto__ filter a generic function
-                        .filter(n => get_object_key_from_node(n.key) !== "__proto__")[0]
-                        .value.elements.length;
-    }
+                        .filter(n => get_object_key_from_node(n.key) !== "__proto__");
+    let field_length = (non_proto_fields.length > 0) 
+                        ? non_proto_fields[0].value.elements.length
+                        : 0;
     // Create array node of required length
     const array_node = B.arrayExpression(
                         Array(field_length).fill(B.literal(null))
