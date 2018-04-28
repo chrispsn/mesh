@@ -12,9 +12,10 @@ const BLANK_FILE = [
     "        const t = this, iterator_pairs = [];",
     "        const defProp = Object.defineProperty;",
     "        for (let [h, iterable] of Object.entries(t)) {",
-    "            delete t[h];", // TODO: make col self-memoising instead of creating now. Also, do we need to delete?
     "            iterator_pairs.push([h, iterable[Symbol.iterator]()]);",
-    "            defProp(t, h, {value: []});",
+    // TODO memoise get?
+    // TODO delete old h prop before reassigning?
+    "            defProp(t, h, {get: () => t.map(r => r[h])});",
     "        };",
     "        defProp(t, '_evaled', {value: true, writable: true});",
     "        defProp(t, 'length', {value: 0, writable: true});",
@@ -28,8 +29,7 @@ const BLANK_FILE = [
     "                    get() {",
     "                        const item = iterator.next();",
     "                        if (item.done) {done = true; return}",
-    "                        const v = item.value; t[h].push(v);",
-    "                        delete this[h]; return this[h] = v;",
+    "                        delete this[h]; return this[h] = item.value;",
     "                    }",
     "                });",
     "            }",
