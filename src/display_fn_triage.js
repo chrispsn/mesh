@@ -38,7 +38,7 @@ triage_table: [
     {nodetype: 'ArrayExpression', prototype: 'ALL', typeof: 'ALL', fn: display_fns.array_rw,},
 
     // TODO consider whether this will deal with object spread notation
-    // {hello: 'world'} or {__proto__: ConsumedTable, ...}
+    // {hello: 'world'} or {__proto__: Table, ...}
     {nodetype: 'ObjectExpression', prototype: 'ALL', typeof: 'ALL', fn: display_fns.object_rw,},
 
     // some_fn()
@@ -74,11 +74,11 @@ triage_table: [
 
 get triage() {
     const sheet = this;
-    return function(nodetype, value, ConsumedTable) {
+    return function(nodetype, value, Table) {
         for (let row of [
             // TODO this is hideous. What is this 'having to thread the prototype through'
             // telling us about the program structure?
-            {nodetype: 'ObjectExpression', prototype: ConsumedTable, 
+            {nodetype: 'ObjectExpression', prototype: Table, 
                 typeof: 'ALL', fn: display_fns.table_rw,},
             ...sheet.triage_table]
             ) {

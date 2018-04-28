@@ -1,7 +1,7 @@
 "use strict";
 
-const Code = require('../settings.js').BLANK_FILE + "[Table, ConsumedTable];";
-const [Table, ConsumedTable] = eval(Code);
+const Code = require('../settings.js').BLANK_FILE + "Table;";
+const Table = eval(Code);
 
 // Helper function for tests
 
@@ -16,13 +16,13 @@ function* take(n, iterable) {
 describe('Table', () => {
     it('deals with a table with no headings or data', () => {
         const table = {__proto__: Table};
-        table.eval();
+        table._eval();
         expect(table.length).toBe(0);
         expect(Object.keys(table).length).toBe(0);
     });
     it('deals with a table with headings but no data', () => {
         const table = {__proto__: Table, single_key: []};
-        table.eval();
+        table._eval();
         expect(table.length).toBe(0);
     });
     it('gets all records of a table with data', () => {
@@ -31,7 +31,7 @@ describe('Table', () => {
             car: ['Mazda', 'Audi'],
             year: [2002, 1991]
         }
-        table.eval();
+        table._eval();
         expect(table.length).toBe(2);
         expect(table[0].year).toBe(2002);
         expect(table[1].car).toBe('Audi');
@@ -41,7 +41,7 @@ describe('Table', () => {
             __proto__: Table,
             number: (function* () { yield 1; yield 2; yield 3; })(),
         }
-        table.eval();
+        table._eval();
         expect(table.length).toBe(3);
         expect(table[1].number).toBe(2);
         expect(table[0].number).toBe(1);
@@ -64,7 +64,7 @@ describe('Table', () => {
                 })());
             },
         }
-        table.eval();
+        table._eval();
         expect(table.length).toBe(10);
         expect(table[5].number).toBe(6);
     });
@@ -89,7 +89,7 @@ describe('Table', () => {
                 })());
             },
         }
-        table.eval();
+        table._eval();
         expect(table.length).toBe(10);
         expect(table[5].power).toBe(36);
     });
@@ -122,7 +122,7 @@ describe('Table', () => {
                 })());
             },
         }
-        table.eval();
+        table._eval();
         expect(table.length).toBe(10);
         expect(table[5].power).toBe(36);
         expect(table[5].power2).toBe(36);
@@ -140,15 +140,16 @@ describe('Table', () => {
             },
             get number() { return [1, 2, 3, 4, 5]; }
         }
-        table.eval();
+        table._eval();
         expect(table.length).toBe(5);
         expect(table[2].power).toBe(9);
     });
     it('can detect the prototypes via isPrototypeOf', () => {
         const table = { __proto__: Table, }
         expect(Table.isPrototypeOf(table)).toBe(true);
-        table.eval();
-        expect(ConsumedTable.isPrototypeOf(table)).toBe(true);
+        expect(!(table._evaled));
+        table._eval();
+        expect(table._evaled).toBe(true);
     });
 
 })
