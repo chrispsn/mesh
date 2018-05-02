@@ -15,7 +15,7 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 ## How to get Mesh
 
-You can [try Mesh online](http://chrispsn.com/try-mesh.html). You'll get best results in a recent version of Google Chrome. Note the web demo doesn't have file reading or writing right now.
+You can [try Mesh online](http://mesh-spreadsheet.com/try-mesh.html). You'll get best results in a recent version of Google Chrome. Note the web demo doesn't have file reading or writing right now.
 
 To work with local files (read and write), you will need to build the source and run with Electron:
 
