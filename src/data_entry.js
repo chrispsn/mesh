@@ -11,6 +11,7 @@ const rewrite_rules = [
 
     // Dates
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
+    // TODO make these just numbers instead? Transform to Excel style?
     { pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})/,
         rewrite: function(match, day, month, year, offset, string) {
             return "new Date(" + [
@@ -56,7 +57,7 @@ const rewrite_rules = [
     { pattern: /-?[0-9]+\.?[0-9]+/, rewrite: "$&" },
 
     // Strings
-    { pattern: /^[\D]+/, rewrite: "`$&`" },
+    { pattern: /^[\D]+/, rewrite: "\"$&\"" },
 ]
 
 function rewrite_input(input_string) {

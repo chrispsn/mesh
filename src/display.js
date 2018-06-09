@@ -13,7 +13,7 @@ const EMPTY_CELL = {
 }
 
 function leaf_is_formula(node) {
-    return !['Literal', 'TemplateLiteral', 'UnaryExpression'].includes(node.type);
+    return !['Literal', /*'TemplateLiteral',*/ 'UnaryExpression'].includes(node.type);
 }
 
 function leaf_classes(value) {
@@ -24,8 +24,9 @@ function leaf_classes(value) {
 
 function get_formula_bar_text(is_formula, raw_text) {
     if (is_formula) {
+        // TODO put brackets around raw object literals? How to detect?
         return '=' + raw_text;
-    } else if (raw_text[0] === "`" && raw_text.slice(-1) === "`") {
+    } else if (raw_text[0] === "\"" && raw_text.slice(-1) === "\"") {
         return raw_text.slice(1, -1);
     }
     return raw_text;
@@ -42,7 +43,7 @@ const display_fns = {
             repr: 'TODO',
             formula_bar_value: "TODO",
             classes: '',
-            cell_AST_changes_type: 'DEFAULT', 
+            cell_AST_changes_type: 'DUMMY', 
             AST_props: {key: id},
         }];
     },

@@ -9,9 +9,9 @@ describe('rewrite_input', () => {
         expect(actual_output).toBe(expected_output);
     });
 
-    it('turns strings of characters into template strings', () => {
+    it('turns strings of characters into literal strings', () => {
         const input_string = 'some_text';
-        const expected_output = '`some_text`';
+        const expected_output = '"some_text"';
         const actual_output = rewrite_input(input_string);
         expect(actual_output).toBe(expected_output);
     });

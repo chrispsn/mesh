@@ -1,7 +1,7 @@
 "use strict";
 
-const Code = require('../settings.js').BLANK_FILE + "Table;";
-const Table = eval(Code);
+const Code = require('../settings.js').BLANK_FILE + "tabulate;";
+const tabulate = eval(Code);
 
 // Helper function for tests
 
@@ -13,143 +13,102 @@ function* take(n, iterable) {
     }
 }
 
+// No columns
+// Columns, but no length
+// No preset length
+// Preset length
+// Value is function call
+// Default thingo is working properly
+// No columns with preset length
+
 describe('Table', () => {
     it('deals with a table with no headings or data', () => {
-        const table = {__proto__: Table};
-        table._eval();
+        const spec = {};
+        const table = tabulate(spec);
         expect(table.length).toBe(0);
         expect(Object.keys(table).length).toBe(0);
     });
     it('deals with a table with headings but no data', () => {
-        const table = {__proto__: Table, single_key: []};
-        table._eval();
+        const spec = {heading: {values: []}};
+        const table = tabulate(spec);
         expect(table.length).toBe(0);
     });
     it('gets all records of a table with data', () => {
-        const table = {
-            __proto__: Table,
-            car: ['Mazda', 'Audi'],
-            year: [2002, 1991]
-        }
-        table._eval();
+        const spec = {
+            "car": {values: ['Mazda', 'Audi']},
+            "year": {values: [2002, 1991]},
+        };
+        const table = tabulate(spec);
         expect(table.length).toBe(2);
         expect(table[0].year).toBe(2002);
         expect(table[1].car).toBe('Audi');
     });
-    it('handles generator columns', () => {
-        const table = {
-            __proto__: Table,
-            number: (function* () { yield 1; yield 2; yield 3; })(),
-        }
-        table._eval();
+    it('handles values from a function call', () => {
+        const call = (function() {return [1, 2, 3]})();
+        const spec = {
+            number: {values: call},
+        };
+        const table = tabulate(spec);
         expect(table.length).toBe(3);
         expect(table[1].number).toBe(2);
         expect(table[0].number).toBe(1);
     });
-    it('handles cells in columns that reference prior cells in that column', () => {
-        const table = {
-            __proto__: Table,
-            get number() { 
-                // Note to readers:
-                // this 't' pattern is used for convenience in testing,
-                // but in a real Mesh sheet you could just use an
-                // explicit ref to the table:
-                // sheet.table[i-1]
-                const t = this; 
-                return take(10, (function* () {
-                    yield 1;
-                    for (let i = 1; true; i++) {
-                        yield t[i - 1].number + 1;
-                    }
-                })());
-            },
-        }
-        table._eval();
-        expect(table.length).toBe(10);
-        expect(table[5].number).toBe(6);
-    });
-    it('handles row cells that use other cells in that row which may be uncomputed', () => {
-        const table = {
-            __proto__: Table,
-            get power() { 
-                const t = this; 
-                return (function* () {
-                    for (let i = 0; true; i++) {
-                        yield t[i].number ** 2;
-                    }
-                })();
-            },
-            get number() { 
-                const t = this; 
-                return take(10, (function* () {
-                    yield 1;
-                    for (let i = 1; true; i++) {
-                        yield t[i - 1].number + 1;
-                    }
-                })());
-            },
-        }
-        table._eval();
-        expect(table.length).toBe(10);
-        expect(table[5].power).toBe(36);
+    it('handles cells in columns that reference prior (potentially uncomputed) cells in that column', () => {
+        const spec = {
+            number: {values: [
+                1,
+                function(rowIdx) {return this[rowIdx-1].number + 1},
+            ]},
+        };
+        const table = tabulate(spec);
+        expect(table[1].number).toBe(2);
     });
     it('handles multiple references to the same cell', () => {
-        const table = {
-            __proto__: Table,
-            get power() { 
-                const t = this; 
-                return (function* () {
-                    for (let i = 0; true; i++) {
-                        yield t[i].number ** 2;
-                    }
-                })();
-            },
-            get power2() { 
-                const t = this; 
-                return (function* () {
-                    for (let i = 0; true; i++) {
-                        yield t[i].number ** 2;
-                    }
-                })();
-            },
-            get number() { 
-                const t = this; 
-                return take(10, (function* () {
-                    yield 1;
-                    for (let i = 1; true; i++) {
-                        yield t[i - 1].number + 1;
-                    }
-                })());
-            },
-        }
-        table._eval();
-        expect(table.length).toBe(10);
-        expect(table[5].power).toBe(36);
-        expect(table[5].power2).toBe(36);
+        const spec = {
+            number: {values: [
+                1,
+                function(rowIdx) {return this[rowIdx-1].number + 1},
+                function(rowIdx) {return this[rowIdx-2].number + 1},
+            ]},
+        };
+        const table = tabulate(spec);
+        expect(table[1].number).toBe(2);
+        expect(table[2].number).toBe(2);
     });
-    it('handles data literal columns and computed columns', () => {
-        const table = {
-            __proto__: Table,
-            get power() { 
-                const t = this; 
-                return (function* () {
-                    for (let i = 0; true; i++) {
-                        yield t[i].number ** 2;
-                    }
-                })();
+    it('lets you set a length', () => {
+        const spec = {
+            length: 3,
+            number: {
+                values: [],
+                default: function(rowIdx) {return rowIdx * 2}
             },
-            get number() { return [1, 2, 3, 4, 5]; }
-        }
-        table._eval();
-        expect(table.length).toBe(5);
-        expect(table[2].power).toBe(9);
+        };
+        const table = tabulate(spec);
+        expect(table[2].number).toBe(4);
     });
-    it('can detect the prototypes via isPrototypeOf', () => {
-        const table = { __proto__: Table, }
-        expect(Table.isPrototypeOf(table)).toBe(true);
-        expect(!(table._evaled));
-        table._eval();
-        expect(table._evaled).toBe(true);
+    it('fills in gaps with default values', () => {
+        const spec = {
+            number: {
+                values: [1, undefined],
+                default: function(rowIdx) {return this[rowIdx-1].number * 2}
+            },
+        };
+        const table = tabulate(spec);
+        expect(table[1].number).toBe(2);
     });
-
+    it('lets you refer to cells across columns', () => {
+        const spec = {
+            length: 2,
+            first: {
+                values: [1],
+                default: function(rowIdx) {return this[rowIdx-1].second + 1}
+            },
+            second: {
+                values: [],
+                default: function(rowIdx) {return this[rowIdx].first + 1}
+            },
+        };
+        const table = tabulate(spec);
+        expect(table[1].second).toBe(4);
+    });
 })

@@ -5,13 +5,45 @@ const {LINE_SEPARATOR} = require('../settings');
 
 // MESH-SPECIFIC
 
-describe('get_root_mesh_obj_node', () => {
+describe('getCellsNodePath', () => {
     it('gets the right node', () => {
-        const old_code = "const DATA = []; const SHEET = {};"
+        const old_code = "const _CELLS = {};"
         const old_AST = CT.parse_code_string_to_AST(old_code);
-        const received_node = CT.get_root_mesh_obj_node(old_AST);
-        expect(received_node.value.type).toBe('ArrayExpression');
+        const received_node = CT.getCellsNodePath(old_AST);
+        expect(received_node.value.type).toBe('ObjectExpression');
     });
+});
+
+describe('getCellNodePaths', () => {
+
+    const code = `const _CELLS = {
+        "name1": {v: abc},
+        "name2": {v: function() {return def}},
+    }`;
+    const AST = CT.parse_code_string_to_AST(code);
+    const cellsNodePath = CT.getCellsNodePath(AST);
+    const nodePaths = CT.getCellNodePaths(cellsNodePath);
+
+    it('gets the properties', () => {
+        expect(Object.entries(nodePaths).length).toBe(2);
+    });
+    it('gets the property nodepaths', () => {
+        let propNode = nodePaths.name1.property;
+        let found_code = CT.print_AST_to_code_string(propNode)
+        expect(found_code).toBe(`"name1": {v: abc}`);
+        propNode = nodePaths.name2.property;
+        found_code = CT.print_AST_to_code_string(propNode)
+        expect(found_code).toBe(`"name2": {v: function() {return def}}`);
+    });
+    it('gets the value nodepaths', () => {
+        let propNode = nodePaths.name1.value;
+        let found_code = CT.print_AST_to_code_string(propNode)
+        expect(found_code).toBe("abc");
+        propNode = nodePaths.name2.value;
+        found_code = CT.print_AST_to_code_string(propNode)
+        expect(found_code).toBe('def');
+    });
+
 });
 
 // TEST HELPERS

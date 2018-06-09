@@ -15,14 +15,14 @@ const B = Recast.types.builders;
 const {LINE_SEPARATOR} = require('./settings');
 const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR }
 
+// TODO should be an object or map
+function getObjPropNodeNameProp(nodeType) {
+    return (nodeType === 'Literal') ? 'value' : 'name';
+}
+
 // TODO write tests
 function get_object_key_from_node(obj_key_node) {
-    switch (obj_key_node.type) {
-        case 'Literal':
-            return obj_key_node.value;
-        case 'Identifier':
-            return obj_key_node.name;
-    }
+    return obj_key_node[getObjPropNodeNameProp(obj_key_node.type)];
 }
 
 /* PUBLIC API */
@@ -39,12 +39,12 @@ print_AST_to_code_string: function(AST) {
     return Recast.print(AST, RECAST_SETTINGS).code;
 },
 
-get_root_mesh_obj_node: function(AST) {
+getCellsNodePath: function(AST) {
     let nodepath_to_return;
     Recast.visit(AST, {
         visitVariableDeclarator: function(path) {
             // TODO put some variable decln type check here?
-            if (path.node.id.name == 'DATA') {
+            if (path.node.id.name == '_CELLS') {
                 nodepath_to_return = path;
                 return false;
             }
@@ -54,8 +54,27 @@ get_root_mesh_obj_node: function(AST) {
     return nodepath_to_return.get('init');
 },
 
-get_mesh_data_value_nodepath: function(mesh_data_node) {
-    return mesh_data_node.get('elements', 2, "body");
+getCellNodePaths: function(meshCellsNodePath) {
+    // TODO Eventually should allow both Identifiers and Literals
+    // using getObjPropNodeNameProp
+    const nodePaths = {};
+    const propsPath = meshCellsNodePath.get('properties');
+    for (let i=0; i < propsPath.value.length; i++) {
+        let propPath = propsPath.get(i);
+        let cellName = get_object_key_from_node(propPath.node.key)
+        let cellProps = propPath.get("value", "properties");
+        // TODO below is massive hack - should look at keys instead of assuming v is first
+        let cellValueNodePath = cellProps.get(0, "value");
+        if (cellValueNodePath.node.type === "FunctionExpression") {
+            cellValueNodePath = cellValueNodePath.get("body", "body", 0, "argument")
+        }
+        nodePaths[cellName] = {
+            property: propPath,
+            value: cellValueNodePath,
+            // TODO should this also contain display nodepaths?
+        };
+    };
+    return nodePaths;
 },
 
 /* GENERAL */
@@ -121,6 +140,7 @@ get_object_item_index: function(obj_path, key) {
     return false;
 },
 
+// TODO: be smart about how the 'key' is created (id vs string literal)
 replace_object_item_key: function(obj_item_path, new_key_text) {
     // TODO throw error if duplicate key?
     obj_item_path.get('key').replace(B.identifier(new_key_text));

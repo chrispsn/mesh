@@ -11,6 +11,8 @@ const Events = require('./events');
 const Reducers = require('./reducers');
 const {LINE_SEPARATOR} = require('./settings');
 const Selectors = require('./selectors');
+const generate_cells = require('./generate_cells');
+const CT = require('./code_transformers');
 
 // Redux setup
 
@@ -83,9 +85,61 @@ Events.bind_load_file_events(store, HTML_elements.filepicker);
 
 // App side-effects
 
+function createWebWorkerFromText(text) {
+    // https://stackoverflow.com/a/10372280/996380
+    var blob;
+    try {
+        blob = new Blob([text], {type: 'application/javascript'});
+    } catch (e) { // Backwards-compatibility
+        blob = new BlobBuilder();
+        blob.append(response);
+        blob = blob.getBlob();
+    }
+    return new Worker(URL.createObjectURL(blob));
+};
+
 store.subscribe( function calculate () {
-    const mode = store.getState().mode;
-    if (mode === 'NEED_TO_CALCULATE') { store.dispatch({type: 'CALCULATE'}) };
+    const state = store.getState();
+    const mode = state.mode;
+    if (mode !== 'CALCULATING') return;
+
+    const code = state.code_editor.value;
+    // TODO consider adding AST check here
+    const worker = createWebWorkerFromText(code);
+    worker.onmessage = function(e) {
+        
+        /* SUCCESS */
+        const results = e.data;
+        const AST = CT.parse_code_string_to_AST(code);
+        let cellsNodePath = CT.getCellsNodePath(AST);
+        let cells = generate_cells(results, cellsNodePath);
+        const new_cells = {};
+        for (let cell of cells) {
+            const cell_id = JSON.stringify(cell.location);
+            new_cells[cell_id] = cell;
+        };
+        store.dispatch({ type: 'UPDATE_GRID', cells: new_cells });
+        /* FAILURE */
+        /*
+            // TODO errors need to be caught *before* the code editor state changes
+            // FAILURE
+            alert(e);
+            // TODO highlight offending code?
+            console.error(e);
+            // TODO right now this dumps the user back to the code editing pane,
+            // but it should depend on where the commit came from (code pane or formula bar)
+            // maybe this is indicated via the action? Actually - could probs get via undo/redo
+            // Send mode to some error state
+            return Object.assign({}, state, {
+                mode: 'EDIT',
+                selected_cell_loc: state.prev_selected_cell_loc,
+                code_editor: Object.assign({}, state.code_editor, {value: state.code_editor.prev_value})
+            });
+        */
+    };
+    // worker.postMessage({action: "full"});
+    worker.postMessage({});
+    // TODO Give option to interrupt worker if it takes too long to calc
 });
 
 store.subscribe( function log_state () {
@@ -124,12 +178,14 @@ store.subscribe( function update_page () {
     // instead of loading it in via a subscription)
     if (state.mode === 'LOAD_CODE_FROM_PANE') {
         store.dispatch({ type: 'LOAD_CODE', code: code_editor.getValue() });
+    } else if (state.mode === 'EDITING_CODE') {
+        HTML_elements.code_editor.style.display = 'block';
     } else {
+        HTML_elements.code_editor.style.display = state.code_editor.show ? 'block' : 'none';
+        code_editor.setValue(state.code_editor.value);
+    }
     // TODO setting this every time is probably slow - consider React-ising
     // or else doing only when a commit happens or something
-        code_editor.setValue(state.code_editor.value);
-        HTML_elements.code_editor.style.display = state.code_editor.show ? 'block' : 'none';
-    }
 
 });
 store.dispatch({ type: 'RESET_STATE' });
