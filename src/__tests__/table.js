@@ -1,7 +1,7 @@
 "use strict";
 
-const Code = require('../settings.js').BLANK_FILE + "_makeTable;";
-const _makeTable = eval(Code);
+const Code = require('../settings.js').BLANK_FILE + "[_makeTable, _calcTable];";
+const [_makeTable, _calcTable] = eval(Code);
 
 // Helper function for tests
 
@@ -21,7 +21,7 @@ function* take(n, iterable) {
 // Default thingo is working properly
 // No columns with preset length
 
-describe('Table', () => {
+describe('_makeTable', () => {
     it('deals with a table with no headings or data', () => {
         const spec = {};
         const table = _makeTable(spec);
@@ -112,3 +112,15 @@ describe('Table', () => {
         expect(table[1].second).toBe(4);
     });
 })
+
+describe('_calcTable', () => {
+    it("resolves all cells", () => {
+        const spec = {heading: {values: [1, 2, 3]}};
+        const table = _makeTable(spec);
+        _calcTable(table);
+        for (let d of Object.values(Object.getOwnPropertyDescriptors(table))) {
+            expect(d.value).toBeDefined();
+            expect(d.get).toBe(undefined);
+        };
+    });
+});

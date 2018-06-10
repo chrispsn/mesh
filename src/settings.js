@@ -21,7 +21,7 @@ const BLANK_FILE = [
     "    }})",
     "};",
     "function _makeTable(s) {",
-    "    var t = [], cols = [], MAX = Math.max; ",
+    "    var t = [], cols = [], MAX = Math.max;",
     "    for (var h in s) {",
     "        if (h != 'length') cols.push([h,s[h].values,s[h].default])", // && h !== 'keyHeading'
                 // TODO do we really need this? What if we want to filter first *then* get col?
@@ -44,7 +44,7 @@ const BLANK_FILE = [
     "    };",
     "    return t;",
     "};",
-    "function _calcTable(t) {for(var r in t) for(var k in row) row[k]};",
+    "function _calcTable(t) {for(var i in t) for(var h in t[i]) row[h]};",
     "",
     "self.onmessage = function(e) {",
     "    for (var k in _CELLS) _defCell(k, _CELLS[k]);",
