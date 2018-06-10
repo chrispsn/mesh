@@ -114,13 +114,15 @@ describe('_makeTable', () => {
 })
 
 describe('_calcTable', () => {
-    it("resolves all cells", () => {
-        const spec = {heading: {values: [1, 2, 3]}};
+    it("calcs and memoises cells", () => {
+        const spec = {heading: {values: [1, 2, 3], default: function() {return 123}}};
         const table = _makeTable(spec);
+        const before = Object.getOwnPropertyDescriptor(table[0], 'heading');
+        expect(before.value).toBeUndefined();
+        expect(before.get).toBeDefined();
         _calcTable(table);
-        for (let d of Object.values(Object.getOwnPropertyDescriptors(table))) {
-            expect(d.value).toBeDefined();
-            expect(d.get).toBe(undefined);
-        };
+        const after = Object.getOwnPropertyDescriptor(table[0], 'heading');
+        expect(after.value).toBeDefined();
+        expect(after.get).toBeUndefined();
     });
 });
