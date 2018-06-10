@@ -66,7 +66,7 @@ const EMPTY = {
     COMMIT_FORMULA_BAR_EDIT: function (mesh_obj_node, state, action) {
         CT.insert_object_item(mesh_obj_node,
             `"${action.commit_value}"`,
-            `{v: null, l: [${state.selected_cell_loc}], f: null}`,
+            `{v: null, l: [${state.selected_cell_loc}], f: null, s: null, n: null, t: null}`,
         )
         return action.offset;
     },

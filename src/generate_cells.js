@@ -5,8 +5,8 @@ const CT = require('./code_transformers');
 module.exports = function(RESULTS, cellsNodePath, TablePrototype) {
     const cells = [];
     const cellNodePaths = CT.getCellNodePaths(cellsNodePath);
-    // TODO implement f, t, n
-    for (let [id, {v:value, l:loc, f, t:transpose, n:showID}] of Object.entries(RESULTS)) {
+    // TODO implement f, s, t, n
+    for (let [id, {v:value, l:loc, f, s:transpose, t: isTable, n:showID}] of Object.entries(RESULTS)) {
 
         // TODO add work of defining this back into display.js?
         // Would seem to fit better there, even if the fn signature is different

@@ -1,7 +1,7 @@
 "use strict";
 
-const Code = require('../settings.js').BLANK_FILE + "tabulate;";
-const tabulate = eval(Code);
+const Code = require('../settings.js').BLANK_FILE + "_makeTable;";
+const _makeTable = eval(Code);
 
 // Helper function for tests
 
@@ -24,13 +24,13 @@ function* take(n, iterable) {
 describe('Table', () => {
     it('deals with a table with no headings or data', () => {
         const spec = {};
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table.length).toBe(0);
         expect(Object.keys(table).length).toBe(0);
     });
     it('deals with a table with headings but no data', () => {
         const spec = {heading: {values: []}};
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table.length).toBe(0);
     });
     it('gets all records of a table with data', () => {
@@ -38,7 +38,7 @@ describe('Table', () => {
             "car": {values: ['Mazda', 'Audi']},
             "year": {values: [2002, 1991]},
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table.length).toBe(2);
         expect(table[0].year).toBe(2002);
         expect(table[1].car).toBe('Audi');
@@ -48,7 +48,7 @@ describe('Table', () => {
         const spec = {
             number: {values: call},
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table.length).toBe(3);
         expect(table[1].number).toBe(2);
         expect(table[0].number).toBe(1);
@@ -60,7 +60,7 @@ describe('Table', () => {
                 function(rowIdx) {return this[rowIdx-1].number + 1},
             ]},
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table[1].number).toBe(2);
     });
     it('handles multiple references to the same cell', () => {
@@ -71,7 +71,7 @@ describe('Table', () => {
                 function(rowIdx) {return this[rowIdx-2].number + 1},
             ]},
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table[1].number).toBe(2);
         expect(table[2].number).toBe(2);
     });
@@ -83,7 +83,7 @@ describe('Table', () => {
                 default: function(rowIdx) {return rowIdx * 2}
             },
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table[2].number).toBe(4);
     });
     it('fills in gaps with default values', () => {
@@ -93,7 +93,7 @@ describe('Table', () => {
                 default: function(rowIdx) {return this[rowIdx-1].number * 2}
             },
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table[1].number).toBe(2);
     });
     it('lets you refer to cells across columns', () => {
@@ -108,7 +108,7 @@ describe('Table', () => {
                 default: function(rowIdx) {return this[rowIdx].first + 1}
             },
         };
-        const table = tabulate(spec);
+        const table = _makeTable(spec);
         expect(table[1].second).toBe(4);
     });
 })
