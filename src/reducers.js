@@ -13,7 +13,8 @@ const INITIAL_STATE = {
     // duplication of location... unless needed by React?
     cells: { '[0, 0]': Object.assign({}, EMPTY_CELL, {location: [0, 0]}) },
     selected_cell_loc: [0, 0],
-    code_editor: { value: BLANK_FILE, prev_value: "", selection: undefined, show: true },
+    // TODO load whether to show code editor at start from user settings?
+    code_editor: { value: BLANK_FILE, prev_value: "", selection: undefined, show: false },
     filepath: null,
 }
 
