@@ -2,10 +2,10 @@ const {triage} = require('./display_fn_triage');
 const CT = require('./code_transformers');
 
 // TODO move this back to reducers?
-module.exports = function(RESULTS, cellsNodePath, TablePrototype) {
+module.exports = function(RESULTS, cellsNodePath) {
     const cells = [];
     const cellNodePaths = CT.getCellNodePaths(cellsNodePath);
-    // TODO implement f, s, t, n
+    // TODO implement f, s, n
     for (let [id, {v:value, l:loc, f, s:transpose, t: isTable, n:showID}] of Object.entries(RESULTS)) {
 
         // TODO add work of defining this back into display.js?
@@ -23,7 +23,7 @@ module.exports = function(RESULTS, cellsNodePath, TablePrototype) {
         }
 
         const value_nodepath = cellNodePaths[id].value;
-        const display_fn = triage(value_nodepath.node.type, value, TablePrototype);
+        const display_fn = triage(value_nodepath.node.type, value, isTable);
 
         // Not sure on exactly which parameters are best here, and which order makes most sense.
         // 1. Value is needed because the AST doesn't know what (eg) a fn call evaluates to.

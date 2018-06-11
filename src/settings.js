@@ -52,7 +52,7 @@ const BLANK_FILE = [
     // "        var V = e.data.values;",
     // "        for (var k in V) _CELLSdefCell(k, {v: V[k]});",
     // Ideally keep calcing first uncalced cell til empty
-    "    for (var k in _CELLS) self[k]; if (_CELLS[k].t) _calcTable(v);",
+    "    for (var k in _CELLS) var v = self[k]; if (_CELLS[k].t) _calcTable(v);",
     // TODO something to strip out functions and other non-data from the results?
     // TODO pass through list of tables?
     "    postMessage(_OUTPUT);",

@@ -381,3 +381,137 @@ run_tests('OOA_remove_field', CT.OOA_remove_field, [
 ])
 
 // TODO delete object
+
+
+/* TABLES */
+
+run_tests('Table_ChangeValueCell', CT.Table_ChangeValueCell, [
+    {
+        desc: 'changes cell in column', 
+        in: "({'columnHeading': {'values': [1, 2, 3], 'default': null}})",
+        args: ['columnHeading', 1, '123'], 
+        out: "({'columnHeading': {'values': [1, 123, 3], 'default': null}})",
+    },
+])
+
+run_tests('Table_ChangeDefaultFormulaCell', CT.Table_ChangeDefaultFormulaCell, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_AddRow', CT.Table_AddRow, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_DeleteRow', CT.Table_DeleteRow, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_AppendRow', CT.Table_AppendRow, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_AddColumn', CT.Table_AddColumn, [
+    {
+        desc: 'inserts a column', 
+        in: "({})",
+        args: ['newHeading'], 
+        out: `({
+            'newHeading': {'default': null, 'values': []}
+        })`
+    },
+    {
+        desc: 'inserts a column with undefined values if another column exists', 
+        in: `({
+            'oldHeading': {'default': null, 'values': [1, 2, 3]}
+        })`,
+        args: ['newHeading'], 
+        out: `({
+            'oldHeading': {'default': null, 'values': [1, 2, 3]}
+            'newHeading': {'default': null, 'values': [undefined, undefined, undefined]}
+        })`
+    },
+    {
+        desc: 'inserts a column at the right place', 
+        in: `({
+            'oldHeading': {'default': null, 'values': [1, 2, 3]}
+        })`,
+        args: ['newHeading', 0], 
+        out: `({
+            'newHeading': {'default': null, 'values': [undefined, undefined, undefined]}
+            'oldHeading': {'default': null, 'values': [1, 2, 3]}
+        })`
+    },
+])
+
+run_tests('Table_AppendColumn', CT.Table_AppendColumn, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_DeleteColumn', CT.Table_DeleteColumn, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_EditLength', CT.Table_EditLength, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+
+run_tests('Table_DeleteLength', CT.Table_DeleteLength, [
+/*
+    {
+        desc: 'inserts when object is empty', 
+        in: "({})",
+        args: ['a_key', '123'], 
+        out: "({a_key: 123})"
+    },
+*/
+])
+

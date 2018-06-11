@@ -34,7 +34,7 @@ function get_formula_bar_text(is_formula, raw_text) {
 
 const display_fns = {
 
-    dummy: (value, value_nodepath, id, AST) => {
+    dummy: (value, value_nodepath, id) => {
         // For use where you don't know what to use for the formula bar value
         // and code location values yet.
         return [{
@@ -48,7 +48,7 @@ const display_fns = {
         }];
     },
 
-    value: (value, value_nodepath, id, AST) => {
+    value: (value, value_nodepath, id) => {
         const raw_text = CT.print_AST_to_code_string(value_nodepath);
         const is_formula = leaf_is_formula(value_nodepath.node);
         const value_cell = {
@@ -65,7 +65,7 @@ const display_fns = {
 
 /* ARRAY */
 
-    array_ro: (array, array_nodepath, id, AST) => {
+    array_ro: (array, array_nodepath, id) => {
     // TODO it may be nice if: when you click on this, it selects the whole array.
         const raw_text = CT.print_AST_to_code_string(array_nodepath.node);
         const is_formula = leaf_is_formula(array_nodepath.node);
@@ -83,7 +83,7 @@ const display_fns = {
         });
     },
 
-    array_rw: (array, array_nodepath, id, AST) => {
+    array_rw: (array, array_nodepath, id) => {
 
         const array_node = array_nodepath.node;
 
@@ -118,7 +118,7 @@ const display_fns = {
 /* OBJECT */
 
     // TODO needs work - maybe look at how array_ro works
-    object_ro: (object, object_nodepath, id, AST) => {
+    object_ro: (object, object_nodepath, id) => {
 
         // TODO fact that we need to add the = here suggests
         // doing it in a function that is not supposed to know about it containing a formula,
@@ -156,7 +156,7 @@ const display_fns = {
 
     },
 
-    object_rw: (object, object_nodepath, id, AST) => {
+    object_rw: (object, object_nodepath, id) => {
 
         const cells = [];
 
@@ -261,8 +261,10 @@ const display_fns = {
 
         return [];
     },
-    table_rw: (arr, obj_nodepath, id, AST) => {
-        // Table structured as object of arrays: {heading: [values], ...}.
+    table_ro: (arr, whatever_nodepath, id) => {/* TODO */},
+    table_rw: (arr, obj_nodepath, id) => {
+        // Table specification:
+        // {heading: {values: [], default: fn}, heading2: ...}
         // By the time it gets to here, the data is an array,
         // but the nodepath is still an object literal.
         // TODO
@@ -272,8 +274,8 @@ const display_fns = {
 
         // TOOD make filtering __proto__ a dedicated function
         const headings = obj_nodepath.get("properties").value
-                        .filter(k => !(k.key.name === "__proto__"))
-                        .map(k => k.key.value);
+                        .filter(k => !(CT.get_object_key_from_node(k.key) === "__proto__"))
+                        .map(k => CT.get_object_key_from_node(k.key));
 
         // Headers
         const header_cells = headings.map(
@@ -284,10 +286,11 @@ const display_fns = {
                 classes: 'heading',
                 formula_bar_value: heading,
                 AST_props: {key: id, heading: heading},
-                cell_AST_changes_type: 'OOA_LITERAL_COLUMN_CELL',
+                cell_AST_changes_type: 'TABLE_RW_HEADING_CELL',
             })
         )
         
+        /*
         // Add column
         // TODO get working for 'no headings' case
         const add_column_cell = {
@@ -295,15 +298,20 @@ const display_fns = {
             repr: '',
             classes: 'add_col',
             formula_bar_value: '',
-            cell_AST_changes_type: 'OOA_LITERAL_ADD_COLUMN_CELL',
+            cell_AST_changes_type: 'TABLE_ADD_COLUMN_CELL',
             AST_props: {key: id},
         };
+        */
         
         // Records
         const col_nodes = {};
         for (let prop_node of obj_nodepath.get("properties").value) {
             let key = CT.get_object_key_from_node(prop_node.key);
-            col_nodes[key] = prop_node.value;
+            for (let p of prop_node.value.properties) {
+                if ('values' === CT.get_object_key_from_node(p.key)) {
+                    col_nodes[key] = p.value;
+                }
+            }
         }
         // TODO flip this around - first go by col (key), then by row
         // that way we can have different behaviour for array literals
@@ -321,7 +329,7 @@ const display_fns = {
                         location: [2 + offset_r, offset_c],
                         repr: value,
                         formula_bar_value: formula_bar_text,
-                        cell_AST_changes_type: 'OOA_LITERAL_VALUE_CELL',
+                        cell_AST_changes_type: 'TABLE_RW_VALUE_CELL',
                         AST_props: {key: id, item_key: heading, index: offset_r},
                         classes: 'object value ' + leaf_classes(value) 
                                     + (is_formula ? '' : ' editable'),
@@ -330,6 +338,7 @@ const display_fns = {
             }
         )}
         
+        /*
         // Append cell
         const append_record_cells = headings.map((heading, offset_c) => ({
             location: [2 + arr.length, offset_c],
@@ -339,8 +348,10 @@ const display_fns = {
             cell_AST_changes_type: 'OOA_LITERAL_APPEND_CELL',
             AST_props: {key: id, item_key: heading},
         }))
+        */
 
-        return [...header_cells, add_column_cell, ...record_cells, ...append_record_cells];
+        return [...header_cells, /*add_column_cell, */
+                ...record_cells, /*...append_record_cells, */];
 
     },
 
