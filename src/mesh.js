@@ -75,6 +75,9 @@ theme_button.onclick = function () {
     assign_theme(current_theme);
 }
 
+const code_pane_toggler = document.getElementById("code_pane_toggler");
+code_pane_toggler.onclick = function() { store.dispatch({type: 'TOGGLE_CODE_PANE_SHOW'}) };
+
 // Event bindings
 
 Events.bind_window_events(store, window);
