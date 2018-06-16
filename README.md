@@ -9,7 +9,7 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 - use JavaScript, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
 
-**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are lots of missing features and bugs. Follow updates at [@mesh_ide](https://twitter.com/mesh_ide).
+**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are lots of missing features and bugs. Follow updates at [@MeshSpreadsheet](https://twitter.com/MeshSpreadsheet).
 
 ![Animated GIF of Mesh in action](docs/mesh_demo.gif)
 
@@ -110,7 +110,6 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 - When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and let you click on a cell to insert a reference
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
-- Poor user experience with `Mesh.attach` (function signature requires you to repeat the name).
 
 ## Possible enhancements
 
@@ -133,4 +132,4 @@ In Electron, line endings should check out and save as per your system's default
 
 Please file any bugs, issues or enhancements via GitHub.
 
-Contact me at Twitter: [@mesh_ide](https://twitter.com/mesh_ide).
+Contact me at Twitter: [@MeshSpreadsheet](https://twitter.com/MeshSpreadsheet).
