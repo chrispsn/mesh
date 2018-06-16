@@ -17,8 +17,8 @@ function StatusBar (props) {
     }, "Mesh website");
     const twitter_link_desc = React.createElement('dd', {}, "Updates: ");
     const twitter_link = React.createElement('a', {
-        href: "https://twitter.com/mesh_ide", target: '_blank',
-    }, "@mesh_ide");
+        href: "https://twitter.com/MeshSpreadsheet", target: '_blank',
+    }, "@MeshSpreadsheet");
     const change_theme = React.createElement('a', {id: "theme_changer", href: "#"}, "Change theme")
     const toggle_code_pane = React.createElement('a', {id: "code_pane_toggler", href: "#"}, "Toggle code pane")
     return React.createElement('dl', {}, 
