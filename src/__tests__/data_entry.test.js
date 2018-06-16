@@ -65,5 +65,19 @@ describe('rewrite_input', () => {
         expect(actual_output).toBe(expected_output);
     });
 
+    it('correctly handles percentages without decimals', () => {
+        const input_string = '5%';
+        const expected_output = '0.05';
+        const actual_output = rewrite_input(input_string);
+        expect(actual_output).toBe(expected_output);
+    });
+
+    it('correctly handles percentages with decimals', () => {
+        const input_string = '-5.21%';
+        const expected_output = '-0.0521';
+        const actual_output = rewrite_input(input_string);
+        expect(actual_output).toBe(expected_output);
+    });
+
     // TODO keep Dates as dates
 });
