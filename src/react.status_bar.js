@@ -20,6 +20,7 @@ function StatusBar (props) {
         mesh_link,
         separator,
         github_link,
+        separator,
         twitter_link,
         separator,
         change_theme,
