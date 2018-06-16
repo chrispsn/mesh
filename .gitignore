@@ -2,11 +2,13 @@
 node_modules
 yarn.lock
 notes_and_scrap
-scrap
 website
-success
+usage
+talks
+twitter
 src/dist_electron
 src/dist_web
+src/temp_cut_examples
 get_line_count.ps1
 line_count.bat
 STUFF TO PUT IN TEST FILE.txt
