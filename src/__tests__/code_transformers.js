@@ -3,6 +3,20 @@ const Recast = require('recast');
 const CT = require('../code_transformers');
 const {LINE_SEPARATOR} = require('../settings');
 
+describe('makeUniqueID', () => {
+    it('output strings of the given length', () => {
+        const new_ID = CT.makeUniqueID(new Set(), 8);
+        expect(new_ID.length).toBe(8);
+    });
+    it('keeps going until a unique ID is found', () => {
+        const lc = /* no a */ "bcdefghijklmnopqrstuvwxyz";
+        const num = "0123456789"
+        const existingChars = new Set((lc + num).split(""));
+        const newID = CT.makeUniqueID(existingChars, 1);
+        expect(newID).toBe("a");
+    });
+});
+
 // MESH-SPECIFIC
 
 describe('getCellsNodePath', () => {
@@ -14,7 +28,7 @@ describe('getCellsNodePath', () => {
     });
 });
 
-describe('getCellNodePaths', () => {
+describe('getCellNodePath', () => {
 
     const code = `const _CELLS = {
         "name1": {v: abc},
@@ -22,28 +36,25 @@ describe('getCellNodePaths', () => {
     }`;
     const AST = CT.parse_code_string_to_AST(code);
     const cellsNodePath = CT.getCellsNodePath(AST);
-    const nodePaths = CT.getCellNodePaths(cellsNodePath);
 
-    it('gets the properties', () => {
-        expect(Object.entries(nodePaths).length).toBe(2);
-    });
-    it('gets the property nodepaths', () => {
-        let propNode = nodePaths.name1.property;
-        let found_code = CT.print_AST_to_code_string(propNode)
+    it('gets the property nodepath', () => {
+        const nodePath = CT.getCellNodePath(cellsNodePath, "name1");
+        const propNode = nodePath.property;
+        const found_code = CT.print_AST_to_code_string(propNode)
         expect(found_code).toBe(`"name1": {v: abc}`);
-        propNode = nodePaths.name2.property;
-        found_code = CT.print_AST_to_code_string(propNode)
-        expect(found_code).toBe(`"name2": {v: function() {return def}}`);
     });
-    it('gets the value nodepaths', () => {
-        let propNode = nodePaths.name1.value;
-        let found_code = CT.print_AST_to_code_string(propNode)
+    it('gets the value nodepath if not a function', () => {
+        const nodePath = CT.getCellNodePath(cellsNodePath, "name1");
+        const propNode = nodePath.value;
+        const found_code = CT.print_AST_to_code_string(propNode)
         expect(found_code).toBe("abc");
-        propNode = nodePaths.name2.value;
-        found_code = CT.print_AST_to_code_string(propNode)
-        expect(found_code).toBe('def');
     });
-
+    it('gets the return value nodepath if a function nodepaths', () => {
+        const nodePath = CT.getCellNodePath(cellsNodePath, "name2");
+        const propNode = nodePath.value;
+        let found_code = CT.print_AST_to_code_string(propNode)
+        expect(found_code).toBe("def");
+    });
 });
 
 // TEST HELPERS
@@ -236,153 +247,6 @@ run_tests('insert_object_getter', CT.insert_object_getter, [
     },
 ])
 
-// RECORDS - ARRAY OF ARRAYS
-
-run_tests('AOA_append_record', CT.AOA_append_record, [
-    {
-        desc: 'adds array to the end of the array with specified values',
-        in: "[[1, 2, 3]]",
-        args: [['4', '5', '6']],
-        out: "[[1, 2, 3], [4, 5, 6]]"
-    }
-]);
-
-describe('AOA_get_record_given_key', () => {
-    it('gets the array with the value in the specified position', () => {
-        const nodepath = get_expr_nodepath("[['a', 1], ['b', 2]]");
-        const obj_item_nodepath = CT.AOA_get_record_given_key(nodepath, 0, 'b');
-        expect(obj_item_nodepath.node.elements[1].value).toBe(2);
-    });
-});
-
-// RECORDS - ARRAY OF OBJECTS
-
-// TODO should be the more generic 'get_record_given_key'
-run_tests('AOO_remove_record_given_key', CT.AOO_remove_record_given_key, [
-    {
-        desc: 'removes based on key field and key value',
-        in: "[{key_field: 'lol', another_field: 'huh'}]",
-        args: ['key_field', 'lol'],
-        out: "[]"
-    },
-    {
-        desc: 'works with string literals as keys',
-        in: "[{'key_field': 'lol', 'another_field': 'huh'}]",
-        args: ['key_field', 'lol'],
-        out: "[]"
-    },
-])
-
-run_tests('AOO_append_record', CT.AOO_append_record, [
-    {
-        desc: 'adds a new record to the end of the records with the relevant field filled in and the rest left null',
-        in: `[
-            {"key_field": 'lol', "another_field": 'huh'},
-        ]`,
-        args: [{"another_field": 'filled_in'}],
-        out: `[
-            {"key_field": 'lol', "another_field": 'huh'},
-            {"key_field": null, "another_field": 'filled_in'},
-        ]`,
-    }
-]);
-
-// RECORDS - OBJECT OF ARRAYS
-
-run_tests('OOA_append_datum', CT.OOA_append_datum, [
-    {
-        desc: 'appends datum to bottom of correct field, and fills rest with null',
-        in: "({field1: ['value'], 'field2': [123]})",
-        args: ['field1', 'new_datum'],
-        out: "({field1: ['value', new_datum], 'field2': [123, null]})"
-    },
-    {
-        desc: "skips arrays that are not literals",
-        in: `({
-            field1: ['value'],
-            'field2': fn_call()
-        })`,
-        args: ['field1', 'new_datum'],
-        out: `({
-            field1: ['value', new_datum], 
-            'field2': fn_call(),
-        })`
-    },
-])
-
-run_tests('OOA_remove_record', CT.OOA_remove_record, [
-    {
-        desc: 'removes correct record',
-        in: `({
-            field1: ['value', 'value2', 'value3'],
-            'field2': ['he', 'hehe', 'hehehe'],
-        })`,
-        args: [1],
-        out: `({
-            field1: ['value', 'value3'],
-            'field2': ['he', 'hehehe'],
-        })`,
-    },
-    {
-        desc: "skips arrays that aren't literals",
-        in: `({
-            field1: ['value', 'value2', 'value3'],
-            'field2': func_call(),
-        })`,
-        args: [1],
-        out: `({
-            field1: ['value', 'value3'],
-            'field2': func_call(),
-        })`,
-    },
-])
-
-run_tests('OOA_add_field', CT.OOA_add_field, [
-    {
-        desc: 'adds specified field',
-        in: `({
-            field1: ['value1', 'value2', 'value3'],
-        })`,
-        args: ['field2'],
-        out: `({
-            field1: ['value1', 'value2', 'value3'],
-            field2: [null, null, null],
-        })`,
-    },
-    {
-        desc: 'adds field to empty object',
-        in: `( {} )`,
-        args: ['field1'],
-        out: `({ field1: [] })`,
-    },
-])
-
-run_tests('OOA_remove_field', CT.OOA_remove_field, [
-    {
-        desc: 'removes specified field',
-        in: `({
-            field1: ['value', 'value2', 'value3'],
-            'field2': ['he', 'hehe', 'hehehe'],
-        })`,
-        args: ['field1'],
-        out: `({
-            'field2': ['he', 'hehe', 'hehehe'],
-        })`,
-    },
-    {
-        desc: 'leaves empty object if field was last one',
-        in: `({
-            field1: ['value', 'value2', 'value3'],
-        })`,
-        args: ['field1'],
-        out: `({
-        })`,
-    },
-])
-
-// TODO delete object
-
-
 /* TABLES */
 
 run_tests('Table_ChangeValueCell', CT.Table_ChangeValueCell, [
@@ -439,6 +303,7 @@ run_tests('Table_AppendRow', CT.Table_AppendRow, [
 ])
 
 run_tests('Table_AddColumn', CT.Table_AddColumn, [
+// TODO add case where no heading specified
     {
         desc: 'inserts a column', 
         in: "({})",
@@ -471,18 +336,19 @@ run_tests('Table_AddColumn', CT.Table_AddColumn, [
     },
 ])
 
-run_tests('Table_AppendColumn', CT.Table_AppendColumn, [
-/*
-    {
-        desc: 'inserts when object is empty', 
-        in: "({})",
-        args: ['a_key', '123'], 
-        out: "({a_key: 123})"
-    },
-*/
-])
-
 run_tests('Table_DeleteColumn', CT.Table_DeleteColumn, [
+    {
+        desc: 'deletes the right column a column at the right place', 
+        in: `({
+            'oldHeading': {'default': null, 'values': [1, 2, 3]}
+            'newHeading': {'default': null, 'values': [undefined, undefined, undefined]}
+        })`,
+        args: ['newHeading'], 
+        out: `({
+            'oldHeading': {'default': null, 'values': [1, 2, 3]}
+        })`
+    },
+
 /*
     {
         desc: 'inserts when object is empty', 

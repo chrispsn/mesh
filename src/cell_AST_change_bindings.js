@@ -215,92 +215,6 @@ const OBJECT_LITERAL_APPEND_CELL = {
     },
 };
 
-const OOA_LITERAL_VALUE_CELL = {
-    __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (mesh_obj_node, state, action) => {
-        // Should be able to merge with the code for commits to the module object
-        const {key, item_key, index} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        const table_prop_node = CT.get_object_item(obj_nodepath, item_key);
-        const array_nodepath = table_prop_node.get("value");
-        const inserted_code = transform_formula_bar_input(action.commit_value);
-        CT.replace_array_element(array_nodepath, index, inserted_code);
-        return action.offset;
-    },
-    // TODO
-    // INSERT_ELEMENT: (mesh_obj_node, state, action) => {
-    DELETE_ELEMENT: (mesh_obj_node, state, action) => {
-        const {key, index} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.OOA_remove_record(obj_nodepath, index);
-        return action.offset;
-    },
-};
-
-const OOA_LITERAL_COLUMN_CELL = {
-    __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (mesh_obj_node, state, action) => {
-        const {key, heading} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        const table_prop_node = CT.get_object_item(obj_nodepath, heading);
-        CT.replace_object_item_key(table_prop_node, action.commit_value);
-        return action.offset;
-    },
-    INSERT_ELEMENT: function(mesh_obj_node, state, action) {
-        const {key, index} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.OOA_add_field(obj_nodepath, "\"TODO\"");
-        return action.offset;
-    },
-    DELETE_ELEMENT: (mesh_obj_node, state, action) => {
-        const {key, heading} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.OOA_remove_field(obj_nodepath, heading);
-        return action.offset;
-    },
-};
-
-const OOA_LITERAL_APPEND_CELL = {
-    __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (mesh_obj_node, state, action) => {
-        // Should be able to merge with the code for commits to the module object
-        const {key, item_key} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        const inserted_code = transform_formula_bar_input(action.commit_value);
-        CT.OOA_append_datum(obj_nodepath, item_key, inserted_code);
-        return action.offset;
-    },
-    INSERT_ELEMENT: (mesh_obj_node, state, action) => {
-        const {key, item_key} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        CT.OOA_append_datum(obj_nodepath, item_key, "null");
-        return action.offset;
-    },
-};
-
-const OOA_LITERAL_ADD_COLUMN_CELL = {
-    __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (mesh_obj_node, state, action) => {
-        // Should be able to merge with the code for commits to the module object
-        const {key, item_key} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(mesh_obj_node, 0, key));
-        // TODO make handle random strings (ie put the requisite quotes around them)
-        const inserted_code = action.commit_value;
-        CT.OOA_add_field(obj_nodepath, inserted_code);
-        return action.offset;
-    },
-    // TODO
-    // INSERT_ELEMENT: (mesh_obj_node, state, action) => {
-};
-
 const TABLE_RW_HEADING_CELL = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: (mesh_obj_node, state, action) => {
@@ -313,8 +227,31 @@ const TABLE_RW_HEADING_CELL = {
         CT.OOA_add_field(obj_nodepath, inserted_code);
         return action.offset;
     },
+    INSERT_ELEMENT: (meshCellsNode, state, action) => {
+        const {key, colIndex} = get_selected_cell(state).AST_props;
+        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        CT.Table_AddColumn(table_nodepath, action.commit_value, colIndex);
+        return action.offset;
+    },
+    DELETE_ELEMENT: function(meshCellsNode, state, action) {
+        const {key, heading} = get_selected_cell(state).AST_props;
+        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        CT.Table_DeleteColumn(table_nodepath, heading);
+        return [0, 0];
+    },
+};
+
+const TABLE_RW_ADD_COLUMN_CELL = {
+    __proto__: DEFAULT,
+    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
+        const {key} = get_selected_cell(state).AST_props;
+        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        CT.Table_AddColumn(table_nodepath, action.commit_value);
+        return action.offset;
+    },
     // TODO
     // INSERT_ELEMENT: (mesh_obj_node, state, action) => {
+
 };
 
 const TABLE_RW_VALUE_CELL = {
@@ -342,13 +279,9 @@ const cell_AST_change_bindings = {
     OBJECT_LITERAL_KEY_CELL,
     OBJECT_LITERAL_VALUE_CELL,
     OBJECT_LITERAL_APPEND_CELL,
-    OOA_LITERAL_VALUE_CELL,
-    OOA_LITERAL_COLUMN_CELL,
-    OOA_LITERAL_APPEND_CELL,
-    OOA_LITERAL_ADD_COLUMN_CELL,
     TABLE_RW_HEADING_CELL,
+    TABLE_RW_ADD_COLUMN_CELL,
     TABLE_RW_VALUE_CELL,
 }
-
 
 module.exports = { cell_AST_change_bindings };

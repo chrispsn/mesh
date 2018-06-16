@@ -24,8 +24,9 @@ function leaf_classes(value) {
 
 function get_formula_bar_text(is_formula, raw_text) {
     if (is_formula) {
-        // TODO put brackets around raw object literals? How to detect?
-        return '=' + raw_text;
+        if (raw_text[0] === "{") { // TODO better way to detect ObjectLiteral?
+            return "=(" + raw_text + ")";
+        } else { return '=' + raw_text; };
     } else if (raw_text[0] === "\"" && raw_text.slice(-1) === "\"") {
         return raw_text.slice(1, -1);
     }
@@ -34,7 +35,7 @@ function get_formula_bar_text(is_formula, raw_text) {
 
 const display_fns = {
 
-    dummy: (value, value_nodepath, id) => {
+    dummy: (value, formatted_value, value_nodepath, id) => {
         // For use where you don't know what to use for the formula bar value
         // and code location values yet.
         return [{
@@ -48,13 +49,13 @@ const display_fns = {
         }];
     },
 
-    value: (value, value_nodepath, id) => {
+    value: (value, formatted_value, value_nodepath, id) => {
         const raw_text = CT.print_AST_to_code_string(value_nodepath);
         const is_formula = leaf_is_formula(value_nodepath.node);
         const value_cell = {
             location: [0, 1], 
             ref_string: id,
-            repr: String(value),
+            repr: formatted_value,
             formula_bar_value: get_formula_bar_text(is_formula, raw_text),
             classes: 'occupied ' + leaf_classes(value) + (is_formula ? '' : ' editable'),
             cell_AST_changes_type: 'DEFAULT', 
@@ -65,7 +66,7 @@ const display_fns = {
 
 /* ARRAY */
 
-    array_ro: (array, array_nodepath, id) => {
+    array_ro: (array, formatted_array, array_nodepath, id) => {
     // TODO it may be nice if: when you click on this, it selects the whole array.
         const raw_text = CT.print_AST_to_code_string(array_nodepath.node);
         const is_formula = leaf_is_formula(array_nodepath.node);
@@ -83,7 +84,7 @@ const display_fns = {
         });
     },
 
-    array_rw: (array, array_nodepath, id) => {
+    array_rw: (array, formatted_array, array_nodepath, id) => {
 
         const array_node = array_nodepath.node;
 
@@ -118,7 +119,7 @@ const display_fns = {
 /* OBJECT */
 
     // TODO needs work - maybe look at how array_ro works
-    object_ro: (object, object_nodepath, id) => {
+    object_ro: (object, formatted_object, object_nodepath, id) => {
 
         // TODO fact that we need to add the = here suggests
         // doing it in a function that is not supposed to know about it containing a formula,
@@ -156,7 +157,7 @@ const display_fns = {
 
     },
 
-    object_rw: (object, object_nodepath, id) => {
+    object_rw: (object, formatted_object, object_nodepath, id) => {
 
         const cells = [];
 
@@ -218,51 +219,10 @@ const display_fns = {
 
 // TODO Pretty much everything below this line is completely broken right now
 
-/* OTHER TYPES */
+/* TABLES */
 
-    records_ro: (records, ref_string, grid_loc, value_node) => {
-        // Array (TODO change to a map?) of objects.
-        // TODO allow user to specify headers, and therefore also order
-
-        let [row_index, col_index] = grid_loc;
-
-        row_index++;
-
-        // Write the data structure
-        if (records.length > 0) {
-            
-            // Headers
-            headers_to_add = Object.keys(records[0]).map(
-                (key, col_offset) => ({
-                    location: [row_index, col_index + col_offset], 
-                    repr: String(key),
-                    classes: 'heading',
-                    formula_bar_value: "TODO",
-                })
-            )
-            row_index++;
-
-            // Records
-            let records_to_add = records.map(
-                (record, row_offset) => {
-                    const current_row_index = row_index + row_offset;
-                    return Object.values(record).map(
-                        (val, col_offset) => ({
-                            location: [current_row_index, col_index + col_offset],
-                            repr: val,
-                            formula_bar_value: "TODO",
-                        })
-                    )
-                }
-            )
-            records_to_add = records_to_add.reduce( (a, b) => a.concat(b) );
-            return [...headers_to_add, ...records_to_add];
-        }
-
-        return [];
-    },
-    table_ro: (arr, whatever_nodepath, id) => {/* TODO */},
-    table_rw: (arr, obj_nodepath, id) => {
+    table_ro: (arr, formatted_arr, whatever_nodepath, id) => {/* TODO */},
+    table_rw: (arr, formatted_arr, obj_nodepath, id) => {
         // Table specification:
         // {heading: {values: [], default: fn}, heading2: ...}
         // By the time it gets to here, the data is an array,
@@ -273,8 +233,9 @@ const display_fns = {
         const formula_bar_text = get_formula_bar_text(true, raw_text);
 
         // TOOD make filtering __proto__ a dedicated function
+        const keys_to_exclude = new Set(['__proto__', 'length']);
         const headings = obj_nodepath.get("properties").value
-                        .filter(k => !(CT.get_object_key_from_node(k.key) === "__proto__"))
+                        .filter(k => !(keys_to_exclude.has(CT.get_object_key_from_node(k.key))))
                         .map(k => CT.get_object_key_from_node(k.key));
 
         // Headers
@@ -285,12 +246,11 @@ const display_fns = {
                 repr: String(heading),
                 classes: 'heading',
                 formula_bar_value: heading,
-                AST_props: {key: id, heading: heading},
+                AST_props: {key: id, heading: heading, colIndex: col_offset},
                 cell_AST_changes_type: 'TABLE_RW_HEADING_CELL',
             })
         )
         
-        /*
         // Add column
         // TODO get working for 'no headings' case
         const add_column_cell = {
@@ -298,18 +258,20 @@ const display_fns = {
             repr: '',
             classes: 'add_col',
             formula_bar_value: '',
-            cell_AST_changes_type: 'TABLE_ADD_COLUMN_CELL',
+            cell_AST_changes_type: 'TABLE_RW_ADD_COLUMN_CELL',
             AST_props: {key: id},
         };
-        */
         
         // Records
         const col_nodes = {};
         for (let prop_node of obj_nodepath.get("properties").value) {
             let key = CT.get_object_key_from_node(prop_node.key);
-            for (let p of prop_node.value.properties) {
-                if ('values' === CT.get_object_key_from_node(p.key)) {
-                    col_nodes[key] = p.value;
+            let node_value = prop_node.value;
+            if ('properties' in node_value) {
+                for (let p of prop_node.value.properties) {
+                    if ('values' === CT.get_object_key_from_node(p.key)) {
+                        col_nodes[key] = p.value;
+                    }
                 }
             }
         }
@@ -319,15 +281,23 @@ const display_fns = {
         const record_cells = [];
         for (let offset_r = 0; offset_r < arr.length; offset_r++) {
             headings.map((heading, offset_c) => {
-                let elem_node = col_nodes[heading].elements[offset_r];
-                let is_formula = leaf_is_formula(elem_node);
-                let raw_text = CT.print_AST_to_code_string(elem_node);
-                let formula_bar_text = get_formula_bar_text(is_formula, raw_text);
+                let elements_node = col_nodes[heading].elements;
+                let is_formula, formula_bar_text;
+                if (offset_r in elements_node) {
+                    let element_node = elements_node[offset_r];
+                    is_formula = leaf_is_formula(element_node);
+                    let raw_text = CT.print_AST_to_code_string(element_node);
+                    formula_bar_text = get_formula_bar_text(is_formula, raw_text);
+                } else {
+                    is_formula = true;
+                    formula_bar_text = "DEFAULT FORMULA";
+                }
                 let value = arr[offset_r][heading];
+                let formatted_value = formatted_arr[offset_r][heading];
                 record_cells.push(
                     ({
                         location: [2 + offset_r, offset_c],
-                        repr: value,
+                        repr: formatted_value,
                         formula_bar_value: formula_bar_text,
                         cell_AST_changes_type: 'TABLE_RW_VALUE_CELL',
                         AST_props: {key: id, item_key: heading, index: offset_r},
@@ -350,7 +320,7 @@ const display_fns = {
         }))
         */
 
-        return [...header_cells, /*add_column_cell, */
+        return [...header_cells, add_column_cell,
                 ...record_cells, /*...append_record_cells, */];
 
     },

@@ -14,7 +14,7 @@ const BLANK_FILE = [
     "        var o = _OUTPUT[k] = {};",
     "        var t = o.t = c.t; o.s = c.s; o.n = c.n;",
     "        var v = c.v; v = _isFn(v)? (t? _makeTable(v()) : v()) : v;",
-    "        var f = c.f; if (f) o.f = c.f(v);",
+    "        var f = c.f; o.f = (f) ? c.f(v) : String(v);",
     "        var l = c.l; o.l = _isFn(l) ? l() : l;",
     // TODO can we delay non-value calcs (formats, etc) until later?
     "        o.v = v; return v;",
