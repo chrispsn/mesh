@@ -57,7 +57,7 @@ describe('_makeTable', () => {
         const spec = {
             number: {values: [
                 1,
-                function(rowIdx) {return this[rowIdx-1].number + 1},
+                function(row, i) {return this[i-1].number + 1},
             ]},
         };
         const table = _makeTable(spec);
@@ -67,8 +67,8 @@ describe('_makeTable', () => {
         const spec = {
             number: {values: [
                 1,
-                function(rowIdx) {return this[rowIdx-1].number + 1},
-                function(rowIdx) {return this[rowIdx-2].number + 1},
+                function(row, i) {return this[i-1].number + 1},
+                function(row, i) {return this[i-2].number + 1},
             ]},
         };
         const table = _makeTable(spec);
@@ -80,7 +80,7 @@ describe('_makeTable', () => {
             length: 3,
             number: {
                 values: [],
-                default: function(rowIdx) {return rowIdx * 2}
+                default: function(row, i) {return i * 2}
             },
         };
         const table = _makeTable(spec);
@@ -90,7 +90,7 @@ describe('_makeTable', () => {
         const spec = {
             number: {
                 values: [1, undefined],
-                default: function(rowIdx) {return this[rowIdx-1].number * 2}
+                default: function(row, i) {return this[i-1].number * 2}
             },
         };
         const table = _makeTable(spec);
@@ -101,11 +101,11 @@ describe('_makeTable', () => {
             length: 2,
             first: {
                 values: [1],
-                default: function(rowIdx) {return this[rowIdx-1].second + 1}
+                default: function(row, i) {return this[i-1].second + 1}
             },
             second: {
                 values: [],
-                default: function(rowIdx) {return this[rowIdx].first + 1}
+                default: function(row, i) {return row.first + 1}
             },
         };
         const table = _makeTable(spec);

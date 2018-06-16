@@ -3,7 +3,7 @@
 const LINE_SEPARATOR = require('os').EOL; // Was '\n' before
 
 const BLANK_FILE = [
-    "/* Mesh boilerplate - do not change. 2018-06-10-1 */",
+    "/* Mesh boilerplate - do not change. 2018-06-16-1 */",
     "'use strict';", // TODO remove line if always intended to be consumed as ES6 module?
     "",
     "var _defProp = Object.defineProperty, _OUTPUT = {};",
@@ -34,12 +34,12 @@ const BLANK_FILE = [
     "    for (var i = 0, length = t.length, r; i < length; i++) {",
     "        t[i] = r = {};",
     "        cols.forEach(function(col) {",
-    "            var h = col[0], c = col[1][i], j = i;",
+    "            var h = col[0], c = col[1][i], s = r, j = i;",
     "            if (c === undefined) c = col[2];",
-    "            _defProp(r, h, {enumerable: true, configurable: true, get: function() {",
+    "            _defProp(r, h, {get: function() {",
     "                delete this[h];",
-    "                return this[h] = (_isFn(c)) ? c.call(t, j) : c",
-    "            }});",
+    "                return this[h] = (_isFn(c)) ? c.call(t, s, j) : c",
+    "            }, enumerable: true, configurable: true});",
     "        })",
     "    };",
     "    return t;",
