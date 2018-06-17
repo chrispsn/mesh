@@ -258,6 +258,16 @@ run_tests('Table_ChangeValueCell', CT.Table_ChangeValueCell, [
     },
 ])
 
+// TODO do some checks near the edges - eg expanding empty by 1
+run_tests('Table_ResizeArray', CT.Table_ResizeArray, [
+    {
+        desc: 'expands by the number of cells specified', 
+        in: "[1, 2, 3]",
+        args: [5], 
+        out: "[1, 2, 3, undefined, undefined]",
+    },
+])
+
 run_tests('Table_ChangeDefaultFormulaCell', CT.Table_ChangeDefaultFormulaCell, [
 /*
     {

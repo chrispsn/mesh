@@ -203,29 +203,56 @@ function remove_object_item(obj_path, key) {
 
 /* TABLE */
 
+function Table_GetColumnNodePaths(tablePath) {
+    const colNodePaths = {};
+    const tablePropsPath = tablePath.get("properties");
+    for (let i = 0; i < tablePropsPath.value.length; i++) {
+        const propPath = tablePropsPath.get(i);
+        const propValuePath = propPath.get("value");
+        if (propValuePath.value.type === 'ObjectExpression') {
+            const valuesPath = get_object_item(propValuePath, "values");
+            const defaultPath = get_object_item(propValuePath, "default");
+            if (valuesPath !== undefined && defaultPath !== undefined) {
+                const heading = get_object_key_from_node(propPath.get("key").node);
+                colNodePaths[heading] = propValuePath;
+            };
+        };
+    };
+    return colNodePaths;
+};
+
+function Table_ResizeArray(arrayPath, newSize) {
+    // TODO shrink?
+    const elementsNode = arrayPath.value.elements;
+    const currentLength = elementsNode.length;
+    const extraSlotCount = Math.max(newSize - currentLength, 0); // TODO remove if shrink
+    for (let i = 0; i < extraSlotCount; i++) {
+        elementsNode.push(B.identifier('undefined'));
+    };
+};
+
 function Table_ChangeValueCell(tablePath, colHeading, index, new_value) {
-    const colPath = get_object_item(tablePath, colHeading);
-    const valuesPath = get_object_item(colPath.get("value"), "values");
-    replace_array_element(valuesPath.get("value"), index, new_value);
     // TODO if values is a function call, fail?
+    const colPath = get_object_item(tablePath, colHeading);
+    const valuesPath = get_object_item(colPath.get("value"), "values").get("value");
+    const currentLength = valuesPath.node.elements.length;
+    if (currentLength < index + 1) { // Expand only, don't shrink
+        Table_ResizeArray(valuesPath, index + 1);
+    };
+    replace_array_element(valuesPath, index, new_value);
 };
 
 function Table_AddColumn(tablePath, heading, colIndex) {
     // TODO should this not have heading as a parameter, and auto-generate it to be unique?
-    const tablePropsPath = tablePath.get("properties");
     const lengths = [], headings = new Set();
-    for (let i = 0; i < tablePropsPath.value.length; i++) {
-        headings.add(get_object_key_from_node(tablePropsPath.get(i, "key").node));
-        let propValuePath = tablePropsPath.get(i, "value");
-        if (propValuePath.value.type === 'ObjectExpression') {
-            const valuesPath = get_object_item(propValuePath, "values");
-            if (valuesPath !== undefined) {
-                let valuesNode = valuesPath.get("value").node;
-                if (valuesNode.type === "ArrayExpression") {
-                    lengths.push(valuesNode.elements.length);
-                };
-            };
-        }
+    const columnPaths = Table_GetColumnNodePaths(tablePath);
+    for (let [heading, colPath] of Object.entries(columnPaths)) {
+        headings.add(heading);
+        const valuesPath = get_object_item(colPath, "values");
+        let valuesNode = valuesPath.get("value").node;
+        if (valuesNode.type === "ArrayExpression") {
+            lengths.push(valuesNode.elements.length);
+        };
     };
     const length = (lengths.length > 0) ? Math.max(...lengths) : 0;
     const valuesProp = B.property('init', 
@@ -238,11 +265,11 @@ function Table_AddColumn(tablePath, heading, colIndex) {
     );
     const defaultProp = B.property('init', B.literal('default'), B.literal(null));
     const newObject = B.objectExpression([defaultProp, valuesProp]);
-    // TODO check if heading is unique
     let newHeading = heading;
     if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
     const newProp = B.property('init', B.literal(newHeading), newObject);
 
+    const tablePropsPath = tablePath.get("properties");
     if (colIndex === undefined) colIndex = tablePropsPath.value.length;
     tablePropsPath.value.splice(colIndex, 0, newProp);
 };
@@ -294,6 +321,7 @@ module.exports = {
     remove_object_item,
 
     Table_ChangeValueCell,
+    Table_ResizeArray,
     Table_AddColumn,
     Table_DeleteColumn,
 

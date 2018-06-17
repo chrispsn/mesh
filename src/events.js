@@ -59,7 +59,7 @@ const grid_keydown_events = [
     {mode: 'READY', keypattern: /^Enter$/, modifiers: (e) => (e.shiftKey), action: () => ({ type: 'MOVE_CELL_SELECTION', offset: [-1, 0] })},
     
     // TODO If on the name: delete the declaration entirely
-    {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'EDIT_AST', AST_edit_type: 'DELETE_VALUE' })},
+    {mode: 'READY', keypattern: /^Delete$/, action: () => ({ type: 'EDIT_AST', AST_edit_type: 'DELETE_VALUE', offset: [0, 0] })},
 
     // Add and remove elements (eg slots in an array)
     {mode: 'READY', keypattern: /^\+$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'INSERT_ELEMENT', offset: [0, 0] }}},

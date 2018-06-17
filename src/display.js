@@ -300,7 +300,7 @@ const display_fns = {
                         repr: formatted_value,
                         formula_bar_value: formula_bar_text,
                         cell_AST_changes_type: 'TABLE_RW_VALUE_CELL',
-                        AST_props: {key: id, item_key: heading, index: offset_r},
+                        AST_props: {key: id, colHeading: heading, rowIndex: offset_r},
                         classes: 'object value ' + leaf_classes(value) 
                                     + (is_formula ? '' : ' editable'),
                     })
