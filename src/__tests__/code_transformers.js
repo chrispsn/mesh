@@ -331,14 +331,12 @@ run_tests('Table_AddRow', CT.Table_AddRow, [
 ])
 
 run_tests('Table_DeleteRow', CT.Table_DeleteRow, [
-/*
     {
         desc: 'inserts when object is empty', 
-        in: "({})",
-        args: ['a_key', '123'], 
-        out: "({a_key: 123})"
+        in: "({heading: {default: null, values: [1, 2, 3]}})",
+        args: [1], 
+        out: "({heading: {default: null, values: [1, 3]}})",
     },
-*/
 ])
 
 run_tests('Table_AppendRow', CT.Table_AppendRow, [

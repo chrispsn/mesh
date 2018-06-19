@@ -269,6 +269,12 @@ const TABLE_RW_VALUE_CELL = {
         CT.Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, "undefined");
         return action.offset;
     },
+    DELETE_ELEMENT: function(meshCellsNode, state, action) {
+        const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
+        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        CT.Table_DeleteRow(table_nodepath, rowIndex);
+        return [0, 0];
+    },
     // TODO
     // INSERT_ELEMENT: (meshCellsNode, state, action) => {
 };

@@ -299,10 +299,20 @@ function Table_AddRow(tablePath, affectedColHeading, index, newValue) {
         }
     };
 };
+
+function Table_DeleteRow(tablePath, index) {
+    const columnPaths = Table_GetColumnNodePaths(tablePath);
+    for (let [h, colPath] of Object.entries(columnPaths)) {
+        const valuesPath = get_object_item(colPath, "values");
+        let valuesNode = valuesPath.get("value").node;
+        if (valuesNode.type === "ArrayExpression") {
+            valuesPath.get("value", "elements", index).prune();
+        }
+    }
+};
 /*
 Table_ChangeDefaultFormulaCell: function() {},
 Table_Add: function() {}, // add tests for this?? Maybe not needed if just do to an empty object
-Table_DeleteRow: function() {},
 Table_EditLength: function() {},
 Table_DeleteLength: function() {}, // not sure
 */
@@ -339,5 +349,6 @@ module.exports = {
     Table_AddColumn,
     Table_DeleteColumn,
     Table_AddRow,
+    Table_DeleteRow,
 
 };
