@@ -26,7 +26,7 @@ describe('table_rw', () => {
         const value = [{heading: 1}, {heading: 2}, {heading: 3}];
         const formatted_values = [{heading: "1"}, {heading: "2"}, {heading: "3"}];
         const cells = D.table_rw(value, formatted_values, AST_node, "dummyID");
-        expect(cells.length).toBe(5);
+        expect(cells.length).toBe(6);
     });
     it('is OK with # elements in values array being less than length of table', () => {
         const code = `({length: 3, heading: {
@@ -39,7 +39,11 @@ describe('table_rw', () => {
         const cells = D.table_rw(value, formatted_values, AST_node, "dummyID");
         expect(cells.length).toBe(5);
     });
-    it('can deal with presence of the length property', () => {
+    /* TODO
+    it('shows a warning if values array longer than length of table', () => {
+    });
+    */
+    it("doesn't show append row cells if length is specified", () => {
         const code = `({length: 3, heading: {
           length: 123,
           default: function(rowIdx) {return rowIdx + 1},

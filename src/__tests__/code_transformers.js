@@ -280,14 +280,54 @@ run_tests('Table_ChangeDefaultFormulaCell', CT.Table_ChangeDefaultFormulaCell, [
 ])
 
 run_tests('Table_AddRow', CT.Table_AddRow, [
-/*
     {
-        desc: 'inserts when object is empty', 
-        in: "({})",
-        args: ['a_key', '123'], 
-        out: "({a_key: 123})"
+        desc: 'inserts the value in the right column', 
+        in: `({
+            notChosenColumn: {
+                values: [1, 2],
+                default: null,
+            },
+            chosenColumn: {
+                values: [3, 4],
+                default: null,
+            },
+        })`,
+        args: ['chosenColumn', 2, '123'], 
+        out: `({
+            notChosenColumn: {
+                values: [1, 2, undefined],
+                default: null,
+            },
+            chosenColumn: {
+                values: [3, 4, 123],
+                default: null,
+            },
+        })`,
     },
-*/
+    {
+        desc: 'adds undefined if no new value specified', 
+        in: `({
+            notChosenColumn: {
+                values: [1, 2],
+                default: null,
+            },
+            chosenColumn: {
+                values: [3, 4],
+                default: null,
+            },
+        })`,
+        args: ['chosenColumn', 2], 
+        out: `({
+            notChosenColumn: {
+                values: [1, 2, undefined],
+                default: null,
+            },
+            chosenColumn: {
+                values: [3, 4, undefined],
+                default: null,
+            },
+        })`,
+    },
 ])
 
 run_tests('Table_DeleteRow', CT.Table_DeleteRow, [

@@ -224,10 +224,9 @@ const display_fns = {
     table_ro: (arr, formatted_arr, whatever_nodepath, id) => {/* TODO */},
     table_rw: (arr, formatted_arr, obj_nodepath, id) => {
         // Table specification:
-        // {heading: {values: [], default: fn}, heading2: ...}
+        // {heading: {values: [], default: fn}, heading2: ..., [optional] length: int}
         // By the time it gets to here, the data is an array,
         // but the nodepath is still an object literal.
-        // TODO
 
         const raw_text = CT.print_AST_to_code_string(obj_nodepath);
         const formula_bar_text = get_formula_bar_text(true, raw_text);
@@ -308,20 +307,23 @@ const display_fns = {
             }
         )}
         
-        /*
         // Append cell
-        const append_record_cells = headings.map((heading, offset_c) => ({
-            location: [2 + arr.length, offset_c],
-            repr: '',
-            classes: 'append',
-            formula_bar_value: "",
-            cell_AST_changes_type: 'OOA_LITERAL_APPEND_CELL',
-            AST_props: {key: id, item_key: heading},
-        }))
-        */
+        // TODO how will this know not to display if the length is manually set?
+        let append_record_cells = [];
+        const showAppendCells = (undefined === CT.get_object_item(obj_nodepath, "length"));
+        if (showAppendCells) {
+            append_record_cells = headings.map((heading, offset_c) => ({
+                location: [2 + arr.length, offset_c],
+                repr: '',
+                classes: 'append',
+                formula_bar_value: "",
+                cell_AST_changes_type: 'TABLE_RW_APPEND_CELL',
+                AST_props: {key: id, rowIndex: 2 + arr.length, colHeading: heading},
+            }))
+        };
 
         return [...header_cells, add_column_cell,
-                ...record_cells, /*...append_record_cells, */];
+                ...record_cells, ...append_record_cells, ];
 
     },
 

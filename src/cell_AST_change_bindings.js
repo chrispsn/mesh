@@ -273,6 +273,17 @@ const TABLE_RW_VALUE_CELL = {
     // INSERT_ELEMENT: (meshCellsNode, state, action) => {
 };
 
+const TABLE_RW_APPEND_CELL = {
+    __proto__: DEFAULT,
+    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
+        const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
+        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const inserted_code = transform_formula_bar_input(action.commit_value, true);
+        CT.Table_AddRow(table_nodepath, colHeading, rowIndex, inserted_code);
+        return action.offset;
+    },
+};
+
 const cell_AST_change_bindings = {
     DEFAULT,
     EMPTY,
@@ -285,6 +296,7 @@ const cell_AST_change_bindings = {
     TABLE_RW_HEADING_CELL,
     TABLE_RW_ADD_COLUMN_CELL,
     TABLE_RW_VALUE_CELL,
+    TABLE_RW_APPEND_CELL,
 }
 
 module.exports = { cell_AST_change_bindings };
