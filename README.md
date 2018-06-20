@@ -121,7 +121,7 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 
 ## I want to contribute!
 
-Awesome! Please check out the [contributions guide](mesh/CONTRIBUTING.md). The codebase is pretty rough right now, so feel free to get in touch via Twitter too.
+Awesome! Please check out the [contributions guide](CONTRIBUTING.md). The codebase is pretty rough right now, so feel free to get in touch via Twitter too.
 
 ## Bugs, issues, enhancements, contact
 
