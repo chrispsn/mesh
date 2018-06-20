@@ -1,4 +1,4 @@
-# Mesh
+# Mesh Spreadsheet
 
 Mesh is a JavaScript code editor that feels like a spreadsheet.
 
