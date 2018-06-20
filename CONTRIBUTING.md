@@ -36,3 +36,11 @@ For example, say Mesh is in **READY** mode and the user types `1.23%` into a val
 - Mesh will then enter **CALCULATING** mode and will run the file in a Web Worker whose boilerplate was originally defined in `settings`. The Web Worker sends its results back to Mesh as an object that maps names to cells. Each cell contains a raw JS value, its formatted string equivalent, a grid location, and some other minor settings.
 -  Mesh then builds a new grid via `generate_cells`. It figures out how to represent each cell on the grid based on the type of the cell's JavaScript value and its AST node equivalent, using logic in `display_fn_triage` and `display`. The `display` file also gives each grid square some event information that is used by `cell_AST_change_bindings` in the next calculation cycle.
 - Finally, Mesh renders the updated state to HTML via the `react_*` family of files, and returns to **READY** mode.
+
+# Miscellaneous details
+
+In Electron, line endings should check out and save as per your system's default (CRLF on Windows, LF on OSX/Unix). See more discussion at:
+
+- <https://stackoverflow.com/a/4425433/996380>
+- <https://git-scm.com/docs/gitattributes>
+- <http://adaptivepatchwork.com/2012/03/01/mind-the-end-of-your-line/>
