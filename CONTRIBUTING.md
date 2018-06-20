@@ -4,7 +4,7 @@ Please see the [issues page](https://github.com/chrispsn/mesh/projects) and the 
 
 # The Mesh vision
 
-Mesh should empower people to make the most of their existing computers in their daily lives, and in so doing, accelerate the rate of human progress.
+Mesh should help people make the most of their existing computers in their daily lives.
 
 Mesh achieves this by combining the best aspects of spreadsheets and 'traditional' programming, and making them available to as many people as possible.
 
