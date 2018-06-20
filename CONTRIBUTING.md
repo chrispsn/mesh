@@ -1,6 +1,6 @@
 Contributions are welcome!
 
-Please see the [issues](https://github.com/chrispsn/mesh/projects) and [projects](https://github.com/chrispsn/mesh/projects) pages for some ideas and a vision of where this project is going.
+Please see the [issues page](https://github.com/chrispsn/mesh/projects) and the [contribution ideas](https://github.com/chrispsn/mesh/projects/2) pages for a vision of where this project is going.
 
 Please keep in mind that Mesh has design constraints (some are aspirational as of 2018-06-20 ):
 
