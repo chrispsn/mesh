@@ -100,7 +100,6 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 ## Caveats with this approach
 
 - Unlike Excel, the whole file gets recalculated every time (no caching of values that won't change)
-- Spreadsheet display won't work well with names whose values change over the course of a file (you may get best results if you adopt an 'immutability' convention)
 - Mesh misses out on Excel's built-in functions (although if we can get Mesh running on native Windows via JScript, we can probably get access to `WorksheetFunction` via COM).
 
 ## Known issues
@@ -120,13 +119,9 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 - Custom themes
 - Optionally use TypeScript or ClojureScript as formula languages.
 
-## Notes for contributors
+## I want to contribute!
 
-In Electron, line endings should check out and save as per your system's default (CRLF on Windows, LF on OSX/Unix). See more discussion at:
-
-- <https://stackoverflow.com/a/4425433/996380>
-- <https://git-scm.com/docs/gitattributes>
-- <http://adaptivepatchwork.com/2012/03/01/mind-the-end-of-your-line/>
+Awesome! Please check out the [contributions guide](mesh/CONTRIBUTING.md). The codebase is pretty rough right now, so feel free to get in touch via Twitter too.
 
 ## Bugs, issues, enhancements, contact
 
