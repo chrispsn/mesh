@@ -2,7 +2,7 @@
 
 Contributions are welcome!
 
-For ideas, please see the [issues page](https://github.com/chrispsn/mesh/issues) and the [contributions project](https://github.com/chrispsn/mesh/projects/2).
+For ideas, please see the [issues page](https://github.com/chrispsn/mesh/issues) or the [contributions project](https://github.com/chrispsn/mesh/projects/2).
 
 ## The Mesh vision
 
