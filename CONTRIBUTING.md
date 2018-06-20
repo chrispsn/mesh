@@ -1,8 +1,10 @@
+# Contributing
+
 Contributions are welcome!
 
 For ideas, please see the [issues page](https://github.com/chrispsn/mesh/issues) and the [contributions project](https://github.com/chrispsn/mesh/projects/2).
 
-# The Mesh vision
+## The Mesh vision
 
 Mesh should help people make the most of their existing computers in their daily lives.
 
@@ -19,13 +21,13 @@ This means we should aim for (some of these are aspirational as of 2018-06-20):
 - **Low-ish learning curve.** JavaScript has a chequered history and users don't need to be exposed to all of it. For example, by defining data in cells, users don't need to learn the difference between `var`, `let` and `const`. There may be other opportunities to "smooth over" the experience - for example, could Mesh provide a "UI for SQL", like a Pivot Table that manages chains of `map`, `filter`, `reduce` etc calls on arrays? 
 - **Use what JavaScript already gives you.** For example, Mesh uses JavaScript as its formula language instead of defining its own. JavaScript also provides standard value formatting functions (such as [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat)).
 
-# Checklist before submitting a pull request
+## Checklist before submitting a pull request
 
 - Do the tests pass?
 - Should I write some tests?
 - Does this work in a wide variety of browsers (IE11, Chrome, Firefox, Edge)? 
 
-# Tour of the codebase
+## Tour of the codebase
 
 Most files in `src` are for turning the user's UI actions into changes in the Mesh file's JavaScript code.
 
@@ -37,7 +39,7 @@ For example, say Mesh is in **READY** mode and the user types `1.23%` into a val
 -  Mesh then builds a new grid via `generate_cells`. It figures out how to represent each cell on the grid based on the type of the cell's JavaScript value and its AST node equivalent, using logic in `display_fn_triage` and `display`. The `display` file also gives each grid square some event information that is used by `cell_AST_change_bindings` in the next calculation cycle.
 - Finally, Mesh renders the updated state to HTML via the `react_*` family of files, and returns to **READY** mode.
 
-# Miscellaneous details
+## Miscellaneous details
 
 In Electron, line endings should check out and save as per your system's default (CRLF on Windows, LF on OSX/Unix). See more discussion at:
 
