@@ -25,7 +25,7 @@ This means we should aim for (some of these are aspirational as of 2018-06-20):
 
 - Do the tests pass?
 - Should I write some tests?
-- Does this work in a wide variety of browsers (IE11, Chrome, Firefox, Edge)? 
+- Does the Mesh app work in a wide variety of browsers (IE11, Chrome, Firefox, Edge, Safari)? 
 
 ## Tour of the codebase
 
