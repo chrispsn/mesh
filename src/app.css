@@ -3,6 +3,7 @@
  *   not use the whole page's
  * - the grid and text area should reach down to the bottom of the page
  *   - currently this is a fixed em number
+ * - move text in append cells to theme?
 */
 
 html {
@@ -86,7 +87,7 @@ body {
 
 /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof */
 #grid td.append:before {
-    content: "↓"
+    content: "NEW ROW"; /* "↓" */
 }
 
 #grid td.add_key:before {
@@ -94,7 +95,7 @@ body {
 }
 
 #grid td.add_col:before {
-    content: "→"
+    content: "NEW COL"; /* content: "→" */
 }
 
 /* Code editor */
