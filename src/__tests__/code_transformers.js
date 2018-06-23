@@ -249,6 +249,36 @@ run_tests('insert_object_getter', CT.insert_object_getter, [
 
 /* TABLES */
 
+describe('Table_Create', () => {
+    it('creates a table if no existing t flag', () => {
+        const code = `const _CELLS = { "cellName": {v: null}, }`;
+        const AST = CT.parse_code_string_to_AST(code);
+        const cellsNodePath = CT.getCellsNodePath(AST);
+        const cellPropsPath = CT.getCellNodePath(cellsNodePath, "cellName")
+                                .property.get("value");
+        CT.Table_Create(cellPropsPath);
+        const found_code = standardise_code_formatting(CT.print_AST_to_code_string(AST));
+        const expected_code = standardise_code_formatting(`const _CELLS = {
+            "cellName": {v: function() {return {}}, t: true},
+        }`);
+        expect(found_code).toBe(expected_code);
+    });
+    it('creates a table if there is an existing t flag', () => {
+        const code = `const _CELLS = { "cellName": {v: null, t: false}, }`;
+        const AST = CT.parse_code_string_to_AST(code);
+        const cellsNodePath = CT.getCellsNodePath(AST);
+        const cellPropsPath = CT.getCellNodePath(cellsNodePath, "cellName")
+                                .property.get("value");
+        CT.Table_Create(cellPropsPath);
+        const found_code = standardise_code_formatting(CT.print_AST_to_code_string(AST));
+        const expected_code = standardise_code_formatting(`const _CELLS = {
+            "cellName": {v: function() {return {}}, t: true},
+        }`);
+        expect(found_code).toBe(expected_code);
+    });
+});
+
+
 run_tests('Table_ChangeValueCell', CT.Table_ChangeValueCell, [
     {
         desc: 'changes cell in column', 

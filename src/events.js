@@ -65,7 +65,7 @@ const grid_keydown_events = [
     {mode: 'READY', keypattern: /^\+$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'INSERT_ELEMENT', offset: [0, 0] }}},
     {mode: 'READY', keypattern: /^-$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'DELETE_ELEMENT', offset: [0, 0]}}},
     {mode: 'READY', keypattern: /^_$/, modifiers: (e) => (e.ctrlKey), preventDefault: true, action: function() { return { type: 'EDIT_AST', AST_edit_type: 'DELETE_CONTAINER', offset: [0, 0] }}},
-
+    {mode: 'READY', keypattern: /^t$/, modifiers: (e) => (e.ctrlKey && e.altKey), preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'CREATE_TABLE', offset: [0, 0] }}},
 ];
 
 const grid_click_events = [

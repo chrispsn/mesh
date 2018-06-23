@@ -55,7 +55,7 @@ const display_fns = {
         const value_cell = {
             location: [0, 1], 
             ref_string: id,
-            repr: formatted_value,
+            repr: (formatted_value === undefined) ? String(value) : formatted_value,
             formula_bar_value: get_formula_bar_text(is_formula, raw_text),
             classes: 'occupied ' + leaf_classes(value) + (is_formula ? '' : ' editable'),
             cell_AST_changes_type: 'DEFAULT', 
@@ -285,6 +285,9 @@ const display_fns = {
                 if (offset_r in elements_node) {
                     let element_node = elements_node[offset_r];
                     is_formula = leaf_is_formula(element_node);
+                    if (is_formula) {
+                        element_node = element_node.body.body[0].argument; // TODO merge with equivalent in display.js / maybe separate that 'lookthrough' aspect into its own function?
+                    }
                     let raw_text = CT.print_AST_to_code_string(element_node);
                     formula_bar_text = get_formula_bar_text(is_formula, raw_text);
                 } else {
@@ -292,7 +295,9 @@ const display_fns = {
                     formula_bar_text = "DEFAULT FORMULA";
                 }
                 let value = arr[offset_r][heading];
-                let formatted_value = formatted_arr[offset_r][heading];
+                let formatted_value = formatted_arr
+                                        ? formatted_arr[offset_r][heading]
+                                        : String(arr[offset_r][heading]);
                 record_cells.push(
                     ({
                         location: [2 + offset_r, offset_c],

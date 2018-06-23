@@ -57,6 +57,12 @@ const DEFAULT = {
         cell_props_nodepath.prune();
         return [0, 0];
     },
+    CREATE_TABLE: function(meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const cell_props_nodepath = CT.get_object_item(meshCellsNode, key).get("value");
+        CT.Table_Create(cell_props_nodepath);
+        return [0, 0];
+    },
 };
 
 // TODO does it need only some of the reducers?
@@ -290,7 +296,7 @@ const TABLE_RW_APPEND_CELL = {
     },
 };
 
-const cell_AST_change_bindings = {
+module.exports = {
     DEFAULT,
     EMPTY,
     KEY,
@@ -303,6 +309,4 @@ const cell_AST_change_bindings = {
     TABLE_RW_ADD_COLUMN_CELL,
     TABLE_RW_VALUE_CELL,
     TABLE_RW_APPEND_CELL,
-}
-
-module.exports = { cell_AST_change_bindings };
+};

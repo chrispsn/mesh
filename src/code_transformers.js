@@ -203,6 +203,18 @@ function remove_object_item(obj_path, key) {
 
 /* TABLE */
 
+function Table_Create(cellObjPath) {
+    const cellValuePropPath = get_object_item(cellObjPath, "v");
+    const table_text = "function () {return {}}";
+    replace_object_item_value(cellValuePropPath, table_text);
+    const cellTableFlagPropPath = get_object_item(cellObjPath, "t");
+    if (cellTableFlagPropPath !== undefined) {
+        replace_object_item_value(cellTableFlagPropPath, "true");
+    } else {
+        insert_object_item(cellObjPath, "t", "true")
+    };
+};
+
 function Table_GetColumnNodePaths(tablePath) {
     const colNodePaths = {};
     const tablePropsPath = tablePath.get("properties");
@@ -344,6 +356,7 @@ module.exports = {
     replace_object_getter_return_val,
     remove_object_item,
 
+    Table_Create,
     Table_ChangeValueCell,
     Table_ResizeArray,
     Table_AddColumn,

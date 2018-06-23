@@ -14,7 +14,7 @@ const BLANK_FILE = [
     "        var o = _OUTPUT[k] = {};",
     "        var t = o.t = c.t; o.s = c.s; o.n = c.n;",
     "        var v = c.v; v = _isFn(v)? (t? _makeTable(v()) : v()) : v;",
-    "        var f = c.f; o.f = (f) ? c.f(v) : String(v);",
+    "        var f = c.f; if (f) o.f = c.f(v);",
     "        var l = c.l; o.l = _isFn(l) ? l() : l;",
     // TODO can we delay non-value calcs (formats, etc) until later?
     "        o.v = v; return v;",
@@ -31,14 +31,14 @@ const BLANK_FILE = [
     "    t.length = (s.length === undefined)",
     "        ? cols.reduce(function(a,e){return MAX(a,e[1].length)},0)",
     "        : s.length;",
-    "    for (var i = 0, length = t.length, r; i < length; i++) {",
+    "    for (let i = 0, length = t.length, r; i < length; i++) {",
     "        t[i] = r = {};",
     "        cols.forEach(function(col) {",
-    "            var h = col[0], c = col[1][i], s = r, j = i;",
+    "            var h = col[0], c = col[1][i];",
     "            if (c === undefined) c = col[2];",
     "            _defProp(r, h, {get: function() {",
     "                delete this[h];",
-    "                return this[h] = (_isFn(c)) ? c.call(t, s, j) : c",
+    "                return this[h] = (_isFn(c)) ? c.call(t, r, i) : c",
     "            }, enumerable: true, configurable: true});",
     "        })",
     "    };",
@@ -52,10 +52,10 @@ const BLANK_FILE = [
     // "        var V = e.data.values;",
     // "        for (var k in V) _CELLSdefCell(k, {v: V[k]});",
     // Ideally keep calcing first uncalced cell til empty
-    "    for (var k in _CELLS) var v = self[k]; if (_CELLS[k].t) _calcTable(v);",
+    "    for (var k in _CELLS) {var v = self[k]; if (_CELLS[k].t) _calcTable(v)};",
     // TODO something to strip out functions and other non-data from the results?
     // TODO pass through list of tables?
-    "    postMessage(_OUTPUT);",
+    "    postMessage(_OUTPUT);", // close();?
     // "    }",
          // TODO invalidate calc tree for cells that were redefined
          // TODO reset changed variables at end?

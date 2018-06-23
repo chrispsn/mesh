@@ -1,10 +1,10 @@
 'use strict';
 
 const CT = require('./code_transformers');
+const cell_AST_change_bindings = require('./cell_AST_change_bindings');
 const {get_selected_cell} = require('./selectors');
 const {EMPTY_CELL} = require('./display');
 const {LINE_SEPARATOR, BLANK_FILE} = require('./settings');
-const {cell_AST_change_bindings} = require('./cell_AST_change_bindings');
 
 const INITIAL_STATE = {
     mode: 'READY',

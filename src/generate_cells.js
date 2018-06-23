@@ -35,7 +35,7 @@ module.exports = function(RESULTS, cellsNodePath) {
         // Value cells come through with locations as offsets to the name cell.
         // Consider moving the offset back into the display fns as a parameter if this is slow.
         for (let cell of value_cells) {
-            // TODO adjust display logic so that doesn't assume it needs to leave a space for the name
+            // TODO adjust display logic so doesn't assume it needs to leave a space for the name
             cell.location = [cell.location[0] + loc[0], cell.location[1] + loc[1]];
             cells.push(cell);
         }
