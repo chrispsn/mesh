@@ -285,7 +285,7 @@ const display_fns = {
                 if (offset_r in elements_node) {
                     let element_node = elements_node[offset_r];
                     is_formula = leaf_is_formula(element_node);
-                    if (is_formula) {
+                    if (element_node.type === "FunctionExpression") {
                         element_node = element_node.body.body[0].argument; // TODO merge with equivalent in display.js / maybe separate that 'lookthrough' aspect into its own function?
                     }
                     let raw_text = CT.print_AST_to_code_string(element_node);
