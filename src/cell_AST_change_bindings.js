@@ -72,7 +72,7 @@ const EMPTY = {
     COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
         CT.insert_object_item(meshCellsNode,
             `"${action.commit_value}"`,
-            `{v: null, l: [${state.selected_cell_loc}], f: null, s: null, n: null, t: null}`,
+            `{v: null, l: [${state.selected_cell_loc}]}`,
         )
         return action.offset;
     },
