@@ -205,7 +205,7 @@ function remove_object_item(obj_path, key) {
 
 function Table_Create(cellObjPath) {
     const cellValuePropPath = get_object_item(cellObjPath, "v");
-    const table_text = "function () {return {}}";
+    const table_text = "function () {return _makeTable({})}";
     replace_object_item_value(cellValuePropPath, table_text);
     const cellTableFlagPropPath = get_object_item(cellObjPath, "t");
     if (cellTableFlagPropPath !== undefined) {
@@ -329,6 +329,10 @@ Table_EditLength: function() {},
 Table_DeleteLength: function() {}, // not sure
 */
 
+function FunctionCall_GetArgument(functionCallNodePath, argIndex) {
+    return functionCallNodePath.get("arguments", argIndex);
+}
+
 /* PUBLIC API */
 
 module.exports = {
@@ -363,5 +367,7 @@ module.exports = {
     Table_DeleteColumn,
     Table_AddRow,
     Table_DeleteRow,
+
+    FunctionCall_GetArgument,
 
 };

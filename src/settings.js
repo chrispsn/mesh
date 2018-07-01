@@ -13,7 +13,7 @@ const BLANK_FILE = [
     "        if (k in _OUTPUT) return _OUTPUT[k].v;",
     "        const o = _OUTPUT[k] = {};",
     "        const t = o.t = c.t; o.s = c.s; o.n = c.n;",
-    "        let v = c.v; v = _isFn(v)? (t? _makeTable(v()) : v()) : v;",
+    "        let v = c.v; v = _isFn(v) ? v() : v;",
     "        const f = c.f; if (f) o.f = c.f(v);",
     "        const l = c.l; o.l = _isFn(l) ? l() : l;",
     // TODO can we delay non-value calcs (formats, etc) until later?

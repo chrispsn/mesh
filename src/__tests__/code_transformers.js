@@ -259,7 +259,7 @@ describe('Table_Create', () => {
         CT.Table_Create(cellPropsPath);
         const found_code = standardise_code_formatting(CT.print_AST_to_code_string(AST));
         const expected_code = standardise_code_formatting(`const _CELLS = {
-            "cellName": {v: function() {return {}}, t: true},
+            "cellName": {v: function() {return _makeTable({})}, t: true},
         }`);
         expect(found_code).toBe(expected_code);
     });
@@ -272,7 +272,7 @@ describe('Table_Create', () => {
         CT.Table_Create(cellPropsPath);
         const found_code = standardise_code_formatting(CT.print_AST_to_code_string(AST));
         const expected_code = standardise_code_formatting(`const _CELLS = {
-            "cellName": {v: function() {return {}}, t: true},
+            "cellName": {v: function() {return _makeTable({})}, t: true},
         }`);
         expect(found_code).toBe(expected_code);
     });
@@ -458,4 +458,15 @@ run_tests('Table_DeleteLength', CT.Table_DeleteLength, [
     },
 */
 ])
+
+describe('FunctionCall_GetArgument', () => {
+    it('works', () => {
+        const code = `someFn(a, b, c);`;
+        const nodePath = get_expr_nodepath(code);
+        const found_node = CT.FunctionCall_GetArgument(nodePath, 1);
+        const found_code = CT.print_AST_to_code_string(found_node);
+        const expected_code = "b";
+        expect(found_code).toBe(expected_code);
+    });
+});
 

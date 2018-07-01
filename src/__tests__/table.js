@@ -3,16 +3,6 @@
 const Code = require('../settings.js').BLANK_FILE + "[_makeTable, _calcTable];";
 const [_makeTable, _calcTable] = eval(Code);
 
-// Helper function for tests
-
-function* take(n, iterable) {
-    for (const x of iterable) {
-        if (n <= 0) return;
-        n--;
-        yield x;
-    }
-}
-
 // No columns
 // Columns, but no length
 // No preset length

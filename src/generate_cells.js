@@ -22,7 +22,8 @@ module.exports = function(RESULTS, cellsNodePath) {
             });
         }
 
-        const value_nodepath = CT.getCellNodePath(cellsNodePath, id).value;
+        let value_nodepath = CT.getCellNodePath(cellsNodePath, id).value;
+        if (Boolean(isTable)) {value_nodepath = CT.FunctionCall_GetArgument(value_nodepath, 0)};
         const display_fn = DisplayFns[triage(value_nodepath.node.type, value, Boolean(isTable))];
 
         // Not sure on exactly which parameters are best here, and which order makes most sense.

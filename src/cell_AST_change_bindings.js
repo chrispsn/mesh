@@ -224,24 +224,20 @@ const OBJECT_LITERAL_APPEND_CELL = {
 const TABLE_RW_HEADING_CELL = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
-        // Should be able to merge with the code for commits to the module object
-        const {key, item_key} = get_selected_cell(state).AST_props;
-        const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-        // TODO make handle random strings (ie put the requisite quotes around them)
-        const inserted_code = action.commit_value;
-        CT.OOA_add_field(obj_nodepath, inserted_code);
+        // TODO complete
         return action.offset;
     },
     INSERT_ELEMENT: (meshCellsNode, state, action) => {
         const {key, colIndex} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_AddColumn(table_nodepath, action.commit_value, colIndex);
         return action.offset;
     },
     DELETE_ELEMENT: function(meshCellsNode, state, action) {
         const {key, heading} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_DeleteColumn(table_nodepath, heading);
         return [0, 0];
     },
@@ -251,7 +247,8 @@ const TABLE_RW_ADD_COLUMN_CELL = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
         const {key} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_AddColumn(table_nodepath, action.commit_value);
         return action.offset;
     },
@@ -264,20 +261,23 @@ const TABLE_RW_VALUE_CELL = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
         const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         const inserted_code = transform_formula_bar_input(action.commit_value, true);
         CT.Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, inserted_code)
         return action.offset;
     },
     DELETE_VALUE: function(meshCellsNode, state, action) {
         const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, "undefined");
         return action.offset;
     },
     DELETE_ELEMENT: function(meshCellsNode, state, action) {
         const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_DeleteRow(table_nodepath, rowIndex);
         return [0, 0];
     },
@@ -289,7 +289,8 @@ const TABLE_RW_APPEND_CELL = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
         const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
-        const table_nodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
+        const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         const inserted_code = transform_formula_bar_input(action.commit_value, true);
         CT.Table_AddRow(table_nodepath, colHeading, rowIndex, inserted_code);
         return action.offset;
