@@ -11,7 +11,11 @@ const LINE_SEPARATOR = require('os').EOL; // Was '\n' before
 Array.from||(Array.from=function(){var r=Object.prototype.toString,t=function(t){return"function"==typeof t||"[object Function]"===r.call(t)},n=Math.pow(2,53)-1,e=function(r){var t,e=(t=Number(r),isNaN(t)?0:0!==t&&isFinite(t)?(t>0?1:-1)*Math.floor(Math.abs(t)):t);return Math.min(Math.max(e,0),n)};return function(r){var n=Object(r);if(null==r)throw new TypeError("Array.from requires an array-like object - not null or undefined");var o,a=arguments.length>1?arguments[1]:void 0;if(void 0!==a){if(!t(a))throw new TypeError("Array.from: when provided, the second argument must be a function");arguments.length>2&&(o=arguments[2])}for(var i,u=e(n.length),f=t(this)?Object(new this(u)):new Array(u),c=0;c<u;)i=n[c],f[c]=a?void 0===o?a(i,c):a.call(o,i,c):i,c+=1;return f.length=u,f}}());
 
 const BLANK_FILE = [
+    "const _CELLS = {};",
+    "",
     "/* Mesh boilerplate - do not change. 2018-06-16-1 */",
+    "// Cell props: v = value or formula (fn), l = grid coordinates,",
+    "// f = format fn, s = transpose?, t = is table?, n = show name?",
     "'use strict';", // TODO remove line if always intended to be consumed as ES6 module?
     "",
     "const _defProp = Object.defineProperty, _OUTPUT = {};",
@@ -68,12 +72,7 @@ const BLANK_FILE = [
          // TODO invalidate calc tree for cells that were redefined
          // TODO reset changed variables at end?
     "};",
-    "", 
-    "// Cell props: v = value or formula (fn), l = grid coordinates,",
-    "// f = format fn, s = transpose?, t = is table?, n = show name?",
     "/* END Mesh boilerplate */",
-    "",
-    "var _CELLS = {};",
 ].join(LINE_SEPARATOR);
 
 module.exports = {
