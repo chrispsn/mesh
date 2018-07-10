@@ -79,5 +79,12 @@ describe('rewrite_input', () => {
         expect(actual_output).toBe(expected_output);
     });
 
+    it('correctly handles strings that contain numbers', () => {
+        const input_string = "IE11";
+        const expected_output = '"IE11"';
+        const actual_output = rewrite_input(input_string);
+        expect(actual_output).toBe(expected_output);
+    })
+
     // TODO keep Dates as dates
 });

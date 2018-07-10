@@ -54,10 +54,10 @@ const rewrite_rules = [
     { pattern: /false/, rewrite: "$&" },
     
     // Numbers
-    { pattern: /(-?[0-9]+\.?[0-9]*)%$/, rewrite: function(match, number) {
+    { pattern: /^(-?[0-9]+\.?[0-9]*)%$/, rewrite: function(match, number) {
         return (parseFloat(number) / 100).toString();
     } },
-    { pattern: /-?[0-9]+\.?[0-9]*$/, rewrite: "$&" },
+    { pattern: /^-?[0-9]+\.?[0-9]*$/, rewrite: "$&" },
 
 
     // Strings
