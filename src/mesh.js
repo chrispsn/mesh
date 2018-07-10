@@ -9,7 +9,7 @@ require('codemirror/mode/javascript/javascript');
 
 const Events = require('./events');
 const Reducers = require('./reducers');
-const {LINE_SEPARATOR} = require('./settings');
+const LINE_SEPARATOR = require('./settings').LINE_SEPARATOR;
 const Selectors = require('./selectors');
 const generate_cells = require('./generate_cells');
 const CT = require('./code_transformers');
@@ -90,7 +90,7 @@ Events.bind_load_file_events(store, HTML_elements.filepicker);
 
 function createWebWorkerFromText(text) {
     // https://stackoverflow.com/a/10372280/996380
-    var blob;
+    let blob;
     try {
         blob = new Blob([text], {type: 'application/javascript'});
     } catch (e) { // Backwards-compatibility
@@ -98,7 +98,13 @@ function createWebWorkerFromText(text) {
         blob.append(response);
         blob = blob.getBlob();
     }
-    return new Worker(URL.createObjectURL(blob));
+    try {
+        return new Worker(URL.createObjectURL(blob));
+    } catch (e) {
+        const worker = new Worker('Worker-helper.js');
+        worker.postMessage(text);
+        return worker;
+    }
 };
 
 store.subscribe( function calculate () {
@@ -117,7 +123,8 @@ store.subscribe( function calculate () {
         let cellsNodePath = CT.getCellsNodePath(AST);
         let cells = generate_cells(results, cellsNodePath);
         const new_cells = {};
-        for (let cell of cells) {
+        for (let k in cells) {
+            const cell = cells[k];
             const cell_id = JSON.stringify(cell.location);
             new_cells[cell_id] = cell;
         };

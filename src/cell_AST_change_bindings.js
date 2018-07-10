@@ -1,6 +1,6 @@
 const CT = require('./code_transformers');
-const {rewrite_input} = require('./data_entry');
-const {get_selected_cell} = require('./selectors');
+const rewrite_input = require('./data_entry').rewrite_input;
+const get_selected_cell = require('./selectors').get_selected_cell;
 
 // This is only needed for the abomination known as checking behaviour below - 
 // either make the testing code in code_transformers.test.js part of the main file,
@@ -13,7 +13,7 @@ function transform_formula_bar_input(raw_input, isTable) {
         // TODO maybe do a check here to see if it *really* needs to be a formula? ie just a literal
         // Could do via AST transform, just quickly
         const remainder = raw_input.slice(1);
-        const nodepath_type = (() => {
+        const nodepath_type = (function() {
             let nodepath;
             const AST = CT.parse_code_string_to_AST(remainder) 
             Recast.visit(AST, {
@@ -71,9 +71,9 @@ const EMPTY = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
         CT.insert_object_item(meshCellsNode,
-            `"${action.commit_value}"`,
-            `{v: null, l: [${state.selected_cell_loc}]}`,
-        )
+            "\"" + action.commit_value + "\"",
+            "{v: null, l: [" + state.selected_cell_loc + "]}"
+        );
         return action.offset;
     },
     DELETE_ELEMENT: function (meshCellsNode, state, action) {
@@ -90,7 +90,8 @@ const KEY = {
 const ARRAY_LITERAL_DATA_CELL = {
     __proto__: DEFAULT,
     COMMIT_FORMULA_BAR_EDIT: function(meshCellsNode, state, action) {
-        const {key, index} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const index = get_selected_cell(state).AST_props.index;
         const array_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         const inserted_code = transform_formula_bar_input(action.commit_value);
@@ -98,14 +99,16 @@ const ARRAY_LITERAL_DATA_CELL = {
         return action.offset;
     },
     INSERT_ELEMENT: function(meshCellsNode, state, action) {
-        const {key, index} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const index = get_selected_cell(state).AST_props.index;
         const array_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.insert_array_element(array_nodepath, index, "null");
         return action.offset;
     },
     DELETE_ELEMENT: function(meshCellsNode, state, action) {
-        const {key, index} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const index = get_selected_cell(state).AST_props.index;
         const array_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.remove_array_element(array_nodepath, index);
@@ -115,17 +118,19 @@ const ARRAY_LITERAL_DATA_CELL = {
 
 const ARRAY_LITERAL_APPEND_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
+    COMMIT_FORMULA_BAR_EDIT: function(meshCellsNode, state, action) {
         // TODO allow for formula cells
-        const {key, index} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const index = get_selected_cell(state).AST_props.index;
         const array_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         const inserted_code = transform_formula_bar_input(action.commit_value);
         CT.append_array_element(array_nodepath, inserted_code);
         return action.offset;
     },
-    INSERT_ELEMENT: (meshCellsNode, state, action) => {
-        const {key, index} = get_selected_cell(state).AST_props;
+    INSERT_ELEMENT: function(meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const index = get_selected_cell(state).AST_props.index;
         const array_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.insert_array_element(array_nodepath, index, "null");
@@ -133,7 +138,7 @@ const ARRAY_LITERAL_APPEND_CELL = {
     },
     // TODO fix below
     DELETE_CONTAINER: function (meshCellsNode, state) {
-        const {key} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
         const nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.delete_container(nodepath);
@@ -143,8 +148,9 @@ const ARRAY_LITERAL_APPEND_CELL = {
 
 const OBJECT_LITERAL_KEY_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
-        const {key, item_key} = get_selected_cell(state).AST_props;
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const item_key = get_selected_cell(state).AST_props.item_key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         const obj_item_nodepath = CT.get_object_item(obj_nodepath, item_key);
@@ -153,15 +159,17 @@ const OBJECT_LITERAL_KEY_CELL = {
         CT.replace_object_item_key(obj_item_nodepath, inserted_code);
         return action.offset;
     },
-    INSERT_ELEMENT: (meshCellsNode, state, action) => {
-        const {key} = get_selected_cell(state).AST_props;
+    INSERT_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const item_key = get_selected_cell(state).AST_props.item_key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.insert_object_getter(obj_nodepath, "new_key", "null");
         return action.offset;
     },
-    DELETE_ELEMENT: (meshCellsNode, state, action) => {
-        const {key, item_key} = get_selected_cell(state).AST_props;
+    DELETE_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const item_key = get_selected_cell(state).AST_props.item_key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.remove_object_item(obj_nodepath, item_key);
@@ -176,9 +184,10 @@ test 'insert element" and also 'insert element on record append cell'
 const OBJECT_LITERAL_VALUE_CELL = {
     __proto__: DEFAULT,
     // TODO maintain item order in code
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
         // Should be able to merge with the code for commits to the module object
-        const {key, item_key} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const item_key = get_selected_cell(state).AST_props.item_key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         const obj_prop_node = CT.get_object_item(obj_nodepath, item_key);
@@ -186,15 +195,16 @@ const OBJECT_LITERAL_VALUE_CELL = {
         CT.replace_object_getter_return_val(obj_prop_node, inserted_code);
         return action.offset;
     },
-    INSERT_ELEMENT: (meshCellsNode, state, action) => {
-        const {key} = get_selected_cell(state).AST_props;
+    INSERT_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.insert_object_getter(obj_nodepath, "new_key", "null");
         return action.offset;
     },
-    DELETE_ELEMENT: (meshCellsNode, state, action) => {
-        const {key, item_key} = get_selected_cell(state).AST_props;
+    DELETE_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const item_key = get_selected_cell(state).AST_props.item_key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.remove_object_item(obj_nodepath, item_key);
@@ -204,16 +214,16 @@ const OBJECT_LITERAL_VALUE_CELL = {
 
 const OBJECT_LITERAL_APPEND_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
-        const {key} = get_selected_cell(state).AST_props;
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         const inserted_code = action.commit_value;
         CT.insert_object_getter(obj_nodepath, inserted_code, "null");
         return action.offset;
     },
-    INSERT_ELEMENT: (meshCellsNode, state, action) => {
-        const {key} = get_selected_cell(state).AST_props;
+    INSERT_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
         const obj_nodepath = CT.get_mesh_data_value_nodepath(
                                 CT.AOA_get_record_given_key(meshCellsNode, 0, key));
         CT.insert_object_getter(obj_nodepath, "new_key", "null");
@@ -223,19 +233,21 @@ const OBJECT_LITERAL_APPEND_CELL = {
 
 const TABLE_RW_HEADING_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
         // TODO complete
         return action.offset;
     },
-    INSERT_ELEMENT: (meshCellsNode, state, action) => {
-        const {key, colIndex} = get_selected_cell(state).AST_props;
+    INSERT_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const colIndex = get_selected_cell(state).AST_props.colIndex;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_AddColumn(table_nodepath, action.commit_value, colIndex);
         return action.offset;
     },
-    DELETE_ELEMENT: function(meshCellsNode, state, action) {
-        const {key, heading} = get_selected_cell(state).AST_props;
+    DELETE_ELEMENT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const heading = get_selected_cell(state).AST_props.heading;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_DeleteColumn(table_nodepath, heading);
@@ -245,22 +257,24 @@ const TABLE_RW_HEADING_CELL = {
 
 const TABLE_RW_ADD_COLUMN_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
-        const {key} = get_selected_cell(state).AST_props;
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_AddColumn(table_nodepath, action.commit_value);
         return action.offset;
     },
     // TODO
-    // INSERT_ELEMENT: (meshCellsNode, state, action) => {
+    // INSERT_ELEMENT: function (meshCellsNode, state, action) {
 
 };
 
 const TABLE_RW_VALUE_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
-        const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const colHeading = get_selected_cell(state).AST_props.colHeading;
+        const rowIndex = get_selected_cell(state).AST_props.rowIndex;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         const inserted_code = transform_formula_bar_input(action.commit_value, true);
@@ -268,27 +282,33 @@ const TABLE_RW_VALUE_CELL = {
         return action.offset;
     },
     DELETE_VALUE: function(meshCellsNode, state, action) {
-        const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const colHeading = get_selected_cell(state).AST_props.colHeading;
+        const rowIndex = get_selected_cell(state).AST_props.rowIndex;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, "undefined");
         return action.offset;
     },
     DELETE_ELEMENT: function(meshCellsNode, state, action) {
-        const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
+        const key = get_selected_cell(state).AST_props.key;
+        const colHeading = get_selected_cell(state).AST_props.colHeading;
+        const rowIndex = get_selected_cell(state).AST_props.rowIndex;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         CT.Table_DeleteRow(table_nodepath, rowIndex);
         return [0, 0];
     },
     // TODO
-    // INSERT_ELEMENT: (meshCellsNode, state, action) => {
+    // INSERT_ELEMENT: function (meshCellsNode, state, action) {
 };
 
 const TABLE_RW_APPEND_CELL = {
     __proto__: DEFAULT,
-    COMMIT_FORMULA_BAR_EDIT: (meshCellsNode, state, action) => {
-        const {key, colHeading, rowIndex} = get_selected_cell(state).AST_props;
+    COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+        const key = get_selected_cell(state).AST_props.key;
+        const colHeading = get_selected_cell(state).AST_props.colHeading;
+        const rowIndex = get_selected_cell(state).AST_props.rowIndex;
         const fnCallNodepath = CT.getCellNodePath(meshCellsNode, key).value;
         const table_nodepath = CT.FunctionCall_GetArgument(fnCallNodepath, 0);
         const inserted_code = transform_formula_bar_input(action.commit_value, true);
@@ -298,16 +318,16 @@ const TABLE_RW_APPEND_CELL = {
 };
 
 module.exports = {
-    DEFAULT,
-    EMPTY,
-    KEY,
-    ARRAY_LITERAL_DATA_CELL,
-    ARRAY_LITERAL_APPEND_CELL,
-    OBJECT_LITERAL_KEY_CELL,
-    OBJECT_LITERAL_VALUE_CELL,
-    OBJECT_LITERAL_APPEND_CELL,
-    TABLE_RW_HEADING_CELL,
-    TABLE_RW_ADD_COLUMN_CELL,
-    TABLE_RW_VALUE_CELL,
-    TABLE_RW_APPEND_CELL,
+    DEFAULT: DEFAULT,
+    EMPTY: EMPTY,
+    KEY: KEY,
+    ARRAY_LITERAL_DATA_CELL: ARRAY_LITERAL_DATA_CELL,
+    ARRAY_LITERAL_APPEND_CELL: ARRAY_LITERAL_APPEND_CELL,
+    OBJECT_LITERAL_KEY_CELL: OBJECT_LITERAL_KEY_CELL,
+    OBJECT_LITERAL_VALUE_CELL: OBJECT_LITERAL_VALUE_CELL,
+    OBJECT_LITERAL_APPEND_CELL: OBJECT_LITERAL_APPEND_CELL,
+    TABLE_RW_HEADING_CELL: TABLE_RW_HEADING_CELL,
+    TABLE_RW_ADD_COLUMN_CELL: TABLE_RW_ADD_COLUMN_CELL,
+    TABLE_RW_VALUE_CELL: TABLE_RW_VALUE_CELL,
+    TABLE_RW_APPEND_CELL: TABLE_RW_APPEND_CELL
 };

@@ -12,8 +12,8 @@
 const Recast = require('recast');
 const B = Recast.types.builders;
 
-const {LINE_SEPARATOR} = require('./settings');
-const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR }
+const LINE_SEPARATOR = require('./settings').LINE_SEPARATOR;
+const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR };
 
 function makeUniqueID(existing_IDs, len) {
     // See also https://github.com/benjamn/private/blob/master/private.js#L49
@@ -258,7 +258,8 @@ function Table_AddColumn(tablePath, heading, colIndex) {
     // TODO should this not have heading as a parameter, and auto-generate it to be unique?
     const lengths = [], headings = new Set();
     const columnPaths = Table_GetColumnNodePaths(tablePath);
-    for (let [heading, colPath] of Object.entries(columnPaths)) {
+    for (let heading in columnPaths) {
+        const colPath = columnPaths[heading];
         headings.add(heading);
         const valuesPath = get_object_item(colPath, "values");
         let valuesNode = valuesPath.get("value").node;
@@ -266,7 +267,8 @@ function Table_AddColumn(tablePath, heading, colIndex) {
             lengths.push(valuesNode.elements.length);
         };
     };
-    const length = (lengths.length > 0) ? Math.max(...lengths) : 0;
+    const MAX = function(a, b) {return Math.max(a, b);}
+    const length = (lengths.length > 0) ? lengths.reduce(MAX, 0) : 0;
     const valuesProp = B.property('init', 
                         B.literal('values'),
     // TODO should it fill with holes instead?
@@ -299,7 +301,8 @@ function Table_DeleteColumn(tablePath, heading) {
 
 function Table_AddRow(tablePath, affectedColHeading, index, newValue) {
     const columnPaths = Table_GetColumnNodePaths(tablePath);
-    for (let [h, colPath] of Object.entries(columnPaths)) {
+    for (let h in columnPaths) {
+        const colPath = columnPaths[h];
         const valuesPath = get_object_item(colPath, "values");
         let valuesNode = valuesPath.get("value").node;
         if (valuesNode.type === "ArrayExpression") {
@@ -314,7 +317,8 @@ function Table_AddRow(tablePath, affectedColHeading, index, newValue) {
 
 function Table_DeleteRow(tablePath, index) {
     const columnPaths = Table_GetColumnNodePaths(tablePath);
-    for (let [h, colPath] of Object.entries(columnPaths)) {
+    for (let h in columnPaths) {
+        const colPath = columnPaths[h];
         const valuesPath = get_object_item(colPath, "values");
         let valuesNode = valuesPath.get("value").node;
         if (valuesNode.type === "ArrayExpression") {
@@ -337,37 +341,37 @@ function FunctionCall_GetArgument(functionCallNodePath, argIndex) {
 
 module.exports = {
 
-    makeUniqueID,
+    makeUniqueID: makeUniqueID,
 
-    get_object_key_from_node,
-    parse_code_string_to_AST,
-    print_AST_to_code_string,
-    getCellsNodePath,
-    getCellNodePath,
-    delete_container,
+    get_object_key_from_node: get_object_key_from_node,
+    parse_code_string_to_AST: parse_code_string_to_AST,
+    print_AST_to_code_string: print_AST_to_code_string,
+    getCellsNodePath: getCellsNodePath,
+    getCellNodePath: getCellNodePath,
+    delete_container: delete_container,
 
-    insert_array_element,
-    append_array_element,
-    replace_array_element,
-    remove_array_element,
+    insert_array_element: insert_array_element,
+    append_array_element: append_array_element,
+    replace_array_element: replace_array_element,
+    remove_array_element: remove_array_element,
 
-    get_object_item,
-    get_object_item_index,
-    replace_object_item_key,
-    replace_object_item_value,
-    insert_object_item,
-    insert_object_getter,
-    replace_object_getter_return_val,
-    remove_object_item,
+    get_object_item: get_object_item,
+    get_object_item_index: get_object_item_index,
+    replace_object_item_key: replace_object_item_key,
+    replace_object_item_value: replace_object_item_value,
+    insert_object_item: insert_object_item,
+    insert_object_getter: insert_object_getter,
+    replace_object_getter_return_val: replace_object_getter_return_val,
+    remove_object_item: remove_object_item,
 
-    Table_Create,
-    Table_ChangeValueCell,
-    Table_ResizeArray,
-    Table_AddColumn,
-    Table_DeleteColumn,
-    Table_AddRow,
-    Table_DeleteRow,
+    Table_Create: Table_Create,
+    Table_ChangeValueCell: Table_ChangeValueCell,
+    Table_ResizeArray: Table_ResizeArray,
+    Table_AddColumn: Table_AddColumn,
+    Table_DeleteColumn: Table_DeleteColumn,
+    Table_AddRow: Table_AddRow,
+    Table_DeleteRow: Table_DeleteRow,
 
-    FunctionCall_GetArgument,
+    FunctionCall_GetArgument: FunctionCall_GetArgument,
 
 };

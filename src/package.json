@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "codemirror": "^5.0.0",
+    "create-react-class": "^15.6.3",
     "electron-config": "^0.2.1",
     "electron-debug": "^1.0.0",
     "react": "16.2.0",

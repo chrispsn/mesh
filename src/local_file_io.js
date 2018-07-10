@@ -12,20 +12,19 @@ const FS = require('fs');
 const io_available = !(Object.keys(FS).length === 0);
 
 if (io_available) {
-    const Electron = require('electron').remote
-    const get_saveas_filepath = () => Electron.dialog.showSaveDialog();
+    const Electron = require('electron').remote;
     const Path = require('path');
     module.exports = {
         io_available: io_available,
         readFileSync: FS.readFileSync,
         writeFile: FS.writeFileSync,
-        get_saveas_filepath: get_saveas_filepath,
+        get_saveas_filepath: Electron.dialog.showSaveDialog,
         // TODO don't seem to use the following function - remove?
         get_basename_from_path: Path.basename,
     }
 } else {
     console.log("NO IO AVAILABLE");
     module.exports = {
-        io_available,
+        io_available: io_available,
     }
 }

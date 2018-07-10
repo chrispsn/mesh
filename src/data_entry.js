@@ -59,18 +59,17 @@ const rewrite_rules = [
     } },
     { pattern: /^-?[0-9]+\.?[0-9]*$/, rewrite: "$&" },
 
-
-    // Strings
-    { pattern: /^[\D]+/, rewrite: "\"$&\"" },
-]
+];
 
 function rewrite_input(input_string) {
-    for (let rule of rewrite_rules) {
-        if (rule.pattern.test(input_string)) {
-            return input_string.replace(rule.pattern, rule.rewrite);
+    let matched_value, stop;
+    rewrite_rules.forEach(function(rule) {
+        if (!stop && rule.pattern.test(input_string)) {
+            matched_value = input_string.replace(rule.pattern, rule.rewrite);
+            stop = true;
         }
-    }
-    return input_string;
+    });
+    return (matched_value !== undefined) ? matched_value : ("\"" + input_string + "\"");
 }
 
-module.exports = { rewrite_input };
+module.exports = { rewrite_input: rewrite_input };

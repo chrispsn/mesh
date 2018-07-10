@@ -1,13 +1,14 @@
 'use strict';
 
-const {EMPTY_CELL} = require('./display');
+const EMPTY_CELL = require('./display').EMPTY_CELL;
+const assign = require('./settings').assign;
 
 function get_cell(cells, cell_location) {
     const cell_id = JSON.stringify(cell_location);
-    if (cells.hasOwnProperty(cell_id)) {
+    if (cell_id in cells) {
         return cells[cell_id];
     } else {
-        return Object.assign({}, EMPTY_CELL, {location: cell_location});
+        return assign({}, EMPTY_CELL, {location: cell_location});
     }
 }
 
@@ -16,6 +17,6 @@ function get_selected_cell(state) {
 }
 
 module.exports = {
-    get_cell,
-    get_selected_cell,
+    get_cell: get_cell,
+    get_selected_cell: get_selected_cell
 }

@@ -4,7 +4,7 @@
 // https://github.com/benjamn/ast-types/blob/master/def/core.js
 // https://github.com/benjamn/ast-types/blob/master/def/es6.js
 
-const ALL = Symbol();
+const ALL = "ALL";
 
 const triage_table = [
 
@@ -62,7 +62,7 @@ const triage_table = [
     {nodetype: 'MemberExpression', prototype: ALL, typeof: ALL, fn: "value"},
     {nodetype: 'CallExpression', prototype: ALL, typeof: ALL, fn: "value"},
 
-    newexpr_triage: (value, value_nodepath, id) => {
+    function newexpr_triage (value, value_nodepath, id) {
         const new_callee_= { 'Map': map, }
         const callee_name = value_nodepath.callee.name;
         let display_fn = value_ro; 
@@ -75,15 +75,19 @@ const triage_table = [
 ];
 
 function triage(nodetype, value, isTable) {
-    for (let row of triage_table) {
-        if (
-            ((row.nodetype === ALL) || (nodetype === row.nodetype))
+    let stop, return_value;
+    triage_table.forEach(function(row) {
+        if (!stop
+            && ((row.nodetype === ALL) || (nodetype === row.nodetype))
             && ((row.prototype === ALL) || (row.prototype.isPrototypeOf(value)))
             && ((row.typeof === ALL) || (typeof value === row.typeof))
             && ((row.isTable === isTable) || (row.isTable === undefined))
-        ) {return row.fn;}
-    }
-    return "value";
+        ) {
+            stop = true;
+            return_value = row.fn;
+        }
+    });
+    return return_value !== undefined ? return_value : "value";
 };
 
-module.exports = { triage };
+module.exports = { triage: triage };
