@@ -106,6 +106,7 @@ body {
 
 .CodeMirror {
     height: 100%;
+    font-family: Consolas, monospace;
 }
 
 .CodeMirror-scroll {
@@ -121,11 +122,14 @@ body {
 }
 
 #status-bar > dl {
-  -webkit-margin-before: 0px;
-  -webkit-margin-after: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    -webkit-margin-before: 0px;
+    -webkit-margin-after: 0px;
 }
 
 #status-bar > dl > dd {
     -webkit-margin-start: 0px;
+    margin-left: 0px;
     display: inline;
 }
