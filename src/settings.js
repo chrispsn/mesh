@@ -10,6 +10,10 @@ const LINE_SEPARATOR = require('os').EOL; // Was '\n' before
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
 Array.from||(Array.from=function(){var r=Object.prototype.toString,t=function(t){return"function"==typeof t||"[object Function]"===r.call(t)},n=Math.pow(2,53)-1,e=function(r){var t,e=(t=Number(r),isNaN(t)?0:0!==t&&isFinite(t)?(t>0?1:-1)*Math.floor(Math.abs(t)):t);return Math.min(Math.max(e,0),n)};return function(r){var n=Object(r);if(null==r)throw new TypeError("Array.from requires an array-like object - not null or undefined");var o,a=arguments.length>1?arguments[1]:void 0;if(void 0!==a){if(!t(a))throw new TypeError("Array.from: when provided, the second argument must be a function");arguments.length>2&&(o=arguments[2])}for(var i,u=e(n.length),f=t(this)?Object(new this(u)):new Array(u),c=0;c<u;)i=n[c],f[c]=a?void 0===o?a(i,c):a.call(o,i,c):i,c+=1;return f.length=u,f}}());
 
+// ARRAY.FILL. Minified version of polyfill from here:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill
+Array.prototype.fill||Object.defineProperty(Array.prototype,'fill',{value:function(a){if(null==this)throw new TypeError('this is null or not defined');for(var b=Object(this),c=b.length>>>0,d=arguments[1],e=d>>0,f=0>e?Math.max(c+e,0):Math.min(e,c),g=arguments[2],h=void 0===g?c:g>>0,i=0>h?Math.max(c+h,0):Math.min(h,c);f<i;)b[f]=a,f++;return b}});
+
 const BLANK_FILE = [
     "const _CELLS = {};",
     "",
@@ -80,4 +84,5 @@ module.exports = {
     BLANK_FILE: BLANK_FILE,
     assign: Object.assign,
     createArray: Array.from,
+    fill: Array.prototype.fill
 }

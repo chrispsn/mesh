@@ -15,6 +15,8 @@ const B = Recast.types.builders;
 const LINE_SEPARATOR = require('./settings').LINE_SEPARATOR;
 const RECAST_SETTINGS = { lineTerminator: LINE_SEPARATOR };
 
+const fill = require('./settings').fill;
+
 function makeUniqueID(existing_IDs, len) {
     // See also https://github.com/benjamn/private/blob/master/private.js#L49
     do {var new_ID = Math.random().toString(36).substr(2, len)}
@@ -275,7 +277,7 @@ function Table_AddColumn(tablePath, heading, colIndex) {
     // TODO should the default value be a function that returns null or undefined?
     // That way we have a simpler template to work with for the UI
     // (or else we exclude the prop entirely), but may dirty up the source
-                        B.arrayExpression((new Array(length)).fill(B.identifier('undefined')))
+                        B.arrayExpression(fill.call(new Array(length), B.identifier('undefined')))
     );
     const defaultProp = B.property('init', B.literal('default'), B.literal(null));
     const newObject = B.objectExpression([defaultProp, valuesProp]);
