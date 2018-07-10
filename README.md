@@ -110,15 +110,6 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
 
-## Possible enhancements
-
-- Allow the user to add buttons so they can run functions in the file outside the 'automatic' calculation loop (such as exporting the result of a calculation)
-- Currently we don't distinguish between 'value' and 'formula' cells (that is, prepended wth a `=`). This makes entering strings harder and is less familiar to existing spreadsheet users. Maybe reintroduce? 
-- Windows-native JScript version (so if people can get the JS files onto their machine, they can run Mesh locally)
-- Cloud version
-- Custom themes
-- Optionally use TypeScript or ClojureScript as formula languages.
-
 ## I want to contribute!
 
 Awesome! Please check out the [contributions guide](CONTRIBUTING.md). The codebase is pretty rough right now, so feel free to get in touch via Twitter too.
