@@ -55,6 +55,12 @@ const grid_keydown_events = [
     {mode: 'READY', keypattern: /^ArrowDown$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [1, 0] }}},
     {mode: 'READY', keypattern: /^ArrowRight$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, 1] }}},
 
+    // IE11 https://github.com/vuejs/vue/commit/4378fc5124067c2b3a3517dd7f527edd9be2ad37#diff-cd513113ac480c30cffa092f5fe266ed
+    {mode: 'READY', keypattern: /^Left$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, -1] }}},
+    {mode: 'READY', keypattern: /^Up$/,  action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [-1, 0] }}},
+    {mode: 'READY', keypattern: /^Down$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [1, 0] }}},
+    {mode: 'READY', keypattern: /^Right$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, 1] }}},
+
     {mode: 'READY', keypattern: /^Tab$/, modifiers: function(e) {return !e.shiftKey}, preventDefault: true, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, 1] }}},
     {mode: 'READY', keypattern: /^Tab$/, modifiers: function(e) {return e.shiftKey}, preventDefault: true, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, -1] }}},
 
