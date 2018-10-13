@@ -9,7 +9,10 @@ twitter
 src/dist_electron
 src/dist_web
 src/temp_cut_examples
+src/merge
+src/recast
 get_line_count.ps1
 line_count.bat
 STUFF TO PUT IN TEST FILE.txt
 news.txt
+temp_removed_examples

@@ -1,33 +1,617 @@
 <!DOCTYPE html>
 <html>
 
-    <head>
-      <meta charset="UTF-8" />
-      <title>Mesh</title>
-      <link href="node_modules/codemirror/lib/codemirror.css" rel="stylesheet" type="text/css"></link>
-      <link href="app.css" rel="stylesheet" type="text/css"></link>
-      <link id="theme-mesh" href="" rel="stylesheet" type="text/css"></link>
-      <link id="theme-codemirror" href="" rel="stylesheet" type="text/css"></link>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mesh</title>
 
-    </head>
+    <script src="dependencies/codemirror.js"></script>
+    <script src="dependencies/codemirror_extras/active-line.js"></script>
+    <script src="dependencies/codemirror_extras/javascript.js"></script>
+    <link href="dependencies/codemirror.css" rel="stylesheet" type="text/css">
 
-    <body>
-    
-      <!-- http://stackoverflow.com/a/14806718 -->
-      <!-- https://www.html5rocks.com/en/tutorials/file/dndfiles/ -->
-      <input type='file' id='open-file-manager' style="display: none;" />
+    <!--
+      https://unpkg.com/react@16.0.0/umd/react.production.min.js
+      https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js
+      https://unpkg.com/create-react-class@15.6.2/create-react-class.min.js
+    -->
+    <script src="dependencies/react.production.min.js"></script>
+    <script src="dependencies/react-dom.production.min.js"></script>
+    <script src="dependencies/create-react-class.min.js"></script>
 
-      <div id="row-container">
-        <div id="spreadsheet">
-          <textarea id="formula-bar"></textarea>
-          <div id="grid-container"></div>
-        </div>
-		<div id="code-editor"></div>
+    <link href="app.css" rel="stylesheet" type="text/css">
+
+    <!-- Hooks used by JS to load themes -->
+    <link id="theme-mesh" href="" rel="stylesheet" type="text/css">
+    <link id="theme-codemirror" href="" rel="stylesheet" type="text/css">
+
+  </head>
+
+  <body>
+  
+    <!-- http://stackoverflow.com/a/14806718 -->
+    <!-- https://www.html5rocks.com/en/tutorials/file/dndfiles/ -->
+    <input type='file' id='open-file-manager' style="display: none;" />
+
+    <div id="row-container">
+      <div id="spreadsheet">
+        <textarea id="formula-bar"></textarea>
+        <div id="grid-container"></div>
       </div>
-      <div id="status-bar"></div>
+      <div id="code-editor" style="display: none"></div>
+    </div>
+    <div id="status-bar"></div>
 
-    <script src="dist_electron/bundle.js"></script>
-    <script src="dist_web/bundle.js"></script>
-    </body>
+    <iframe id="app" name="app" style="display: none;"></iframe>
+    <iframe id="sheet" name="sheet" style="display: none;"></iframe>
+
+<script>
+
+'use strict';
+
+/* REACT */
+
+const EMPTY_CELL = { // TODO get this from the worker eventually
+    repr: '', 
+    ref_string: null, 
+    formula_bar_value: '',
+    classes: '', 
+    cell_AST_changes_type: 'EMPTY',
+}
+const assign = Object.assign; // TODO eventually polyfill
+
+const Cell = createReactClass({
+
+    componentDidMount: function() {
+        this.ensureVisible();
+    },
+
+    componentDidUpdate: function() {
+        this.ensureVisible();
+    },
+
+    ensureVisible: function() {
+        if (this.props.selected) {
+            // http://stackoverflow.com/a/30497101
+            // https://facebook.github.io/react/docs/react-dom.html#finddomnode
+            ReactDOM.findDOMNode(this).scrollIntoView(false);
+        }
+    },
+
+    render: function() {
+        let props = this.props;
+        props = {
+            className: ((props.classes.length === 0 ? 'empty' : props.classes) 
+                        + (props.selected ? ' selected' : '')),
+            id: props.id,
+        }
+        return React.createElement("td", props, this.props.repr);
+    }
+
+});
+
+const Grid = createReactClass({
+    
+    render: function() {
+                
+        const cells_obj = this.props.cells;
+        const selected_idxs = this.props.selected_cell_loc;
+        console.log("Grid's cells_obj:", cells_obj);
+        const cells_array = Object.keys(cells_obj).reduce(function(arr, key) {arr.push(cells_obj[key]); return arr}, []) || [];
+        
+        const MAX = function(agg, curr) {return Math.max(agg, curr)};
+        const max_cell_row_idx = cells_array
+                                    .map(function(c) {return c.location[0]})
+                                    .reduce(MAX, 0);
+        const max_cell_col_idx = cells_array
+                                    .map(function(c) {return c.location[1]})
+                                    .reduce(MAX, 0);
+
+        const max_row_idx = Math.max(10, selected_idxs[0], max_cell_row_idx + 1);
+        const max_col_idx = Math.max(10, selected_idxs[1], max_cell_col_idx + 1);
+        
+        const rows = [];
+        for (let row_idx = 0; row_idx <= max_row_idx; row_idx++) {
+            let row_cells = [];
+            for (let col_idx = 0; col_idx <= max_col_idx; col_idx++) {
+                const id = JSON.stringify([row_idx, col_idx]);
+                const cell = cells_obj[id] ? cells_obj[id] : EMPTY_CELL;
+                row_cells.push(React.createElement(
+                    Cell, 
+                    assign({}, cell, {
+                        key: id + '|' + cell.repr, 
+                        id: id,
+                        // TODO Seems a pain to do this for every cell instead of
+                        // just the selected one
+                        selected: (row_idx === selected_idxs[0] && col_idx === selected_idxs[1])
+                    })
+                ))
+            };
+            rows.push(React.createElement('tr', {key: row_idx.toString()}, row_cells));
+        }
+
+        const TBody = React.createElement("tbody", null, rows)
+        // tabindex="0" allows the grid to be focused: http://stackoverflow.com/a/3149416
+        return React.createElement("table", {id: 'grid', tabIndex: 0}, TBody);
+
+    }
+    
+});
+
+const StatusBar = function(props) {
+    const current_mode = React.createElement('dd', {}, props.mode);
+    const separator = React.createElement('dd', {}, " | ");
+    const current_file = React.createElement('dd', {}, props.filepath || 'No file loaded');
+    const mesh_link = React.createElement('a', { href: "http://mesh-spreadsheet.com", target: "_blank" }, "Mesh website");
+    const github_link = React.createElement('a', { href: "https://github.com/chrispsn/mesh/", target: "_blank" }, "GitHub");
+    const twitter_link = React.createElement('a', { href: "https://twitter.com/MeshSpreadsheet", target: "_blank" }, "Twitter");
+    const change_theme = React.createElement('a', {id: "theme_changer", href: "#"}, "Change theme")
+    const toggle_code_pane = React.createElement('a', {id: "code_pane_toggler", href: "#"}, "Toggle code pane")
+    return React.createElement('dl', {}, 
+        current_mode, separator, 
+        current_file, separator,
+        mesh_link, separator,
+        github_link, separator,
+        twitter_link, separator,
+        change_theme, separator,
+        toggle_code_pane
+    );
+};
+
+/* HTML ELEMENTS */
+
+// Need to render now to make React create the grid and status bar
+// so we can get references to them
+const grid_container = document.getElementById('grid-container');
+const dummy_grid = {selected_cell_loc: [1, 1], cells: []};
+ReactDOM.render(
+    React.createElement(Grid, dummy_grid),
+    grid_container
+);
+const status_bar = document.getElementById('status-bar');
+const dummy_status_bar = {mode: "LOADING", filepath: "SOMEBODY ONCE TOL"}
+ReactDOM.render(
+    React.createElement(StatusBar, dummy_status_bar),
+    status_bar
+);
+const HTML_elements = {
+    grid_container: grid_container,
+    status_bar: status_bar,
+    formula_bar: document.getElementById('formula-bar'),
+    grid: document.getElementById('grid'),
+    code_editor: document.getElementById('code-editor'),
+    filepicker: document.getElementById('open-file-manager'),
+    mesh_theme_css_hook: document.getElementById("theme-mesh"),
+    codemirror_theme_css_hook: document.getElementById("theme-codemirror"),
+    code_pane_toggler: document.getElementById("code_pane_toggler"),
+    theme_change_button: document.getElementById("theme_changer")
+}
+
+/* CODEMIRROR */
+
+const LINE_SEPARATOR = "\n"; // require('./settings').LINE_SEPARATOR // get from the worker eventually
+const codemirror_settings = {
+    value: '',
+    mode: "javascript",
+    styleActiveLine: true,
+    lineWrapping: true,
+    lineNumbers: true,
+    lineSeparator: LINE_SEPARATOR,
+}
+
+const code_editor = CodeMirror(HTML_elements.code_editor, codemirror_settings);
+
+/* THEMES */
+
+const themes = {
+    light: {css: 'light', codemirror: 'neo'},
+    dark: {css: 'dark', codemirror: 'lesser-dark'},
+}
+
+function assign_theme(chosen_theme) {
+    const mesh_theme_css_path = "themes/" + themes[chosen_theme].css + ".css";
+    const codemirror_theme_css_path = "dependencies/codemirror_extras/" + themes[chosen_theme].codemirror + '.css';
+    HTML_elements.mesh_theme_css_hook.href = mesh_theme_css_path;
+    HTML_elements.codemirror_theme_css_hook.href = codemirror_theme_css_path;
+    code_editor.setOption("theme", themes[chosen_theme].codemirror);
+};
+let current_theme = 'dark';
+assign_theme(current_theme);
+
+HTML_elements.theme_change_button.onclick = function() {
+    current_theme = (current_theme === 'light') ? 'dark' : 'light';
+    assign_theme(current_theme);
+};
+
+HTML_elements.code_pane_toggler.onclick = function() {
+    app_iframe.contentWindow.postMessage({values: {action: {type: 'TOGGLE_CODE_PANE_SHOW'}}}, "*");
+};
+
+/* MESH APP WORKER */
+// (Send in actions; receive the whole store state)
+
+let app_iframe = document.getElementById("app");
+let old_state;
+
+function send_app_action(message_obj) {
+    const action_to_send = (
+        old_state === undefined
+        ? {action: message_obj}
+        : {old_state: old_state, action: message_obj}
+    )
+    console.log("Sending action to app:", action_to_send)
+    app_iframe.contentWindow.postMessage({values: action_to_send}, "*");
+}
+
+let sheet_iframe = document.getElementById("sheet");
+function reset_sheet(new_code) {
+    if (sheet_iframe) sheet_iframe.remove();
+    sheet_iframe = document.createElement("iframe");
+    sheet_iframe.setAttribute("name", "sheet");
+    sheet_iframe.setAttribute("style", "display:none;");
+    document.body.appendChild(sheet_iframe);
+    sheet_iframe.contentDocument.write(
+        '<script>'
+        + new_code
+        + "\n"
+        + "console.log('Calculating...');"
+        + "_defCells(_CELLS); " // TODO add back _extraValues(e.data.values);"
+        + "_calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')"
+        // close() ?
+        + '<\/script>'
+    );
+}
+
+let message_for_app;
+onmessage = function(e) {
+
+    if (e.source === app_iframe.contentWindow) {
+
+        console.log("Parent got message from app!", e);
+
+        old_state = e.data.new_state.v;
+        console.log("App worker state: ", old_state);
+
+        // Run calcs
+        if (old_state.mode === 'CALCULATING') {
+            reset_sheet(old_state.code_editor.value)
+        }
+
+        // Status bar
+        // TODO should it *always* render?
+        ReactDOM.render(React.createElement(StatusBar, old_state), HTML_elements.status_bar);
+
+        // Grid
+        if (old_state.mode === 'READY') {
+            // TODO maybe we should return to having focus tracked in the app state?
+            HTML_elements.grid.focus();
+            ReactDOM.render(React.createElement(Grid, old_state), HTML_elements.grid_container);
+        }
+        
+        // Formula bar
+        if (old_state.mode === 'EDIT') {
+            HTML_elements.formula_bar.focus();
+        } else if (old_state.mode === 'EDIT_REPLACE') {
+            send_app_action({ type: 'EDIT_CELL' }); // TODO don't think it's loaded by the time this gets to it...
+        } else if (old_state.mode === 'READY') {
+            const cell_id = JSON.stringify(old_state.selected_cell_loc);
+            const selected_cell = old_state.cells[cell_id] || Object.assign({}, old_state.empty_cell, {location: old_state.selected_cell_loc});
+            HTML_elements.formula_bar.value = selected_cell.formula_bar_value;
+        }
+
+        // Code editor
+        if (old_state.mode === 'LOAD_CODE_FROM_PANE') {
+            send_app_action({ type: 'LOAD_CODE', code: code_editor.getValue() });
+        } else if (old_state.mode === 'EDITING_CODE') {
+            HTML_elements.code_editor.style.display = 'block';
+        } else {
+            HTML_elements.code_editor.style.display = (old_state.code_editor.show ? 'block' : 'none');
+            code_editor.setValue(old_state.code_editor.value);
+        }
+        // TODO setting this every time is probably slow - consider React-ising
+        // or else doing only when a commit happens or something
+
+    } else {
+        // Receive message (calculations) from sheet and
+        // send cells to app for processing if successful
+        console.log("RECEIVED MESSAGE FROM SHEET:", e.data);
+        message_for_app = {values: {
+            old_state: old_state,
+            results: e.data,
+            action: {type: 'LOAD_CELLS'}
+        }};
+        console.log("Sending results to app...", message_for_app);
+        // Seems to be some weird race condition here
+        // as it works if I send the message manually via console
+        // Maybe message from sheet is sent before app is reset?
+        // Could fix if I stop doing the stupid destroy-and-recreate thing
+        // and instead rely on cache invalidation
+        app_iframe.contentWindow.postMessage(message_for_app, "*");
+    }
+                    
+    /*
+        // TODO consider adding AST check here
+            // SUCCESS
+            // FAILURE
+                // // TODO errors need to be caught *before* the code editor state changes
+                // // FAILURE
+                // alert(e);
+                // // TODO highlight offending code?
+                // console.error(e);
+                // // TODO right now this dumps the user back to the code editing pane,
+                // // but it should depend on where the commit came from (code pane or formula bar)
+                // // maybe this is indicated via the action? Actually - could probs get via undo/redo
+                // // Send mode to some error state
+                // return Object.assign({}, state, {
+                //     mode: 'EDIT',
+                //     selected_cell_loc: state.prev_selected_cell_loc,
+                //     code_editor: Object.assign({}, state.code_editor, {value: state.code_editor.prev_value})
+                // });
+        };
+        // worker.postMessage({action: "full"});
+        // TODO Give option to interrupt worker if it takes too long to calc
+    */
+
+};
+
+app_iframe.contentDocument.write('<script src="./app.js"><\/script>');
+app_iframe.contentDocument.write(
+    '<script>'
+    + "onmessage = function(e) {"
+    + "    console.log('MESSAGE RECEIVED BY', window.name, ':', e.data);"
+    + "    _defCells(_CELLS); _extraValues(e.data.values);"
+    + "    _calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')"
+    // TODO what if we only send the deltas? ie only the props in _OUTPUT that changed?
+    + "}"
+    + '<\/script>'
+            // "    if (e.data.action === 'full') {",
+    // "        var V = e.data.values;",
+    // "        for (var k in V) _CELLSdefCell(k, {v: V[k]});",
+    // Ideally keep calcing first uncalced cell til empty
+    // "    }",
+    // TODO reset changed variables at end?
+);
+// Trigger sending of initial state by app
+app_iframe.contentDocument.write(
+    "<script>_defCells(_CELLS); _calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')<\/script>"
+)
+
+// Events
+
+// https://developer.mozilla.org/en-US/docs/Web/Events
+
+// Key values: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
+// Keydown: https://developer.mozilla.org/en-US/docs/Web/Events/keydown
+// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Exampleselected_cell
+
+// Regex:
+// https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/test
+
+// TODO how to stop a given event running through lots of the events? (see via a console.log)
+// Probably fixed via a carefully placed event.stopPropagation();.
+
+// TODO I think this needs to be merged with local_file_io and maybe local settings too...
+// too many commonalities
+
+// const LocalFileIO = require('./local_file_io');
+
+// # HELPERS
+
+function process_keydown_event (bindings, event) {
+    const mode = old_state.mode;
+    let stop;
+    bindings.forEach(function(binding) {
+        if (!stop 
+            && binding.keypattern.test(event.key)
+            && ((mode === binding.mode) || (binding.mode === 'ALL'))
+            && ((binding.modifiers === undefined) || binding.modifiers(event))
+        ) {
+            if (binding.hasOwnProperty('preventDefault') && binding.preventDefault) {
+                event.preventDefault()
+            }
+            const action = binding.action();
+            if (action.type === "EDIT_CELL_REPLACE") HTML_elements.formula_bar.value = event.key; // TODO something to append if app is still catching up?
+            send_app_action(action);
+            stop = true;
+        }
+    });
+}
+
+
+// # GRID
+
+// predicate:
+// function(row) {
+//     return (row.mode === state.mode && row.keypattern.test(event.key) 
+//            && row.ctrlKey === e.ctrlKey && row.altKey === e.altKey 
+//            && row.shiftKey === e.shiftKey)
+// }
+
+const grid_keydown_events = [
+    // TODO what else should trigger this? + etc?
+    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/=]$/, modifiers: function(e) {return !e.ctrlKey}, action: function() {return { type: 'EDIT_CELL_REPLACE' }}},
+
+    {mode: 'READY', keypattern: /^F2$/, action: function() {return { type: 'EDIT_CELL' }}},
+
+    {mode: 'READY', keypattern: /^ArrowLeft$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, -1] }}},
+    {mode: 'READY', keypattern: /^ArrowUp$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [-1, 0] }}},
+    {mode: 'READY', keypattern: /^ArrowDown$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [1, 0] }}},
+    {mode: 'READY', keypattern: /^ArrowRight$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, 1] }}},
+
+    // IE11 https://github.com/vuejs/vue/commit/4378fc5124067c2b3a3517dd7f527edd9be2ad37#diff-cd513113ac480c30cffa092f5fe266ed
+    {mode: 'READY', keypattern: /^Left$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, -1] }}},
+    {mode: 'READY', keypattern: /^Up$/,  action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [-1, 0] }}},
+    {mode: 'READY', keypattern: /^Down$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [1, 0] }}},
+    {mode: 'READY', keypattern: /^Right$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, 1] }}},
+
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: function(e) {return !e.shiftKey}, preventDefault: true, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, 1] }}},
+    {mode: 'READY', keypattern: /^Tab$/, modifiers: function(e) {return e.shiftKey}, preventDefault: true, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, -1] }}},
+
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: function(e) {return !e.shiftKey}, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [1, 0] }}},
+    {mode: 'READY', keypattern: /^Enter$/, modifiers: function(e) {return e.shiftKey}, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [-1, 0] }}},
+    
+    // TODO If on the name: delete the declaration entirely
+    {mode: 'READY', keypattern: /^Delete$/, action: function() {return { type: 'EDIT_AST', AST_edit_type: 'DELETE_VALUE', offset: [0, 0] }}},
+
+    // Add and remove elements (eg slots in an array)
+    {mode: 'READY', keypattern: /^\+$/, modifiers: function(e) {return e.ctrlKey}, preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'INSERT_ELEMENT', offset: [0, 0] }}},
+    {mode: 'READY', keypattern: /^-$/, modifiers: function(e) {return e.ctrlKey}, preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'DELETE_ELEMENT', offset: [0, 0]}}},
+    {mode: 'READY', keypattern: /^_$/, modifiers: function(e) {return e.ctrlKey}, preventDefault: true, action: function() { return { type: 'EDIT_AST', AST_edit_type: 'DELETE_CONTAINER', offset: [0, 0] }}},
+    {mode: 'READY', keypattern: /^t$/, modifiers: function(e) {return e.ctrlKey && e.altKey}, preventDefault: true, action: function () { return { type: 'EDIT_AST', AST_edit_type: 'CREATE_TABLE', offset: [0, 0] }}},
+];
+
+const grid_click_events = [
+    { mode: 'READY', action: { type: 'SELECT_CELL' } },
+    // TODO would be nice to make this a generic 'LOAD_CODE'
+    // and just load with an argument of the code text in the store
+    // Problem is you actually want the text in the *code editor object*, not the state,
+    // because the state hasn't been updated yet.
+    // So you need to give the event a binding to the code editor object.
+    { mode: 'EDITING_CODE', action: { type: 'LOAD_CODE_FROM_PANE' } },
+];
+
+function get_clicked_cell_location (event) {
+    const id = event.target.getAttribute('id');
+    let return_value = null;
+    try {
+        return_value = JSON.parse(id);
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log("Couldn't read in the clicked element's ID as JSON.");
+        } else {
+            console.error(e)
+        }
+    }
+    return return_value;
+}
+
+HTML_elements.grid.addEventListener('click', function(event) {
+    const clicked_location = get_clicked_cell_location(event);
+    if (clicked_location === null) { return }
+
+    const mode = old_state.mode;
+    for (let key in grid_click_events) {
+        const shortcut = grid_click_events[key];
+        if (mode === shortcut.mode) {
+            const action = assign({}, shortcut.action, {location: clicked_location})
+            send_app_action(action);
+            return;
+        }
+    }
+});
+
+HTML_elements.grid.addEventListener('dblclick', function(event) {
+    const clicked_location = get_clicked_cell_location(event);
+    if (clicked_location === null) { return }
+
+    if (old_state.mode === 'READY') {
+        const action = assign({}, {type: 'EDIT_CELL', location: clicked_location});
+        send_app_action(action);
+        return;
+    }
+});
+
+HTML_elements.grid.addEventListener('keydown', function(event) {
+    return process_keydown_event(grid_keydown_events, event);
+});
+
+function save_file_as(old_state) {
+    let dest_filepath = LocalFileIO.get_saveas_filepath();
+    if (dest_filepath !== undefined) {
+        if (dest_filepath.slice(-3) !== '.js') {
+            dest_filepath = dest_filepath + '.js';
+        }
+        LocalFileIO.writeFile(dest_filepath, old_state.code_editor.value);
+        alert("File saved: "+dest_filepath);
+        return {type: 'SET_FILEPATH', filepath: dest_filepath};
+    } else {
+        return { type: 'RETURN_TO_READY' };
+    }
+}
+
+const window_keydown_events = [
+    {mode: 'READY', keypattern: /^S$/, modifiers: function(e) {return e.ctrlKey}, action: function(state) {
+        return save_file_as(state);
+    }},
+    {mode: 'READY', keypattern: /^s$/, modifiers: function(e) {return e.ctrlKey}, action: function(state) {
+        if (state.filepath === null) {
+            return save_file_as(state);
+        } else {
+            LocalFileIO.writeFile(state.filepath, state.code_editor.value);
+            alert("File saved: " + state.filepath)
+            return { type: 'RETURN_TO_READY' };
+        }
+    }},
+    {mode: 'READY', keypattern: /^o$/, modifiers: function(e) {return e.ctrlKey}, action: function() {
+        document.getElementById('open-file-manager').click();
+    }},
+    {mode: 'ALL', keypattern: /^F11$/, modifiers: function(e) {return e.altKey}, action: function() {return { type: 'TOGGLE_CODE_PANE_SHOW' }}},
+
+    // Prevent certain Electron defaults
+    {mode: 'ALL', keypattern: /^w/,  preventDefault: true, modifiers: function(e) {return e.ctrlKey}, action: function() {return undefined}},
+]
+
+// TODO move these to window KB events
+// Catch window closes
+
+window.addEventListener('keydown', function(event) {
+    return process_keydown_event(window_keydown_events, event);
+});
+
+// # Event listeners
+// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Syntax
+
+// # CODE EDITOR
+
+code_editor.on('focus', 
+    function() {send_app_action({ type: 'SELECT_CODE' })}
+);
+
+// # FORMULA BAR
+
+const formula_bar = document.getElementById("formula-bar");
+const formula_bar_keydown_events = [
+    // TOOD how can a user insert a line into the formula bar 
+    // without triggering commit? Same way as in Excel?
+    {mode: 'EDIT', keypattern: /^Enter$/, modifiers: function(e) {return e.shiftKey}, preventDefault: false, action: function() {return { type: '' }}},
+    {mode: 'EDIT', keypattern: /^Enter$/, modifiers: function(e) {return !e.shiftKey}, preventDefault: true, 
+        action: function() {return { type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [1, 0] }}},
+    {mode: 'EDIT', keypattern: /^Tab$/, modifiers: function(e) {return !e.shiftKey}, preventDefault: true, 
+        action: function() {return { type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [0, 1] }}},
+    // {mode: 'EDIT', keypattern: /^Enter$/, modifiers: function(e) {return e.shiftKey}, preventDefault: true, 
+    //    action: function() {return { type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [-1, 0] }}},
+    {mode: 'EDIT', keypattern: /^Tab$/, modifiers: function(e) {return e.shiftKey}, preventDefault: true, 
+        action: function() {return { type: 'EDIT_AST', AST_edit_type: 'COMMIT_FORMULA_BAR_EDIT', commit_value: formula_bar.value, offset: [0, -1] }}},
+    {mode: 'EDIT', keypattern: /^Escape$/, action: function() {return { type: 'DISCARD_CELL_EDIT' }}},
+];
+
+HTML_elements.formula_bar.addEventListener('click',
+    function() {send_app_action({ type: 'EDIT_CELL' })}
+);
+HTML_elements.formula_bar.addEventListener('keydown', function(event) {
+    process_keydown_event(formula_bar_keydown_events, event);
+});
+
+// # FILE LOAD API
+
+HTML_elements.filepicker.addEventListener('change', function(event) {
+    const file = event.target.files[0]; 
+    if (file && file.path) {
+        const path = file.path;
+        // TODO compress into single event?
+        const contents = LocalFileIO.readFileSync(path, 'utf8');
+        send_app_action({type: 'RESET_STATE'});
+        send_app_action({type: 'SET_FILEPATH', filepath: path});
+        send_app_action({type: 'LOAD_CODE', code: contents});
+    } else {
+        // TODO do we not want to just restore the filename already loaded?
+        send_app_action({type: 'RETURN_TO_READY'});
+    }
+});
+
+    </script>
+
+  </body>
 
 </html>
