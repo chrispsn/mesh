@@ -23068,10 +23068,7 @@ state_changes: {
                     return Object.assign({}, state, {selected_cell_loc: new_location});
                 }},
                 function() {return function(state, action) {return Object.assign({}, state, {mode: 'EDIT'})}},
-                function() {return function(state, action) {
-                    let new_props = (state.mode === 'EDIT') ? {} : {mode: 'EDIT_REPLACE'};
-                    return Object.assign({}, state, new_props);
-                }},
+                function() {return function(state, action) {return Object.assign({}, state, {mode: 'EDIT'})}},
                 function() {return function(state, action) {return Object.assign({}, state, {
                     mode: 'READY',
                     formula_bar_value: this.formula_bar_value,

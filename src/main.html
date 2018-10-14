@@ -291,8 +291,6 @@ onmessage = function(e) {
         // Formula bar
         if (old_state.mode === 'EDIT') {
             HTML_elements.formula_bar.focus();
-        } else if (old_state.mode === 'EDIT_REPLACE') {
-            send_app_action({ type: 'EDIT_CELL' }); // TODO don't think it's loaded by the time this gets to it...
         } else if (old_state.mode === 'READY') {
             const cell_id = JSON.stringify(old_state.selected_cell_loc);
             const selected_cell = old_state.cells[cell_id] || Object.assign({}, old_state.empty_cell, {location: old_state.selected_cell_loc});
@@ -411,7 +409,10 @@ function process_keydown_event (bindings, event) {
                 event.preventDefault()
             }
             const action = binding.action();
-            if (action.type === "EDIT_CELL_REPLACE") HTML_elements.formula_bar.value = event.key; // TODO something to append if app is still catching up?
+            if (action.type === "EDIT_CELL_REPLACE") {
+                HTML_elements.formula_bar.value = "";
+                HTML_elements.formula_bar.focus();
+            }
             send_app_action(action);
             stop = true;
         }
