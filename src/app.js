@@ -22923,7 +22923,7 @@ Table_AddColumn: {
         // TODO should the default value be a function that returns null or undefined?
         // That way we have a simpler template to work with for the UI
         // (or else we exclude the prop entirely), but may dirty up the source
-                            B.arrayExpression(fill.call(new Array(length), B.identifier('undefined')))
+                            B.arrayExpression(Array.prototype.fill.call(new Array(length), B.identifier('undefined')))
         );
         const defaultProp = B.property('init', B.literal('default'), B.literal(null));
         const newObject = B.objectExpression([defaultProp, valuesProp]);
