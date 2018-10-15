@@ -145,8 +145,9 @@ const StatusBar = function(props) {
     const mesh_link = React.createElement('a', { href: "http://mesh-spreadsheet.com", target: "_blank" }, "Mesh website");
     const github_link = React.createElement('a', { href: "https://github.com/chrispsn/mesh/", target: "_blank" }, "GitHub");
     const twitter_link = React.createElement('a', { href: "https://twitter.com/MeshSpreadsheet", target: "_blank" }, "Twitter");
-    const change_theme = React.createElement('a', {id: "theme_changer", href: "#"}, "Change theme")
-    const toggle_code_pane = React.createElement('a', {id: "code_pane_toggler", href: "#"}, "Toggle code pane")
+    const change_theme = React.createElement('a', {id: "theme_changer", href: "javascript: // Change theme"}, "Change theme")
+    const toggle_code_pane = React.createElement('a', {id: "code_pane_toggler", href: "javascript: // Toggle code pane"}, "Toggle code pane")
+    const save_to_URL = React.createElement('a', {id: "URL_saver", href: "javascript: // Save sheet as URL component;"}, "Save to URL")
     return React.createElement('dl', {}, 
         current_mode, separator, 
         current_file, separator,
@@ -154,7 +155,8 @@ const StatusBar = function(props) {
         github_link, separator,
         twitter_link, separator,
         change_theme, separator,
-        toggle_code_pane
+        toggle_code_pane, separator,
+        save_to_URL
     );
 };
 
@@ -232,7 +234,6 @@ HTML_elements.code_pane_toggler.onclick = function() {
 
 let app_iframe = document.getElementById("app");
 let old_state;
-
 function send_app_action(message_obj) {
     const action_to_send = (
         old_state === undefined
@@ -242,6 +243,8 @@ function send_app_action(message_obj) {
     console.log("Sending action to app:", action_to_send)
     app_iframe.contentWindow.postMessage({values: action_to_send}, "*");
 }
+
+/* MESH SHEET LOADER */
 
 let sheet_iframe = document.getElementById("sheet");
 function reset_sheet(new_code) {
@@ -262,7 +265,8 @@ function reset_sheet(new_code) {
     );
 }
 
-let message_for_app;
+/* PARENT MESSAGE RESPONSES */
+
 onmessage = function(e) {
 
     if (e.source === app_iframe.contentWindow) {
@@ -313,7 +317,7 @@ onmessage = function(e) {
         // Receive message (calculations) from sheet and
         // send cells to app for processing if successful
         console.log("RECEIVED MESSAGE FROM SHEET:", e.data);
-        message_for_app = {values: {
+        const message_for_app = {values: {
             old_state: old_state,
             results: e.data,
             action: {type: 'LOAD_CELLS'}
@@ -352,6 +356,8 @@ onmessage = function(e) {
 
 };
 
+/* LOAD APP */
+
 app_iframe.contentDocument.write('<script src="./app.js"><\/script>');
 app_iframe.contentDocument.write(
     '<script>'
@@ -369,12 +375,31 @@ app_iframe.contentDocument.write(
     // "    }",
     // TODO reset changed variables at end?
 );
+
 // Trigger sending of initial state by app
 app_iframe.contentDocument.write(
     "<script>_defCells(_CELLS); _calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')<\/script>"
 )
 
-// Events
+if (location.hash) {
+    // TODO this is a *terrible* race condition. Definitely need to fix
+    setTimeout(function() {
+        const code = decodeURIComponent(location.hash.substring(1));
+        code_editor.setValue(code);
+        send_app_action({ type: 'LOAD_CODE', code: code_editor.getValue() });
+    }, 200);
+}
+
+/* SEND SHEET AS HASH IN URL */
+
+function save_sheet_to_URL() {
+    const code = code_editor.getValue();
+    location.hash = "#" + encodeURIComponent(code);
+}
+
+document.getElementById("URL_saver").onclick = save_sheet_to_URL;
+
+/* EVENT BINDINGS */
 
 // https://developer.mozilla.org/en-US/docs/Web/Events
 
@@ -431,7 +456,7 @@ function process_keydown_event (bindings, event) {
 
 const grid_keydown_events = [
     // TODO what else should trigger this? + etc?
-    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/=]$/, modifiers: function(e) {return !e.ctrlKey}, action: function() {return { type: 'EDIT_CELL_REPLACE' }}},
+    {mode: 'READY', keypattern: /^[\w-"'\(\[{\/=*]$/, modifiers: function(e) {return !e.ctrlKey}, action: function() {return { type: 'EDIT_CELL_REPLACE' }}},
 
     {mode: 'READY', keypattern: /^F2$/, action: function() {return { type: 'EDIT_CELL' }}},
 
