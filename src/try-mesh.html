@@ -258,8 +258,12 @@ function reset_sheet(new_code) {
         + new_code
         + "\n"
         + "console.log('Calculating...');"
-        + "_defCells(_CELLS); " // TODO add back _extraValues(e.data.values);"
+        + "_defCells(_CELLS);"
+        + "_calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*');"
+        + "onmessage = function(e) {"
+        + " _extraValues(e.data.values);"
         + "_calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')"
+        + "}"
         // close() ?
         + '<\/script>'
     );
