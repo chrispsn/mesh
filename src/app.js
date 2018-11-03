@@ -21947,7 +21947,7 @@ BLANK_FILE: {
         "                const v = default_col_formulas[k];",
         "                if (_isFn(v)) {",
         "                    Object.defineProperty(r, k, {get: function() {",
-        "                        delete this[k]; return this[k] = fn.call(this, i, t);",
+        "                        delete this[k]; return this[k] = v.call(this, i, t);",
         "                    }, configurable: true, enumerable: true});",
         "                } else r[k] = v",
         "            }",
@@ -23263,7 +23263,7 @@ function _makeTable(default_col_formulas, set_length, rows) {
                 const v = default_col_formulas[k];
                 if (_isFn(v)) {
                     Object.defineProperty(r, k, {get: function() {
-                        delete this[k]; return this[k] = fn.call(this, i, t);
+                        delete this[k]; return this[k] = v.call(this, i, t);
                     }, configurable: true, enumerable: true});
                 } else r[k] = v
             }
