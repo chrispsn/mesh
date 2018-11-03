@@ -21601,10 +21601,10 @@ cell_edit_types: {
             COMMIT_FORMULA_BAR_EDIT: function() {return function (meshCellsNode, state, action) {
                 // TODO Check that the commit is valid first?
                 const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key);
-                const cell_value_nodepath = get_object_item(cell_props_nodepath.get("value"), "v");
+                const cell_props_nodepath = Object_GetItem(meshCellsNode, key);
+                const cell_value_nodepath = Object_GetItem(cell_props_nodepath.get("value"), "v");
                 const inserted_code = transform_formula_bar_input(action.commit_value);
-                replace_object_item_value(cell_value_nodepath, inserted_code);
+                Object_ReplaceItemValue(cell_value_nodepath, inserted_code);
                 return action.offset;
             }},
             DELETE_VALUE: function() {return function (meshCellsNode, state, action) {
@@ -21613,19 +21613,19 @@ cell_edit_types: {
             }},
             DELETE_ELEMENT: function() {return function(meshCellsNode, state, action) {
                 const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key);
+                const cell_props_nodepath = Object_GetItem(meshCellsNode, key);
                 cell_props_nodepath.prune();
                 return [0, 0];
             }},
             DELETE_CONTAINER: function() {return function(meshCellsNode, state, action) {
                 const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key);
+                const cell_props_nodepath = Object_GetItem(meshCellsNode, key);
                 cell_props_nodepath.prune();
                 return [0, 0];
             }},
             CREATE_TABLE: function() {return function(meshCellsNode, state, action) {
                 const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key).get("value");
+                const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
                 Table_Create(cell_props_nodepath);
                 return [0, 0];
             }}
@@ -21644,7 +21644,7 @@ cell_edit_types: {
             {
                 cell_type: "EMPTY",
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
-                    insert_object_item(meshCellsNode,
+                    Object_InsertItem(meshCellsNode,
                         "\"" + action.commit_value + "\"",
                         "{v: null, l: [" + state.selected_cell_loc + "]}"
                     );
@@ -21658,7 +21658,7 @@ cell_edit_types: {
                     const index = get_selected_cell(state).AST_props.index;
                     const array_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    remove_array_element(array_nodepath, index);
+                    Array_RemoveElement(array_nodepath, index);
                     return action.offset;
                 },
             },
@@ -21670,7 +21670,7 @@ cell_edit_types: {
                     const array_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
                     const inserted_code = transform_formula_bar_input(action.commit_value);
-                    replace_array_element(array_nodepath, index, inserted_code);
+                    Array_ReplaceElement(array_nodepath, index, inserted_code);
                     return action.offset;
                 },
                 INSERT_ELEMENT: function(meshCellsNode, state, action) {
@@ -21678,7 +21678,7 @@ cell_edit_types: {
                     const index = get_selected_cell(state).AST_props.index;
                     const array_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_array_element(array_nodepath, index, "null");
+                    Array_InsertElement(array_nodepath, index, "null");
                     return action.offset;
                 },
             },
@@ -21691,7 +21691,7 @@ cell_edit_types: {
                     const array_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
                     const inserted_code = transform_formula_bar_input(action.commit_value);
-                    append_array_element(array_nodepath, inserted_code);
+                    Array_AppendElement(array_nodepath, inserted_code);
                     return action.offset;
                 },
                 INSERT_ELEMENT: function(meshCellsNode, state, action) {
@@ -21699,7 +21699,7 @@ cell_edit_types: {
                     const index = get_selected_cell(state).AST_props.index;
                     const array_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_array_element(array_nodepath, index, "null");
+                    Array_InsertElement(array_nodepath, index, "null");
                     return action.offset;
                 },
                 DELETE_ELEMENT: function (meshCellsNode, state, action) {
@@ -21707,14 +21707,14 @@ cell_edit_types: {
                     const item_key = get_selected_cell(state).AST_props.item_key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    remove_object_item(obj_nodepath, item_key);
+                    Object_RemoveItem(obj_nodepath, item_key);
                     return action.offset;
                 },
                 DELETE_CONTAINER: function (meshCellsNode, state) {
                     const key = get_selected_cell(state).AST_props.key;
                     const nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    delete_container(nodepath);
+                    Cell_DeleteValue(nodepath);
                     return [0, 0];
                 }, // TODO fix this one
             },
@@ -21725,10 +21725,10 @@ cell_edit_types: {
                     const item_key = get_selected_cell(state).AST_props.item_key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    const obj_item_nodepath = get_object_item(obj_nodepath, item_key);
+                    const obj_item_nodepath = Object_GetItem(obj_nodepath, item_key);
                     const inserted_code = action.commit_value;
                     // TODO where does new_id come from?
-                    replace_object_item_key(obj_item_nodepath, inserted_code);
+                    Object_ReplaceItemKey(obj_item_nodepath, inserted_code);
                     return action.offset;
                 },
                 INSERT_ELEMENT: function (meshCellsNode, state, action) {
@@ -21736,7 +21736,7 @@ cell_edit_types: {
                     const item_key = get_selected_cell(state).AST_props.item_key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_object_getter(obj_nodepath, "new_key", "null");
+                    Object_InsertGetter(obj_nodepath, "new_key", "null");
                     return action.offset;
                 },
             },
@@ -21748,16 +21748,16 @@ cell_edit_types: {
                     const item_key = get_selected_cell(state).AST_props.item_key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    const obj_prop_node = get_object_item(obj_nodepath, item_key);
+                    const obj_prop_node = Object_GetItem(obj_nodepath, item_key);
                     const inserted_code = transform_formula_bar_input(action.commit_value);
-                    replace_object_getter_return_val(obj_prop_node, inserted_code);
+                    Object_ReplaceGetterReturnValue(obj_prop_node, inserted_code);
                     return action.offset;
                 },
                 INSERT_ELEMENT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_object_getter(obj_nodepath, "new_key", "null");
+                    Object_InsertGetter(obj_nodepath, "new_key", "null");
                     return action.offset;
                 },
                 DELETE_ELEMENT: function (meshCellsNode, state, action) {
@@ -21765,7 +21765,7 @@ cell_edit_types: {
                     const item_key = get_selected_cell(state).AST_props.item_key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    remove_object_item(obj_nodepath, item_key);
+                    Object_RemoveItem(obj_nodepath, item_key);
                     return action.offset;
                 },
             },
@@ -21776,14 +21776,14 @@ cell_edit_types: {
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
                     const inserted_code = action.commit_value;
-                    insert_object_getter(obj_nodepath, inserted_code, "null");
+                    Object_InsertGetter(obj_nodepath, inserted_code, "null");
                     return action.offset;
                 },
                 INSERT_ELEMENT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const obj_nodepath = get_mesh_data_value_nodepath(
                                             AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_object_getter(obj_nodepath, "new_key", "null");
+                    Object_InsertGetter(obj_nodepath, "new_key", "null");
                     return action.offset;
                 },
             },
@@ -21796,17 +21796,15 @@ cell_edit_types: {
                 INSERT_ELEMENT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colIndex = get_selected_cell(state).AST_props.colIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_AddColumn(table_nodepath, colIndex, action.commit_value);
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
+                    Table_AddColumn(fnCallNodepath, colIndex, action.commit_value);
                     return action.offset;
                 },
                 DELETE_ELEMENT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const heading = get_selected_cell(state).AST_props.heading;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_DeleteColumn(table_nodepath, heading);
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
+                    Table_DeleteColumn(fnCallNodepath, heading);
                     return [0, 0];
                 },
             },
@@ -21814,9 +21812,8 @@ cell_edit_types: {
                 cell_type: "TABLE_RW_ADD_COLUMN_CELL",
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_AddColumn(table_nodepath, undefined, action.commit_value);
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
+                    Table_AddColumn(fnCallNodepath, undefined, action.commit_value);
                     return action.offset;
                 },
             },
@@ -21826,28 +21823,25 @@ cell_edit_types: {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
                     const inserted_code = transform_formula_bar_input(action.commit_value, true);
-                    Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, inserted_code)
+                    Table_ChangeCellValue(fnCallNodepath, rowIndex, colHeading, inserted_code)
                     return action.offset;
                 },
                 DELETE_VALUE: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, "undefined");
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
+                    Table_ChangeCellValue(fnCallNodepath, rowIndex, colHeading, "undefined");
                     return action.offset;
                 },
                 DELETE_ELEMENT: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_DeleteRow(table_nodepath, rowIndex);
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
+                    Table_DeleteRow(fnCallNodepath, rowIndex);
                     return [0, 0];
                 },
             },
@@ -21857,7 +21851,7 @@ cell_edit_types: {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
+                    const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
                     const inserted_code = transform_formula_bar_input(action.commit_value, true);
                     Table_AddRow(fnCallNodepath, rowIndex, "{" + colHeading + ": " + inserted_code + "}");
                     return action.offset;
@@ -22013,7 +22007,7 @@ generate_cells: {
                 });
             }
 
-            let value_nodepath = getCellNodePath(cellsNodePath, id).value;
+            let value_nodepath = Cell_GetNodePath(cellsNodePath, id).value;
             const display_fn = display_fns[triage(value_nodepath.node.type, cell.v, Boolean(cell.t))];
 
             // Not sure on exactly which parameters are best here, and which order makes most sense.
@@ -22425,7 +22419,7 @@ display_fns: {
             // Headings
             const headings_nodepath = FunctionCall_GetArgument(nodepath, 0);
             const headings = headings_nodepath.get("properties").value
-                .map(function(k) {return get_object_key_from_node(k.key)})
+                .map(function(k) {return Object_GetKeyFromNode(k.key)})
             const heading_cells = headings.map(
                 function(heading, col_offset) { return {
                     // TODO
@@ -22457,7 +22451,7 @@ display_fns: {
                     const row_info = {};
                     // if ('properties' in row_node) ? (case where there are a bunch of rows with no cols?)
                     row_node.properties.forEach(function(prop_node) {
-                        const key = get_object_key_from_node(prop_node.key);
+                        const key = Object_GetKeyFromNode(prop_node.key);
                         row_info[key] = prop_node.value;
                     })
                     rows_prop_value_nodes.push(row_info);
@@ -22551,7 +22545,7 @@ makeUniqueID: {
 },
 
 // TODO should be an object or map
-getObjPropNodeNameProp: {
+Object_GetPropNodeNamePropName: {
     v: function(){
         return function(nodeType) {
             return (nodeType === 'Literal') ? 'value' : 'name';
@@ -22562,9 +22556,9 @@ getObjPropNodeNameProp: {
 
 // TODO write tests
 // TODO make this take a nodepath instead?
-get_object_key_from_node: {
+Object_GetKeyFromNode: {
     v: function() {return function(obj_key_node) {
-        return obj_key_node[getObjPropNodeNameProp(obj_key_node.type)];
+        return obj_key_node[Object_GetPropNodeNamePropName(obj_key_node.type)];
     }},
     l: [4, 22]
 },
@@ -22583,7 +22577,7 @@ print_AST_to_code_string: {
     l: [6, 22]
 },
 
-getCellsNodePath: {
+Cells_GetNodePath: {
     v: function() {return function(AST) {
         let nodepath_to_return;
         Recast.visit(AST, {
@@ -22601,13 +22595,13 @@ getCellsNodePath: {
     l: [7, 22],
 },
 
-getCellNodePath: {
+Cell_GetNodePath: {
     v: function() {return function(meshCellsNodePath, key) {
-        // TODO Eventually should allow both Identifiers and Literals using getObjPropNodeNameProp
+        // TODO Eventually should allow both Identifiers and Literals using Object_GetPropNodeNamePropName
         const propsPath = meshCellsNodePath.get('properties');
         for (let i=0; i < propsPath.value.length; i++) {
             const propPath = propsPath.get(i);
-            const cellName = get_object_key_from_node(propPath.node.key)
+            const cellName = Object_GetKeyFromNode(propPath.node.key)
             if (cellName === key) {
                 const cellProps = propPath.get("value", "properties");
                 // TODO below is massive hack - should look at keys instead of assuming v is first
@@ -22625,14 +22619,14 @@ getCellNodePath: {
 /* GENERAL */
 
 // TODO write tests
-delete_container: {
+Cell_DeleteValue: {
     v: function() {return function(value_path) {value_path.replace(B.literal(null))}},
     l: [10, 22]
 },
 
 /* ARRAY */
 
-insert_array_element: {
+Array_InsertElement: {
     v: function() {return function(arr_path, element_num, inserted_text) {
         const elements_path = arr_path.get('elements');
         const inserted_node = B.identifier(inserted_text);
@@ -22645,7 +22639,7 @@ insert_array_element: {
     l: [12, 22]
 },
 
-append_array_element: {
+Array_AppendElement: {
     v: function() {return function(arr_path, inserted_text) {
         const elements_path = arr_path.get('elements');
         const inserted_node = B.identifier(inserted_text);
@@ -22654,7 +22648,7 @@ append_array_element: {
     l: [13, 22]
 },
 
-replace_array_element: {
+Array_ReplaceElement: {
     v: function() {return function(arr_path, element_num, inserted_text) {
         const elements_path = arr_path.get('elements');
         elements_path.get(element_num).replace(B.identifier(inserted_text));
@@ -22662,7 +22656,7 @@ replace_array_element: {
     l: [14, 22]
 },
 
-remove_array_element: {
+Array_RemoveElement: {
     v: function() {return function(arr_path, element_num) {
         const element_path = arr_path.get('elements', element_num);
         element_path.prune();
@@ -22672,14 +22666,14 @@ remove_array_element: {
 
 /* OBJECT */
 
-get_object_item: {
+Object_GetItem: {
     v: function() {return function(obj_path, key) {
         const props_path = obj_path.get('properties');
 
         for (let i=0; i < props_path.value.length; i++) {
             let prop_path = props_path.get(i);
             let key_node = prop_path.node.key;
-            if (get_object_key_from_node(key_node) === key) {
+            if (Object_GetKeyFromNode(key_node) === key) {
                 return prop_path;
             }
         }
@@ -22688,14 +22682,14 @@ get_object_item: {
     l: [17, 22]
 },
 
-get_object_item_index: {
+Object_GetItemIndex: {
     v: function() {return function(obj_path, key) {
         const props_path = obj_path.get('properties');
 
         for (let i=0; i < props_path.value.length; i++) {
             let prop_path = props_path.get(i);
             let key_node = prop_path.node.key;
-            if (get_object_key_from_node(key_node) === key) {
+            if (Object_GetKeyFromNode(key_node) === key) {
                 return i;
             }
         }
@@ -22705,7 +22699,7 @@ get_object_item_index: {
 },
 
 // TODO: be smart about how the 'key' is created (id vs string literal)
-replace_object_item_key: {
+Object_ReplaceItemKey: {
     v: function() {return function(obj_item_path, new_key_text) {
         // TODO throw error if duplicate key?
         obj_item_path.get('key').replace(B.identifier(new_key_text));
@@ -22713,14 +22707,14 @@ replace_object_item_key: {
     l: [19, 22]
 },
 
-replace_object_item_value: {
+Object_ReplaceItemValue: {
     v: function() {return function(obj_item_path, new_value_text) {
         obj_item_path.get('value').replace(B.identifier(new_value_text));
     }},
     l: [20, 22]
 },
 
-insert_object_item: {
+Object_InsertItem: {
     v: function() {return function(obj_path, key_text, value_text, index) {
         // TODO throw error if duplicate key?
         const props_path = obj_path.get('properties');
@@ -22737,7 +22731,7 @@ insert_object_item: {
     l: [21, 22]
 },
 
-insert_object_getter: {
+Object_InsertGetter: {
     v: function() {return function(obj_path, key_text, body_text, index) {
         // TODO throw error if duplicate key?
         // TODO make these self-memoising?
@@ -22761,7 +22755,7 @@ insert_object_getter: {
     l: [22, 22]
 },
 
-replace_object_getter_return_val: {
+Object_ReplaceGetterReturnValue: {
     v: function() {return function(obj_getter_prop_path, new_return_value_text) {
         const val = obj_getter_prop_path.get('value', 'body', 'body', 0, 'argument');
         val.replace(B.identifier(new_return_value_text));
@@ -22769,7 +22763,7 @@ replace_object_getter_return_val: {
     l: [23, 22]
 },
 
-remove_object_item: {
+Object_RemoveItem: {
     v: function() {return function(obj_path, key) {
         // TODO throw error if missing key?
         const props_path = obj_path.get('properties');
@@ -22777,7 +22771,7 @@ remove_object_item: {
             for (let i=0; i < props_path.value.length; i++) {
                 let prop_path = props_path.get(i);
                 let key_node = prop_path.node.key;
-                if (key === get_object_key_from_node(key_node, key)) {
+                if (key === Object_GetKeyFromNode(key_node, key)) {
                     prop_path.prune();
                 }
             }
@@ -22790,31 +22784,31 @@ remove_object_item: {
 
 Table_Create: {
     v: function() {return function(cellObjPath) {
-        const cellValuePropPath = get_object_item(cellObjPath, "v");
+        const cellValuePropPath = Object_GetItem(cellObjPath, "v");
         const table_text = "function () {return _makeTable({}, null, [])}";
-        replace_object_item_value(cellValuePropPath, table_text);
-        const cellTableFlagPropPath = get_object_item(cellObjPath, "t");
+        Object_ReplaceItemValue(cellValuePropPath, table_text);
+        const cellTableFlagPropPath = Object_GetItem(cellObjPath, "t");
         if (cellTableFlagPropPath !== undefined) {
-            replace_object_item_value(cellTableFlagPropPath, "true");
+            Object_ReplaceItemValue(cellTableFlagPropPath, "true");
         } else {
-            insert_object_item(cellObjPath, "t", "true")
+            Object_InsertItem(cellObjPath, "t", "true")
         };
     }},
     l: [26, 22]
 },
 
 Table_GetColumnsObject: {
-    v: function() {return function(table_fncall_node) {return FunctionCall_GetArgument(table_fncall_node, 0)}},
+    v: function() {return function(table_np) {return FunctionCall_GetArgument(table_np, 0)}},
     l: [27, 22]
 },
 
 Table_GetRowCountOverride: {
-    v: function() {return function(table_fncall_node) {return FunctionCall_GetArgument(table_fncall_node, 1)}},
+    v: function() {return function(table_np) {return FunctionCall_GetArgument(table_np, 1)}},
     l: [28, 22]
 },
 
 Table_GetRowsArray: {
-    v: function() {return function(table_fncall_node) {return FunctionCall_GetArgument(table_fncall_node, 2)}},
+    v: function() {return function(table_np) {return FunctionCall_GetArgument(table_np, 2)}},
     l: [29, 22]
 },
 
@@ -22850,7 +22844,34 @@ Table_AddColumn: {
                 // ???
             }
         }
-    }
+    },
+    l: [31, 22]
+},
+
+Table_ChangeCellValue: {
+    v: function() {
+        return function(table_np, row_index, col_header, new_value) {
+            console.log(table_np);
+            const rows_np = Table_GetRowsArray(table_np);
+            console.log(rows_np);
+            const row_np = rows_np.get("elements", row_index); // what if need to append?
+            console.log(row_np);
+            let item_np = Object_GetItem(row_np, col_header); // what if item does not yet exist?
+            if (item_np === undefined) {
+                Object_InsertItem(row_np, col_header, "null") // TODO insert in right order?
+                item_np = Object_GetItem(row_np, col_header);
+            }
+            Object_ReplaceItemValue(item_np, new_value)
+        }
+        // // TODO if values is a function call, fail?
+        // const valuesPath = Object_GetItem(colPath.get("value"), "values").get("value");
+        // const currentLength = valuesPath.node.elements.length;
+        // if (currentLength < index + 1) { // Expand only, don't shrink
+        //     Table_ResizeArray(valuesPath, index + 1);
+        // };
+        // Array_ReplaceElement(valuesPath, index, new_value);
+    },
+    l: [32, 22]
 },
 
 // Table_GetColumnNodePaths: {
@@ -22861,10 +22882,10 @@ Table_AddColumn: {
 //             const propPath = tablePropsPath.get(i);
 //             const propValuePath = propPath.get("value");
 //             if (propValuePath.value.type === 'ObjectExpression') {
-//                 const valuesPath = get_object_item(propValuePath, "values");
-//                 const defaultPath = get_object_item(propValuePath, "default");
+//                 const valuesPath = Object_GetItem(propValuePath, "values");
+//                 const defaultPath = Object_GetItem(propValuePath, "default");
 //                 if (valuesPath !== undefined && defaultPath !== undefined) {
-//                     const heading = get_object_key_from_node(propPath.get("key").node);
+//                     const heading = Object_GetKeyFromNode(propPath.get("key").node);
 //                     colNodePaths[heading] = propValuePath;
 //                 };
 //             };
@@ -22886,21 +22907,6 @@ Table_AddColumn: {
 //     }},
 //     l: [28, 22]
 // },
-
-// Table_ChangeValueCell: {
-//     v: function() {return function(tablePath, colHeading, index, new_value) {
-//         // TODO if values is a function call, fail?
-//         const colPath = get_object_item(tablePath, colHeading);
-//         const valuesPath = get_object_item(colPath.get("value"), "values").get("value");
-//         const currentLength = valuesPath.node.elements.length;
-//         if (currentLength < index + 1) { // Expand only, don't shrink
-//             Table_ResizeArray(valuesPath, index + 1);
-//         };
-//         replace_array_element(valuesPath, index, new_value);
-//     }},
-//     l: [29, 22]
-// },
-
 // Table_AddColumn: {
 //     v: function() {return function(tablePath, heading, colIndex) {
 //         // TODO should this not have heading as a parameter, and auto-generate it to be unique?
@@ -22909,7 +22915,7 @@ Table_AddColumn: {
 //         for (let heading in columnPaths) {
 //             const colPath = columnPaths[heading];
 //             headings.add(heading);
-//             const valuesPath = get_object_item(colPath, "values");
+//             const valuesPath = Object_GetItem(colPath, "values");
 //             let valuesNode = valuesPath.get("value").node;
 //             if (valuesNode.type === "ArrayExpression") {
 //                 lengths.push(valuesNode.elements.length);
@@ -22943,7 +22949,7 @@ Table_AddColumn: {
 //         const tablePropsPath = tablePath.get("properties");
 //         for (let i = 0; i < tablePropsPath.value.length; i++) {
 //             let propPath = tablePropsPath.get(i);
-//             let key = get_object_key_from_node(propPath.get("key").value);
+//             let key = Object_GetKeyFromNode(propPath.get("key").value);
 //             if (key === heading) {
 //                 propPath.prune();
 //             }
@@ -22957,7 +22963,7 @@ Table_AddColumn: {
 //         const columnPaths = Table_GetColumnNodePaths(tablePath);
 //         for (let h in columnPaths) {
 //             const colPath = columnPaths[h];
-//             const valuesPath = get_object_item(colPath, "values");
+//             const valuesPath = Object_GetItem(colPath, "values");
 //             let valuesNode = valuesPath.get("value").node;
 //             if (valuesNode.type === "ArrayExpression") {
 //                 if (h === affectedColHeading && newValue !== undefined) {
@@ -22976,7 +22982,7 @@ Table_AddColumn: {
 //         const columnPaths = Table_GetColumnNodePaths(tablePath);
 //         for (let h in columnPaths) {
 //             const colPath = columnPaths[h];
-//             const valuesPath = get_object_item(colPath, "values");
+//             const valuesPath = Object_GetItem(colPath, "values");
 //             let valuesNode = valuesPath.get("value").node;
 //             if (valuesNode.type === "ArrayExpression") {
 //                 valuesPath.get("value", "elements", index).prune();
@@ -23093,7 +23099,7 @@ state_changes: {
                 reducer: function(state, action) {
                     const old_code = state.code_editor.value;
                     const AST = parse_code_string_to_AST(old_code);
-                    const mesh_obj_node = getCellsNodePath(AST);
+                    const mesh_obj_node = Cells_GetNodePath(AST);
             
                     const fns_label = get_selected_cell(state).cell_AST_changes_type;
                     const AST_change_fns = find(cell_edit_types, function(r){return r.cell_type === fns_label});
@@ -23175,7 +23181,7 @@ AST: {
 },
 
 cells: {
-    v: function() {return generate_cells(results, getCellsNodePath(AST))},
+    v: function() {return generate_cells(results, Cells_GetNodePath(AST))},
     l: [1, 28]
 }
 
@@ -23203,6 +23209,7 @@ const g = window;
 function sc(x, d) {
 // Used to determine what to show in the cell in the Mesh UI.
 // Not everything can be transferred via structured clone.
+// TODO move this fn to something inserted at runtime?
     if (d === 5) return null; // TODO why is it 5? I just played until I found something that showed the whole Mesh grid...
     if (typeof x === 'function') return "ƒ";
     if (x instanceof RegExp || x instanceof Date 
