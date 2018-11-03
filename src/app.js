@@ -21461,80 +21461,85 @@ const B = Recast.types.builders;
 
 const _CELLS = {
 
-"rewrite_rules": {v: function() {return _makeTable({
-    description: {
-        default: null,
-        values: [
-            "formulas",
-            "dates",
-            "dates2",
-            "dates3",
-            "arrays",
-            "objects",
-            "regex",
-            "boolean",
-            "percentages",
-            "numbers"
-        ]
+"rewrite_rules": {v: function() {return _makeTable(
+    {
+        description: function() {return null},
+        pattern: function() {return null},
+        rewrite: function() {return null}
     },
-    pattern: {
-        default: null,
-        values: [
-            /^=/,
-            /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})/,
-            /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2})/,
-            /^([0-9]{4})\-([0-1]?[0-9])\-([0-2]?[0-9])/,
-            /^\[.*\]$/,
-            /^\{.*\}$/,
-            /\//,
-            /^(true|false)$/,
-            /^(-?[0-9]+\.?[0-9]*)%$/,
-            /^-?[0-9]+\.?[0-9]*$/
-        ]
-    },
-    rewrite: {
-        default: null,
-        values: [
-            "$&",
-            function(row, i) {
-                return function(match, day, month, year, offset, string) {
-                    return "new Date(" + [
-                        year, 
-                        parseInt(month-1, 10).toString(), 
-                        parseInt(day, 10).toString(),
-                    ].join(", ") + ")";
-                }
-            },
-            function(row, i) {
-                return function(match, day, month, year, offset, string) {
-                    return "new Date(" + [
-                        "20" + year, 
-                        parseInt(month-1, 10).toString(), 
-                        parseInt(day, 10).toString(),
-                    ].join(", ") + ")";
-                }
-            },
-            function(row, i) {
-                return function(match, year, month, day, offset, string) {
-                    return "new Date(" + [
-                        year, 
-                        parseInt(month-1, 10).toString(), 
-                        parseInt(day, 10).toString()
-                    ].join(", ") + ")";
-                }
-            },
-            "$&",
-            "($&)",
-            "$&",
-            "$&",
-            function(row, i) {
-                return function(match, number) {
-                    return (parseFloat(number) / 100).toString();
-                }
-            },
-            "$&"
-        ]
-    }
+    null,
+    [
+        {
+            description: "formulas",
+            pattern: /^=/,
+            rewrite: "$&"
+        },
+        {
+            description: "dates",
+            pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})/,
+            rewrite: function(match, day, month, year, offset, string) {
+                return "new Date(" + [
+                    year, 
+                    parseInt(month-1, 10).toString(), 
+                    parseInt(day, 10).toString(),
+                ].join(", ") + ")";
+            }
+        },
+        {
+            description: "dates2",
+            pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2})/,
+            rewrite: function(match, day, month, year, offset, string) {
+                return "new Date(" + [
+                    "20" + year, 
+                    parseInt(month-1, 10).toString(), 
+                    parseInt(day, 10).toString(),
+                ].join(", ") + ")";
+            }
+        },
+        {
+            description: "dates3",
+            pattern: /^([0-9]{4})\-([0-1]?[0-9])\-([0-2]?[0-9])/,
+            rewrite: function(match, year, month, day, offset, string) {
+                return "new Date(" + [
+                    year, 
+                    parseInt(month-1, 10).toString(), 
+                    parseInt(day, 10).toString()
+                ].join(", ") + ")";
+            }
+        },
+        {
+            description: "arrays",
+            pattern: /^\[.*\]$/,
+            rewrite: "$&"
+        },
+        {
+            description: "objects",
+            pattern: /^\{.*\}$/,
+            rewrite: "($&)"
+        },
+        {
+            description: "regex",
+            pattern: /\//,
+            rewrite: "$&"
+        },
+        {
+            description: "boolean",
+            pattern: /^(true|false)$/,
+            rewrite: "$&"
+        },
+        {
+            description: "percentages",
+            pattern: /^(-?[0-9]+\.?[0-9]*)%$/,
+            rewrite: function(match, number) {
+                return (parseFloat(number) / 100).toString();
+            }
+        },
+        {
+            description: "numbers",
+            pattern: /^-?[0-9]+\.?[0-9]*$/,
+            rewrite: "$&"
+        }
+    ]
 
     /*
         
@@ -21550,8 +21555,7 @@ const _CELLS = {
     // Numbers
 
     */
-
-})}, l: [3,1], t: true},
+)}, l: [3,1], t: true},
 rewrite_input: {v: function() {
     return function (input_string) {
         let matched_value, stop;
@@ -21591,26 +21595,10 @@ transform_formula_bar_input: {
     }}, l: [1,6]},
 
 cell_edit_types: {
-    v: function() { return _makeTable({
-        cell_type: {
-            default: null,
-            values: [
-                "DEFAULT",
-                "EMPTY",
-                "KEY", // TODO add 'change symbol' functionality
-                "ARRAY_LITERAL_DATA_CELL",
-                "ARRAY_LITERAL_APPEND_CELL",
-                "OBJECT_LITERAL_KEY_CELL",
-                "OBJECT_LITERAL_VALUE_CELL",
-                "OBJECT_LITERAL_APPEND_CELL",
-                "TABLE_RW_HEADING_CELL",
-                "TABLE_RW_ADD_COLUMN_CELL",
-                "TABLE_RW_VALUE_CELL",
-                "TABLE_RW_APPEND_CELL",
-            ]
-        },
-        COMMIT_FORMULA_BAR_EDIT: {
-            default: function(row, i) {return function (meshCellsNode, state, action) {
+    v: function() { return _makeTable(
+        // defaults
+        {
+            COMMIT_FORMULA_BAR_EDIT: function() {return function (meshCellsNode, state, action) {
                 // TODO Check that the commit is valid first?
                 const key = get_selected_cell(state).AST_props.key;
                 const cell_props_nodepath = get_object_item(meshCellsNode, key);
@@ -21619,77 +21607,222 @@ cell_edit_types: {
                 replace_object_item_value(cell_value_nodepath, inserted_code);
                 return action.offset;
             }},
-            values: [
-                undefined,
-                function(row, i) {return function (meshCellsNode, state, action) {
+            DELETE_VALUE: function() {return function (meshCellsNode, state, action) {
+                alert("No 'delete value' action defined.")
+                return [0, 0];
+            }},
+            DELETE_ELEMENT: function() {return function(meshCellsNode, state, action) {
+                const key = get_selected_cell(state).AST_props.key;
+                const cell_props_nodepath = get_object_item(meshCellsNode, key);
+                cell_props_nodepath.prune();
+                return [0, 0];
+            }},
+            DELETE_CONTAINER: function() {return function(meshCellsNode, state, action) {
+                const key = get_selected_cell(state).AST_props.key;
+                const cell_props_nodepath = get_object_item(meshCellsNode, key);
+                cell_props_nodepath.prune();
+                return [0, 0];
+            }},
+            CREATE_TABLE: function() {return function(meshCellsNode, state, action) {
+                const key = get_selected_cell(state).AST_props.key;
+                const cell_props_nodepath = get_object_item(meshCellsNode, key).get("value");
+                Table_Create(cell_props_nodepath);
+                return [0, 0];
+            }}
+        }
+        // # rows
+        , null
+        // # hardcode rows
+        , [
+            {
+                cell_type: "DEFAULT",
+                DELETE_ELEMENT: function (meshCellsNode, state, action) {
+                    alert("No 'delete element' action defined.")
+                    return [0, 0];
+                },
+            },
+            {
+                cell_type: "EMPTY",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     insert_object_item(meshCellsNode,
                         "\"" + action.commit_value + "\"",
                         "{v: null, l: [" + state.selected_cell_loc + "]}"
                     );
                     return action.offset;
-                }},
-                undefined,
-                function(row, i) {return function(meshCellsNode, state, action) {
+                },
+            },
+            {
+                cell_type: "KEY", // TODO add 'change symbol' functionality
+                DELETE_ELEMENT: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const index = get_selected_cell(state).AST_props.index;
-                    const array_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
+                    const array_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    remove_array_element(array_nodepath, index);
+                    return action.offset;
+                },
+            },
+            {
+                cell_type: "ARRAY_LITERAL_DATA_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function(meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const index = get_selected_cell(state).AST_props.index;
+                    const array_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
                     const inserted_code = transform_formula_bar_input(action.commit_value);
                     replace_array_element(array_nodepath, index, inserted_code);
                     return action.offset;
-                }},
-                function(row, i) {return function(meshCellsNode, state, action) {
+                },
+                INSERT_ELEMENT: function(meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const index = get_selected_cell(state).AST_props.index;
+                    const array_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    insert_array_element(array_nodepath, index, "null");
+                    return action.offset;
+                },
+            },
+            {
+                cell_type: "ARRAY_LITERAL_APPEND_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function(meshCellsNode, state, action) {
                     // TODO allow for formula cells
                     const key = get_selected_cell(state).AST_props.key;
                     const index = get_selected_cell(state).AST_props.index;
-                    const array_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
+                    const array_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
                     const inserted_code = transform_formula_bar_input(action.commit_value);
                     append_array_element(array_nodepath, inserted_code);
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
+                },
+                INSERT_ELEMENT: function(meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const index = get_selected_cell(state).AST_props.index;
+                    const array_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    insert_array_element(array_nodepath, index, "null");
+                    return action.offset;
+                },
+                DELETE_ELEMENT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const item_key = get_selected_cell(state).AST_props.item_key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    remove_object_item(obj_nodepath, item_key);
+                    return action.offset;
+                },
+                DELETE_CONTAINER: function (meshCellsNode, state) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    delete_container(nodepath);
+                    return [0, 0];
+                }, // TODO fix this one
+            },
+            {
+                cell_type: "OBJECT_LITERAL_KEY_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const item_key = get_selected_cell(state).AST_props.item_key;
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
                     const obj_item_nodepath = get_object_item(obj_nodepath, item_key);
                     const inserted_code = action.commit_value;
                     // TODO where does new_id come from?
                     replace_object_item_key(obj_item_nodepath, inserted_code);
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
+                },
+                INSERT_ELEMENT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const item_key = get_selected_cell(state).AST_props.item_key;
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    insert_object_getter(obj_nodepath, "new_key", "null");
+                    return action.offset;
+                },
+            },
+            {
+                cell_type: "OBJECT_LITERAL_VALUE_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     // Should be able to merge with the code for commits to the module object
                     const key = get_selected_cell(state).AST_props.key;
                     const item_key = get_selected_cell(state).AST_props.item_key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
                     const obj_prop_node = get_object_item(obj_nodepath, item_key);
                     const inserted_code = transform_formula_bar_input(action.commit_value);
                     replace_object_getter_return_val(obj_prop_node, inserted_code);
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
+                },
+                INSERT_ELEMENT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    insert_object_getter(obj_nodepath, "new_key", "null");
+                    return action.offset;
+                },
+                DELETE_ELEMENT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const item_key = get_selected_cell(state).AST_props.item_key;
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    remove_object_item(obj_nodepath, item_key);
+                    return action.offset;
+                },
+            },
+            {
+                cell_type: "OBJECT_LITERAL_APPEND_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
                     const inserted_code = action.commit_value;
                     insert_object_getter(obj_nodepath, inserted_code, "null");
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
+                },
+                INSERT_ELEMENT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const obj_nodepath = get_mesh_data_value_nodepath(
+                                            AOA_get_record_given_key(meshCellsNode, 0, key));
+                    insert_object_getter(obj_nodepath, "new_key", "null");
+                    return action.offset;
+                },
+            },
+            {
+                cell_type: "TABLE_RW_HEADING_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     // TODO complete
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
+                },
+                INSERT_ELEMENT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const colIndex = get_selected_cell(state).AST_props.colIndex;
+                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
+                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
+                    Table_AddColumn(table_nodepath, colIndex, action.commit_value);
+                    return action.offset;
+                },
+                DELETE_ELEMENT: function (meshCellsNode, state, action) {
+                    const key = get_selected_cell(state).AST_props.key;
+                    const heading = get_selected_cell(state).AST_props.heading;
+                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
+                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
+                    Table_DeleteColumn(table_nodepath, heading);
+                    return [0, 0];
+                },
+            },
+            {
+                cell_type: "TABLE_RW_ADD_COLUMN_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
                     const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_AddColumn(table_nodepath, action.commit_value);
+                    Table_AddColumn(table_nodepath, undefined, action.commit_value);
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
+                },
+            },
+            {
+                cell_type: "TABLE_RW_VALUE_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
@@ -21698,93 +21831,8 @@ cell_edit_types: {
                     const inserted_code = transform_formula_bar_input(action.commit_value, true);
                     Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, inserted_code)
                     return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const colHeading = get_selected_cell(state).AST_props.colHeading;
-                    const rowIndex = get_selected_cell(state).AST_props.rowIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    const inserted_code = transform_formula_bar_input(action.commit_value, true);
-                    Table_AddRow(table_nodepath, colHeading, rowIndex, inserted_code);
-                    return action.offset;
-                }}
-            ]
-        },
-        INSERT_ELEMENT: {
-            default: null,
-            values: [
-                undefined,
-                undefined,
-                undefined,
-                function(row, i) {return function(meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const index = get_selected_cell(state).AST_props.index;
-                    const array_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_array_element(array_nodepath, index, "null");
-                    return action.offset;
-                }},
-                function(row, i) {return function(meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const index = get_selected_cell(state).AST_props.index;
-                    const array_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_array_element(array_nodepath, index, "null");
-                    return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const item_key = get_selected_cell(state).AST_props.item_key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_object_getter(obj_nodepath, "new_key", "null");
-                    return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_object_getter(obj_nodepath, "new_key", "null");
-                    return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    insert_object_getter(obj_nodepath, "new_key", "null");
-                    return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const colIndex = get_selected_cell(state).AST_props.colIndex;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_AddColumn(table_nodepath, action.commit_value, colIndex);
-                    return action.offset;
-                }},
-                undefined,
-                undefined,
-                undefined,
-            ]
-        },
-        DELETE_VALUE: {
-            default: function(row, i) {return function (meshCellsNode, state, action) {
-                alert("No 'delete value' action defined.")
-                return [0, 0];
-            }},
-            values: [
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                function(row, i) {return function(meshCellsNode, state, action) {
+                },
+                DELETE_VALUE: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
@@ -21792,60 +21840,8 @@ cell_edit_types: {
                     const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
                     Table_ChangeValueCell(table_nodepath, colHeading, rowIndex, "undefined");
                     return action.offset;
-                }},
-                undefined,
-            ]
-        },
-        DELETE_ELEMENT: {
-            default: function(row, i) {return function(meshCellsNode, state, action) {
-                const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key);
-                cell_props_nodepath.prune();
-                return [0, 0];
-            }},
-            values: [
-                undefined,
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    alert("No 'delete element' action defined.")
-                    return [0, 0];
-                }},
-                undefined,
-                function(row, i) {return function(meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const index = get_selected_cell(state).AST_props.index;
-                    const array_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    remove_array_element(array_nodepath, index);
-                    return action.offset;
-                }},
-                undefined,
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const item_key = get_selected_cell(state).AST_props.item_key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    remove_object_item(obj_nodepath, item_key);
-                    return action.offset;
-                }},
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const item_key = get_selected_cell(state).AST_props.item_key;
-                    const obj_nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    remove_object_item(obj_nodepath, item_key);
-                    return action.offset;
-                }},
-                undefined,
-                function(row, i) {return function (meshCellsNode, state, action) {
-                    const key = get_selected_cell(state).AST_props.key;
-                    const heading = get_selected_cell(state).AST_props.heading;
-                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
-                    const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
-                    Table_DeleteColumn(table_nodepath, heading);
-                    return [0, 0];
-                }},
-                undefined,
-                function(row, i) {return function(meshCellsNode, state, action) {
+                },
+                DELETE_ELEMENT: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
@@ -21853,61 +21849,22 @@ cell_edit_types: {
                     const table_nodepath = FunctionCall_GetArgument(fnCallNodepath, 0);
                     Table_DeleteRow(table_nodepath, rowIndex);
                     return [0, 0];
-                }},
-                undefined,
-            ]
-        },
-        DELETE_CONTAINER: {
-            default: function(row, i) {return function(meshCellsNode, state, action) {
-                const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key);
-                cell_props_nodepath.prune();
-                return [0, 0];
-            }},
-            values: [
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                function(row, i) {return function (meshCellsNode, state) {
+                },
+            },
+            {
+                cell_type: "TABLE_RW_APPEND_CELL",
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
-                    const nodepath = CT.get_mesh_data_value_nodepath(
-                                            CT.AOA_get_record_given_key(meshCellsNode, 0, key));
-                    delete_container(nodepath);
-                    return [0, 0];
-                }}, // TODO fix this one
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-            ]
-        },
-        CREATE_TABLE: {
-            default: function(row, i) {return function(meshCellsNode, state, action) {
-                const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = get_object_item(meshCellsNode, key).get("value");
-                Table_Create(cell_props_nodepath);
-                return [0, 0];
-            }},
-            values: [
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-            ]
-        }
-    })},
+                    const colHeading = get_selected_cell(state).AST_props.colHeading;
+                    const rowIndex = get_selected_cell(state).AST_props.rowIndex;
+                    const fnCallNodepath = getCellNodePath(meshCellsNode, key).value;
+                    const inserted_code = transform_formula_bar_input(action.commit_value, true);
+                    Table_AddRow(fnCallNodepath, rowIndex, "{" + colHeading + ": " + inserted_code + "}");
+                    return action.offset;
+                }
+            }
+        ]
+    ) },
     l: [3, 6], t: true
 },
 
@@ -21916,81 +21873,97 @@ LINE_SEPARATOR: {
     l: [19, 1]
 },
 
-// TODO need to update this to reflect what worked for the boilerplate at the bottom of the file
+// TODO add indentation
 BLANK_FILE: {
     v: function() {return [
+        
+        "'use strict';",
         "const _CELLS = {};",
+        "const g = window;",
         "",
         "/* Mesh boilerplate - do not change. 2018-10-01-1 */",
         "// Cell props: v = value or formula (fn), l = grid coordinates,",
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
-        "'use strict';",
-        "",
-        "function sc(x) {",
-        "    if (typeof x === 'function') return 'ƒ';",
-        "    if (x instanceof RegExp || x instanceof Date",
+        "function sc(x, d) {",
+        // Used to determine what to show in the cell in the Mesh UI.
+        // Not everything can be transferred via structured clone.
+        "    if (d === 5) return null;", // TODO why is it 5? I just played until I found something that showed the whole Mesh grid...
+        "    if (typeof x === 'function') return \"ƒ\";",
+        "    if (x instanceof RegExp || x instanceof Date ",
         "        || x === null || x === undefined) return x;",
-        "    if (Array.isArray(x)) return x.map(function(a){return sc(a)});",
-        "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k])};return n};",
-        "    return x;",
+        "    if (Array.isArray(x)) return x.map(function(a){return sc(a,d+1)});",
+        "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k],d+1)};return n};",
+            "return x;",
         "};",
-        "",
+"",
         "function find(a, p, options) {",
         "    const l = a.length, o = options || {};",
         "    for (let k = 0; k < l; k++) {",
         "        const v = a[k];",
         "        if (p(v)) return (o.index ? k : v);",
         "    }",
-        "    return o.default;",
-        "    // TODO what to return if options.index = true? -1? what does normal array.proto.find do?",
+        "    return o.default;", // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
         "};",
-        "",
-        "const _defProp = Object.defineProperty, _CACHE = {}, _OUTPUT = {};",
+"",
+        "const _defProp = Object.defineProperty, _OUTPUT = {}, _STACK = [];",
         "function _isFn(value) {return typeof value === 'function'};",
         "function _defCell(k, c) {",
-        "    return _defProp(window, k, {get: function() {",
-        "        // TODO instead of blowing away the defn, clearing cache should just restore cell defs?",
-        "        // That way can avoid doing this check on every lookup?",
-        "        if (k in _CACHE) return _CACHE[k];",
-        "        const o = _OUTPUT[k] = {};",
-        "        const t = o.t = c.t; o.s = c.s; o.n = c.n;",
-        "        let v = c.v; v = _isFn(v) ? v() : v; o.v = sc(v);",
-        "        const f = c.f; if (f) o.f = c.f(v);",
-        "        const l = c.l; o.l = _isFn(l) ? l() : l;",
-        "        return _CACHE[k] = v;",
-                 // TODO can we delay non-value calcs until later?
+        "    return _defProp(g, k, {get: function() {",
+        "        if (_STACK.length > 0) {",
+        "            const top = _STACK[_STACK.length-1];",
+        "            const edges = ('deps' in c) ? c.deps : (c.deps = new Set());",
+        "            edges.add(top);",
+        "        }",
+        "        _STACK.push(k);",
+        "        let v = ('r' in c) ? c.r : (c.r = _isFn(c.v) ? c.v() : c.v);",
+        "        if (!(k in _OUTPUT)) {",
+        "            const l = c.l, f = c.f;",
+        "            const o = _OUTPUT[k] = {",
+        "                t: c.t, s: c.s, n: c.n, // TODO assign instead?",
+        "                v: sc(v,0), ",
+        "                f: f ? f(v) : f,",
+        "                l: _isFn(l) ? l() : l",
+        "            };",
+        "        }",
+        "        _STACK.pop();",
+        "        return v;",
         "    }, configurable: true})",
         "};",
-        "function _makeTable(s) {",
-        "    const table = [], cols = [], MAX = Math.max;",
-        "    for (let h in s) {",
-        "        if (h !== 'length') cols.push([h,s[h].values,s[h].default])",  // && h !== 'keyHeading'
-                    // TODO do we really need this? What if we want to filter first *then* get col?
-                    // indicates operating on columns is not the way to go...
-                    // _defProp(t, h, {get: function() {return this.map(function(r) {return r[h]})}});
-        "    };",
-        "    table.length = (s.length === undefined)",
-        "        ? cols.reduce(function(a,e){return MAX(a,e[1].length)},0)",
-        "        : s.length;",
-        "    for (let i = 0, length = table.length, row; i < length; i++) {",
-        "        table[i] = row = {};",
-        "        cols.forEach(function(col) {",
-        "            let h = col[0], c = col[1][i];",
-        "            if (c === undefined) c = col[2];",
-        "            _defProp(row, h, {get: function() {",
-        "                delete this[h];",
-        "                return this[h] = _isFn(c) ? c.call(table, row, i) : c",
-        "            }, enumerable: true, configurable: true});",
-        "        })",
-        "    };",
-        "    return table;",
-        "};",
-        "function _defCells(c) {for (let k in c) _defCell(k, c[k])};",
-        "function _extraValues(vs) {for (let k in vs) {_CACHE[k] = vs[k]}};",
-        "function _calcSheet(c){for (let k in c) {let v = self[k]; if (c[k].t) _calcTable(v)}}",
-        "function _calcTable(t){for (let i in t){let r=t[i];for(let h in r)r[h]}};",
-        "",
-        "/* END Mesh boilerplate */"    ].join(LINE_SEPARATOR)
+        "function _makeTable(default_col_formulas, set_length, rows) {",
+            // default row cells, length (optional), 'hardcodes'
+            // Build 'default formula' prototype
+            // TODO can we extract out the idea of having the prototype hold
+            // the calculated values and memo on the child?
+            // http://2ality.com/2012/11/property-assignment-prototype-chain.html
+            // in theory, indifferent to whether sparse (obj) or dense (arr)? TODO think about that
+            // upside: huge saving in boilerplate code by pushing memoisation to UI responsibility
+            // downside: 'exception' row values aren't computed (only default row formulas are)
+        "    const t = [];",
+        "    if (set_length === null) set_length = rows.length;",
+        "    for (let i=0; i<set_length; i++) {",
+        "        const r = rows[i] || {}; t.push(r);", // "|| {}" for cases where generating excess rows"
+        "        for (let k in default_col_formulas) {",
+        "            if (!(k in r)) {",
+        "                const v = default_col_formulas[k];",
+        "                if (_isFn(v)) {",
+        "                    Object.defineProperty(r, k, {get: function() {",
+        "                        delete this[k]; return this[k] = fn.call(this, i, t);",
+        "                    }, configurable: true, enumerable: true});",
+        "                } else r[k] = v",
+        "            }",
+        "        }",
+        "    }",
+        "    return t;",
+        "}",
+        "function _defCells(c)     {for (let k in c) _defCell(k, c[k])};",
+        "function _extraValues(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}};", // Should this uncaching happen elsewhere?
+        "function _calcSheet(c)    {for (let k in c) {let v = g[k]; if (c[k].t) _calcTable(v)}};",
+        "function _calcTable(t)    {for (let i in t){let r=t[i];for(let h in r)r[h]}};",
+        // TODO do we also need to delete c.deps if it has it?
+        // TODO store output on cell instead of in _OUTPUT? (But easy to just send _OUTPUT)
+        "function _uncache(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)};",
+        "/* END Mesh boilerplate */"
+        ].join(LINE_SEPARATOR)
     },
     l: [20,1]
 },
@@ -22041,7 +22014,6 @@ generate_cells: {
             }
 
             let value_nodepath = getCellNodePath(cellsNodePath, id).value;
-            if (Boolean(cell.t)) {value_nodepath = FunctionCall_GetArgument(value_nodepath, 0)};
             const display_fn = display_fns[triage(value_nodepath.node.type, cell.v, Boolean(cell.t))];
 
             // Not sure on exactly which parameters are best here, and which order makes most sense.
@@ -22074,14 +22046,15 @@ generate_cells: {
 },
 
 triage: {
+    // TODO replace with 'find' call
     v: function() {return function triage(nodetype, value, isTable) {
         let stop, return_value;
         triage_table.forEach(function(row) {
             if (!stop
-                && ((row.nodetype === "ALL") || (nodetype === row.nodetype))
-                && ((row.prototype === "ALL") || (row.prototype.isPrototypeOf(value)))
-                && ((row.typeof === "ALL") || (typeof value === row.typeof))
-                && ((row.isTable === isTable) || (row.isTable === undefined))
+                && ((row.nodetype === undefined) || (nodetype === row.nodetype))
+                && ((row.prototype === undefined) || (row.prototype.isPrototypeOf(value)))
+                && ((row.typeof === undefined) || (typeof value === row.typeof))
+                && ((row.isTable === undefined) || (row.isTable === isTable))
             ) {
                 stop = true;
                 return_value = row.fn;
@@ -22096,82 +22069,65 @@ triage: {
 // https://github.com/benjamn/ast-types/blob/master/def/es6.js
 
 triage_table: {
-    v: function() {return _makeTable({
-        nodetype: {
-            default: function(row, i) {return "ALL"},
-            values: [
-                // removed 'rw' for now - need to figure out whether object and array literals should stay
-                // consider *not* allowing them (just read-only) because of difficulties
-                // in dealing with spread notation
-                'ObjectExpression',
-                undefined,
-                "ArrayExpression",
-                "ObjectExpression",
-                "CallExpression",
-                "CallExpression",
-                "MemberExpression",
-                "MemberExpression",
-                "NewExpression"
-            ]
+    v: function() {return _makeTable(
+        {
+            nodetype: function() {return undefined},
+            prototype: function() {return undefined},
+            typeof: function() {return undefined},
+            isTable: function() {return undefined},
+            fn: function() {return null}
         },
-        prototype: {
-            default: function(row, i) {return "ALL"},
-            values: [
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                Array.prototype,
-                undefined,
-                Array.prototype,
-                undefined,
-                undefined
-            ]
-        },
-        typeof: {
-            default: function(row, i) {return "ALL"},
-            values: [
-                undefined,
-                "Array",
-                undefined,
-                undefined,
-                "ALL",
-                "object",
-                undefined,
-                "object",
-                "object"
-            ]
-        },
-        isTable: {
-            default: function(row, i) {return false},
-            values: [
-                true,
-                true,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined
-            ]
-        },
-        fn: {
-            default: null,
-            values: [
-                "table_rw",
-                "table_ro",
-                "array_ro",
-                "object_ro",
-                "array_ro",
-                "object_ro",
-                "array_ro",
-                "object_ro",
-                "object_ro"
-            ]
-        },
+        null,
+        [
+            // removed 'rw' array/object variants for now - need to figure out whether object and array literals should stay
+            // consider *not* allowing them (just read-only) because of difficulties in dealing with spread notation.
+            // I actually reckon we could overcome the issue of self-references not working by encouraging tables in general case
+            {
+                nodetype: 'CallExpression',
+                isTable: true,
+                fn: "table_rw",
+            },
+            {
+                typeof: "Array",
+                isTable: true,
+                fn: "table_ro",
+            },
+            {
+                nodetype: "ArrayExpression",
+                fn: "array_ro",
+            },
+            {
+                nodetype: "ObjectExpression",
+                fn: "object_ro",
+            },
+            {
+                nodetype: "CallExpression",
+                prototype: Array.prototype,
+                typeof: "ALL",
+                fn: "array_ro",
+            },
+            {
+                nodetype: "CallExpression",
+                typeof: "object",
+                fn: "object_ro",
+            },
+            {
+                nodetype: "MemberExpression",
+                prototype: Array.prototype,
+                fn: "array_ro",
+            },
+            {
+                nodetype: "MemberExpression",
+                typeof: "object",
+                fn: "object_ro",
+            },
+            {
+                nodetype: "NewExpression",
+                typeof: "object",
+                fn: "object_ro"
+            }
+        ]
         
-
         // TODO consider whether this will deal with array spread notation
         // [1, 2, 3]
         // TODO consider whether this will deal with object spread notation
@@ -22183,7 +22139,7 @@ triage_table: {
     
         // TODO what are MemberExpressions? Provide example in comments
         // TODO need to enumerate the other built-in objects here too... eg Map, Set
-
+    
         // If above isn't capturing things some objects, see http://stackoverflow.com/a/22482737
         
         /*
@@ -22222,7 +22178,7 @@ triage_table: {
             }
         },
         */
-    })},
+    )},
     l: [3, 15], t: true
 },
 
@@ -22272,7 +22228,6 @@ get_formula_bar_text: {
 
 display_fns: {
     v: function() {return ({
-
         dummy: function(value, formatted_value, value_nodepath, id) {
             // For use where you don't know what to use for the formula bar value
             // and code location values yet.
@@ -22465,25 +22420,13 @@ display_fns: {
     /* TABLES */
     
         table_ro: function(arr, formatted_arr, whatever_nodepath, id) {/* TODO */},
-        table_rw: function(arr, formatted_arr, obj_nodepath, id) {
-            // Table specification:
-            // {heading: {values: [], default: fn}, heading2: ..., [optional] length: int}
-            // By the time it gets to here, the data is an array,
-            // but the nodepath is still an object literal.
-    
-            const raw_text = print_AST_to_code_string(obj_nodepath);
-            const formula_bar_text = get_formula_bar_text(true, raw_text);
-    
-            // TOOD make filtering __proto__ a dedicated function
-            const keys_to_exclude = new Set(['__proto__', 'length']);
-            const headings = obj_nodepath.get("properties").value
-                            .filter(function(k) {
-                                return !(keys_to_exclude.has(get_object_key_from_node(k.key)))
-                            })
-                            .map(function(k) {return get_object_key_from_node(k.key)});
-    
-            // Headers
-            const header_cells = headings.map(
+        table_rw: function(arr, formatted_arr, nodepath, id) {
+
+            // Headings
+            const headings_nodepath = FunctionCall_GetArgument(nodepath, 0);
+            const headings = headings_nodepath.get("properties").value
+                .map(function(k) {return get_object_key_from_node(k.key)})
+            const heading_cells = headings.map(
                 function(heading, col_offset) { return {
                     // TODO
                     location: [1, col_offset], 
@@ -22507,42 +22450,48 @@ display_fns: {
             };
             
             // Records
-            const col_nodes = {};
-            obj_nodepath.get("properties").value.forEach(function(prop_node) {
-                let key = get_object_key_from_node(prop_node.key);
-                let node_value = prop_node.value;
-                if ('properties' in node_value) {
-                    prop_node.value.properties.forEach(function(p) {
-                        if ('values' === get_object_key_from_node(p.key)) {
-                            col_nodes[key] = p.value;
-                        }
+            const rows_prop_value_nodes = [];
+            const rows_nodepath = FunctionCall_GetArgument(nodepath, 2);
+            rows_nodepath.get("elements").value.forEach(
+                function(row_node) {
+                    const row_info = {};
+                    // if ('properties' in row_node) ? (case where there are a bunch of rows with no cols?)
+                    row_node.properties.forEach(function(prop_node) {
+                        const key = get_object_key_from_node(prop_node.key);
+                        row_info[key] = prop_node.value;
                     })
+                    rows_prop_value_nodes.push(row_info);
                 }
-            });
-            // TODO flip this around - first go by col (key), then by row
-            // that way we can have different behaviour for array literals
-            // versus results of function calls / generators
+            );
             const record_cells = [];
             for (let offset_r = 0; offset_r < arr.length; offset_r++) {
+                // If an AST row actually exists for that slot (as opposed to being generated by _makeTable)
+                let row_prop_value_nodes
+                if (offset_r in rows_prop_value_nodes) {
+                    row_prop_value_nodes = rows_prop_value_nodes[offset_r];
+                }
                 headings.map(function(heading, offset_c) {
-                    let elements_node = col_nodes[heading].elements;
-                    let is_formula, formula_bar_text;
-                    if (offset_r in elements_node) {
-                        let element_node = elements_node[offset_r];
-                        is_formula = leaf_is_formula(element_node);
-                        if (element_node.type === "FunctionExpression") {
-                            element_node = element_node.body.body[0].argument; // TODO merge with equivalent in display.js / maybe separate that 'lookthrough' aspect into its own function?
+                    // TODO somewhere account for case where row was auto-generated so there is no AST node for that row
+                    let row_prop_value_node = row_prop_value_nodes[heading];
+                    let is_formula, raw_text, formula_bar_text;
+                    // Property actually exists on row's object literal
+                    if (heading in row_prop_value_nodes) {
+                        is_formula = leaf_is_formula(row_prop_value_node);
+                        if (row_prop_value_node.type === "FunctionExpression") {
+                            // TODO merge with equivalent in display.js / maybe separate that 'lookthrough' aspect into its own function?
+                            row_prop_value_node = row_prop_value_node.body.body[0].argument;
                         }
-                        let raw_text = print_AST_to_code_string(element_node);
+                        raw_text = print_AST_to_code_string(row_prop_value_node);
                         formula_bar_text = get_formula_bar_text(is_formula, raw_text);
                     } else {
+                        // TODO figure out what to do here - show calc column formula but disable editing formula bar?
                         is_formula = true;
-                        formula_bar_text = "DEFAULT FORMULA";
+                        formula_bar_text = "HARDCODE DOESN'T EXIST ON THIS ROW'S OBJECT LITERAL"
                     }
                     let value = arr[offset_r][heading];
                     let formatted_value = formatted_arr
                                             ? formatted_arr[offset_r][heading]
-                                            : String(arr[offset_r][heading]);
+                                            : String(value);
                     record_cells.push(
                         ({
                             location: [2 + offset_r, offset_c],
@@ -22556,11 +22505,12 @@ display_fns: {
                     )
                 }
             )}
-            
+
             // Append cell
-            // TODO how will this know not to display if the length is manually set?
             let append_record_cells = [];
-            const showAppendCells = (undefined === get_object_item(obj_nodepath, "length"));
+            const set_table_length_nodepath = FunctionCall_GetArgument(nodepath, 1);
+            console.log(set_table_length_nodepath);
+            const showAppendCells = "undefined" !== set_table_length_nodepath.value.name; // TODO also account for null?
             if (showAppendCells) {
                 append_record_cells = headings.map(function(heading, offset_c) {return {
                     location: [2 + arr.length, offset_c],
@@ -22572,7 +22522,7 @@ display_fns: {
                 }})
             };
     
-            return [].concat(header_cells, [add_column_cell], record_cells, append_record_cells);
+            return [].concat(heading_cells, add_column_cell, record_cells, append_record_cells);
     
         },
 
@@ -22841,7 +22791,7 @@ remove_object_item: {
 Table_Create: {
     v: function() {return function(cellObjPath) {
         const cellValuePropPath = get_object_item(cellObjPath, "v");
-        const table_text = "function () {return _makeTable({})}";
+        const table_text = "function () {return _makeTable({}, null, [])}";
         replace_object_item_value(cellValuePropPath, table_text);
         const cellTableFlagPropPath = get_object_item(cellObjPath, "t");
         if (cellTableFlagPropPath !== undefined) {
@@ -22853,138 +22803,188 @@ Table_Create: {
     l: [26, 22]
 },
 
-Table_GetColumnNodePaths: {
-    v: function() {return function(tablePath) {
-        const colNodePaths = {};
-        const tablePropsPath = tablePath.get("properties");
-        for (let i = 0; i < tablePropsPath.value.length; i++) {
-            const propPath = tablePropsPath.get(i);
-            const propValuePath = propPath.get("value");
-            if (propValuePath.value.type === 'ObjectExpression') {
-                const valuesPath = get_object_item(propValuePath, "values");
-                const defaultPath = get_object_item(propValuePath, "default");
-                if (valuesPath !== undefined && defaultPath !== undefined) {
-                    const heading = get_object_key_from_node(propPath.get("key").node);
-                    colNodePaths[heading] = propValuePath;
-                };
-            };
-        };
-        return colNodePaths;
-    }},
+Table_GetColumnsObject: {
+    v: function() {return function(table_fncall_node) {return FunctionCall_GetArgument(table_fncall_node, 0)}},
     l: [27, 22]
 },
 
-Table_ResizeArray: {
-    v: function() {return function(arrayPath, newSize) {
-        // TODO shrink?
-        const elementsNode = arrayPath.value.elements;
-        const currentLength = elementsNode.length;
-        const extraSlotCount = Math.max(newSize - currentLength, 0); // TODO remove if shrink
-        for (let i = 0; i < extraSlotCount; i++) {
-            elementsNode.push(B.identifier('undefined'));
-        };
-    }},
+Table_GetRowCountOverride: {
+    v: function() {return function(table_fncall_node) {return FunctionCall_GetArgument(table_fncall_node, 1)}},
     l: [28, 22]
 },
 
-Table_ChangeValueCell: {
-    v: function() {return function(tablePath, colHeading, index, new_value) {
-        // TODO if values is a function call, fail?
-        const colPath = get_object_item(tablePath, colHeading);
-        const valuesPath = get_object_item(colPath.get("value"), "values").get("value");
-        const currentLength = valuesPath.node.elements.length;
-        if (currentLength < index + 1) { // Expand only, don't shrink
-            Table_ResizeArray(valuesPath, index + 1);
-        };
-        replace_array_element(valuesPath, index, new_value);
-    }},
+Table_GetRowsArray: {
+    v: function() {return function(table_fncall_node) {return FunctionCall_GetArgument(table_fncall_node, 2)}},
     l: [29, 22]
 },
 
-Table_AddColumn: {
-    v: function() {return function(tablePath, heading, colIndex) {
-        // TODO should this not have heading as a parameter, and auto-generate it to be unique?
-        const lengths = [], headings = new Set();
-        const columnPaths = Table_GetColumnNodePaths(tablePath);
-        for (let heading in columnPaths) {
-            const colPath = columnPaths[heading];
-            headings.add(heading);
-            const valuesPath = get_object_item(colPath, "values");
-            let valuesNode = valuesPath.get("value").node;
-            if (valuesNode.type === "ArrayExpression") {
-                lengths.push(valuesNode.elements.length);
-            };
-        };
-        const MAX = function(a, b) {return Math.max(a, b);}
-        const length = (lengths.length > 0) ? lengths.reduce(MAX, 0) : 0;
-        const valuesProp = B.property('init', 
-                            B.literal('values'),
-        // TODO should it fill with holes instead?
-        // TODO should the default value be a function that returns null or undefined?
-        // That way we have a simpler template to work with for the UI
-        // (or else we exclude the prop entirely), but may dirty up the source
-                            B.arrayExpression(Array.prototype.fill.call(new Array(length), B.identifier('undefined')))
-        );
-        const defaultProp = B.property('init', B.literal('default'), B.literal(null));
-        const newObject = B.objectExpression([defaultProp, valuesProp]);
-        let newHeading = heading;
-        if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
-        const newProp = B.property('init', B.literal(newHeading), newObject);
-
-        const tablePropsPath = tablePath.get("properties");
-        if (colIndex === undefined) colIndex = tablePropsPath.value.length;
-        tablePropsPath.value.splice(colIndex, 0, newProp);
-    }},
+Table_AddRow: {
+    v: function() {
+        return function(table_fncall_node, row_index, prop_obj) {
+            const rows_nodepath = Table_GetRowsArray(table_fncall_node);
+            const new_row = prop_obj || {}; // May need to convert to node equivalent
+            if (row_index === undefined) {
+                // rows_nodepath.node.elements.splice( ??? );
+            }
+            else { rows_nodepath.node.elements.push(String(new_row)); }
+        }
+        // TODO if a row is already there, push it down (insert before it)
+    },
     l: [30, 22]
 },
 
-Table_DeleteColumn: {
-    v: function() {return function(tablePath, heading) {
-        const tablePropsPath = tablePath.get("properties");
-        for (let i = 0; i < tablePropsPath.value.length; i++) {
-            let propPath = tablePropsPath.get(i);
-            let key = get_object_key_from_node(propPath.get("key").value);
-            if (key === heading) {
-                propPath.prune();
-            }
-        };
-    }},
-    l: [31, 22]
-},
-
-Table_AddRow: {
-    v: function() {return function(tablePath, affectedColHeading, index, newValue) {
-        const columnPaths = Table_GetColumnNodePaths(tablePath);
-        for (let h in columnPaths) {
-            const colPath = columnPaths[h];
-            const valuesPath = get_object_item(colPath, "values");
-            let valuesNode = valuesPath.get("value").node;
-            if (valuesNode.type === "ArrayExpression") {
-                if (h === affectedColHeading && newValue !== undefined) {
-                    valuesNode.elements.push(B.identifier(newValue));
-                } else {
-                    valuesNode.elements.push(B.identifier("undefined"));
-                }
-            }
-        };
-    }},
-    l: [32, 22]
-},
-
-Table_DeleteRow: {
-    v: function() {return function(tablePath, index) {
-        const columnPaths = Table_GetColumnNodePaths(tablePath);
-        for (let h in columnPaths) {
-            const colPath = columnPaths[h];
-            const valuesPath = get_object_item(colPath, "values");
-            let valuesNode = valuesPath.get("value").node;
-            if (valuesNode.type === "ArrayExpression") {
-                valuesPath.get("value", "elements", index).prune();
+Table_AddColumn: {
+    v: function() {
+        return function(table_fncall_node, col_index, header) {
+            // TODO Also allow specifying default col formula?
+            const cols_nodepath = Table_GetColumnsObject(table_fncall_node);
+            if (col_index === undefined) {
+                console.log(cols_nodepath.node.properties);
+                const new_col_node = B.property('init', 
+                    // TODO using this instead of literal is probably a massive hack
+                    B.identifier(header), 
+                    B.literal(null)
+                );
+                cols_nodepath.node.properties.push(new_col_node);
+            } else {
+                // ???
             }
         }
-    }},
-    l: [33, 22]
+    }
 },
+
+// Table_GetColumnNodePaths: {
+//     v: function() {return function(tablePath) {
+//         const colNodePaths = {};
+//         const tablePropsPath = tablePath.get("properties");
+//         for (let i = 0; i < tablePropsPath.value.length; i++) {
+//             const propPath = tablePropsPath.get(i);
+//             const propValuePath = propPath.get("value");
+//             if (propValuePath.value.type === 'ObjectExpression') {
+//                 const valuesPath = get_object_item(propValuePath, "values");
+//                 const defaultPath = get_object_item(propValuePath, "default");
+//                 if (valuesPath !== undefined && defaultPath !== undefined) {
+//                     const heading = get_object_key_from_node(propPath.get("key").node);
+//                     colNodePaths[heading] = propValuePath;
+//                 };
+//             };
+//         };
+//         return colNodePaths;
+//     }},
+//     l: [27, 22]
+// },
+//
+// Table_ResizeArray: {
+//     v: function() {return function(arrayPath, newSize) {
+//         // TODO shrink?
+//         const elementsNode = arrayPath.value.elements;
+//         const currentLength = elementsNode.length;
+//         const extraSlotCount = Math.max(newSize - currentLength, 0); // TODO remove if shrink
+//         for (let i = 0; i < extraSlotCount; i++) {
+//             elementsNode.push(B.identifier('undefined'));
+//         };
+//     }},
+//     l: [28, 22]
+// },
+
+// Table_ChangeValueCell: {
+//     v: function() {return function(tablePath, colHeading, index, new_value) {
+//         // TODO if values is a function call, fail?
+//         const colPath = get_object_item(tablePath, colHeading);
+//         const valuesPath = get_object_item(colPath.get("value"), "values").get("value");
+//         const currentLength = valuesPath.node.elements.length;
+//         if (currentLength < index + 1) { // Expand only, don't shrink
+//             Table_ResizeArray(valuesPath, index + 1);
+//         };
+//         replace_array_element(valuesPath, index, new_value);
+//     }},
+//     l: [29, 22]
+// },
+
+// Table_AddColumn: {
+//     v: function() {return function(tablePath, heading, colIndex) {
+//         // TODO should this not have heading as a parameter, and auto-generate it to be unique?
+//         const lengths = [], headings = new Set();
+//         const columnPaths = Table_GetColumnNodePaths(tablePath);
+//         for (let heading in columnPaths) {
+//             const colPath = columnPaths[heading];
+//             headings.add(heading);
+//             const valuesPath = get_object_item(colPath, "values");
+//             let valuesNode = valuesPath.get("value").node;
+//             if (valuesNode.type === "ArrayExpression") {
+//                 lengths.push(valuesNode.elements.length);
+//             };
+//         };
+//         const MAX = function(a, b) {return Math.max(a, b);}
+//         const length = (lengths.length > 0) ? lengths.reduce(MAX, 0) : 0;
+//         const valuesProp = B.property('init', 
+//                             B.literal('values'),
+//         // TODO should it fill with holes instead?
+//         // TODO should the default value be a function that returns null or undefined?
+//         // That way we have a simpler template to work with for the UI
+//         // (or else we exclude the prop entirely), but may dirty up the source
+//                             B.arrayExpression(Array.prototype.fill.call(new Array(length), B.identifier('undefined')))
+//         );
+//         const defaultProp = B.property('init', B.literal('default'), B.literal(null));
+//         const newObject = B.objectExpression([defaultProp, valuesProp]);
+//         let newHeading = heading;
+//         if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
+//         const newProp = B.property('init', B.literal(newHeading), newObject);
+
+//         const tablePropsPath = tablePath.get("properties");
+//         if (colIndex === undefined) colIndex = tablePropsPath.value.length;
+//         tablePropsPath.value.splice(colIndex, 0, newProp);
+//     }},
+//     l: [30, 22]
+// },
+
+// Table_DeleteColumn: {
+//     v: function() {return function(tablePath, heading) {
+//         const tablePropsPath = tablePath.get("properties");
+//         for (let i = 0; i < tablePropsPath.value.length; i++) {
+//             let propPath = tablePropsPath.get(i);
+//             let key = get_object_key_from_node(propPath.get("key").value);
+//             if (key === heading) {
+//                 propPath.prune();
+//             }
+//         };
+//     }},
+//     l: [31, 22]
+// },
+
+// Table_AddRow: {
+//     v: function() {return function(tablePath, affectedColHeading, index, newValue) {
+//         const columnPaths = Table_GetColumnNodePaths(tablePath);
+//         for (let h in columnPaths) {
+//             const colPath = columnPaths[h];
+//             const valuesPath = get_object_item(colPath, "values");
+//             let valuesNode = valuesPath.get("value").node;
+//             if (valuesNode.type === "ArrayExpression") {
+//                 if (h === affectedColHeading && newValue !== undefined) {
+//                     valuesNode.elements.push(B.identifier(newValue));
+//                 } else {
+//                     valuesNode.elements.push(B.identifier("undefined"));
+//                 }
+//             }
+//         };
+//     }},
+//     l: [32, 22]
+// },
+
+// Table_DeleteRow: {
+//     v: function() {return function(tablePath, index) {
+//         const columnPaths = Table_GetColumnNodePaths(tablePath);
+//         for (let h in columnPaths) {
+//             const colPath = columnPaths[h];
+//             const valuesPath = get_object_item(colPath, "values");
+//             let valuesNode = valuesPath.get("value").node;
+//             if (valuesNode.type === "ArrayExpression") {
+//                 valuesPath.get("value", "elements", index).prune();
+//             }
+//         }
+//     }},
+//     l: [33, 22]
+// },
 
 /*
 Table_ChangeDefaultFormulaCell: function() {},
@@ -23003,41 +23003,32 @@ FunctionCall_GetArgument: {
 // TODO is there a more brief alternative to assign?
 // TODO can we get rid of all the (state, action) signatures?
 state_changes: {
-
-    v: function() {return _makeTable({
-        action_type: {
-            default: null,
-            values: [
-                'NOOP',
-            /* CODE PANE */
-                'SELECT_CODE',
-                'TOGGLE_CODE_PANE_SHOW',
-                'LOAD_CODE',
-                'LOAD_CODE_FROM_PANE',
-            /* CALCULATION */
-                'LOAD_CELLS',
-            /* CELL BEHAVIOUR */
-                'SELECT_CELL',
-                'MOVE_CELL_SELECTION',
-                'EDIT_CELL',
-                'EDIT_CELL_REPLACE',
-                'DISCARD_CELL_EDIT',
-                'EDIT_AST',
-            /* OTHER */
-                'SET_FILEPATH',
-            ]
+    v: function() {return _makeTable(
+        {
+            action_type: function() {return null}
         },
-        reducer: {
-            default: null,
-            values: [
-                function() {return function(state, action) {return state}},
-                function() {return function(state, action) {return Object.assign({}, state, {mode: 'EDITING_CODE'})}},
-                function() {return function(state, action) {
+        null,
+        [
+            {
+                action_type: 'NOOP',
+                reducer: function(state, action) {return state},
+            },
+            /* CODE PANE */
+            {
+                action_type: 'SELECT_CODE',
+                reducer: function(state, action) {return Object.assign({}, state, {mode: 'EDITING_CODE'})},
+            },
+            {
+                action_type: 'TOGGLE_CODE_PANE_SHOW',
+                reducer: function(state, action) {
                     const bool = !state.code_editor.show;
                     const code_editor = Object.assign({}, state.code_editor, {show: bool});
                     return Object.assign({}, state, {code_editor: code_editor});
-                }},
-                function() {return function(state, action) {return Object.assign({}, state, {
+                },
+            },
+            {
+                action_type: 'LOAD_CODE',
+                reducer: function(state, action) {return Object.assign({}, state, {
                     code_editor: Object.assign({}, state.code_editor, {
                         // TODO this 'recording of past valid state' is a bit of a hack.
                         // If the change we made in the code pane was not valid,
@@ -23047,18 +23038,32 @@ state_changes: {
                         value: action.code, prev_value: state.code_editor.value
                     }),
                     mode: 'CALCULATING',
-                })}},
-                function() {return function(state, action) {return Object.assign({}, state, {
+                })},
+            },
+            {
+                action_type: 'LOAD_CODE_FROM_PANE',
+                reducer: function(state, action) {return Object.assign({}, state, {
                     mode: 'LOAD_CODE_FROM_PANE', 
-                })}},
-                function() {return function(state, action) {return Object.assign({}, state, {
+                })},
+            },
+            /* CALCULATION */
+            {
+                action_type: 'LOAD_CELLS',
+                reducer: function(state, action) {return Object.assign({}, state, {
                     mode: 'READY',
                     cells: cells
-                })}},
-                function() {return function(state, action) {return Object.assign({}, state, {
+                })},
+            },
+            /* CELL BEHAVIOUR */
+            {
+                action_type: 'SELECT_CELL',
+                reducer: function(state, action) {return Object.assign({}, state, {
                     selected_cell_loc: action.location
-                })}},
-                function() {return function(state, action) {
+                })},
+            },
+            {
+                action_type: 'MOVE_CELL_SELECTION',
+                reducer: function(state, action) {
                     const old_idxs = state.selected_cell_loc;
                     const offsets = action.offset;
                     const new_location = [
@@ -23066,14 +23071,26 @@ state_changes: {
                         Math.max(0, old_idxs[1] + offsets[1]),
                     ];
                     return Object.assign({}, state, {selected_cell_loc: new_location});
-                }},
-                function() {return function(state, action) {return Object.assign({}, state, {mode: 'EDIT'})}},
-                function() {return function(state, action) {return Object.assign({}, state, {mode: 'EDIT'})}},
-                function() {return function(state, action) {return Object.assign({}, state, {
+                },
+            },
+            {
+                action_type: 'EDIT_CELL',
+                reducer: function(state, action) {return Object.assign({}, state, {mode: 'EDIT'})},
+            },
+            {
+                action_type: 'EDIT_CELL_REPLACE',
+                reducer: function(state, action) {return Object.assign({}, state, {mode: 'EDIT'})},
+            },
+            {
+                action_type: 'DISCARD_CELL_EDIT',
+                reducer: function(state, action) {return Object.assign({}, state, {
                     mode: 'READY',
                     formula_bar_value: this.formula_bar_value,
-                })}},
-                function() {return function(state, action) {
+                })},
+            },
+            {
+                action_type: 'EDIT_AST',
+                reducer: function(state, action) {
                     const old_code = state.code_editor.value;
                     const AST = parse_code_string_to_AST(old_code);
                     const mesh_obj_node = getCellsNodePath(AST);
@@ -23101,12 +23118,15 @@ state_changes: {
                         ],
                         prev_selected_cell_loc: [old_idxs[0], old_idxs[1]],
                     });
-                }},
-                function() {return function(state, action) {return Object.assign({}, state, {filepath: action.filepath})}}
-            ]
-        }
-
-    })},
+                },
+            },
+            /* OTHER */
+            {
+                action_type: 'SET_FILEPATH',
+                reducer: function(state, action) {return Object.assign({}, state, {filepath: action.filepath})}
+            }
+        ]
+    )},
     l: [10, 25], t: true,
 },
 
@@ -23213,37 +23233,44 @@ function _defCell(k, c) {
       _STACK.push(k);
       let v = ('r' in c) ? c.r : (c.r = _isFn(c.v) ? c.v() : c.v);
       if (!(k in _OUTPUT)) {
-          const o = _OUTPUT[k] = {};
-          const t = o.t = c.t; o.s = c.s; o.n = c.n;
-          o.v = sc(v,0);
-          const f = c.f; if (f) o.f = c.f(v);
-          const l = c.l; o.l = _isFn(l) ? l() : l;
+        const l = c.l, f = c.f;
+        const o = _OUTPUT[k] = {
+          t: c.t, s: c.s, n: c.n, // TODO assign instead?
+          v: sc(v,0), 
+          f: f ? f(v) : f,
+          l: _isFn(l) ? l() : l
+        };
       }
       _STACK.pop();
       return v;
   }, configurable: true})
 };
-function _makeTable(s) {
-  const table = [], cols = [], MAX = Math.max;
-  for (let h in s) {
-      if (h !== 'length') cols.push([h,s[h].values,s[h].default])
-  };
-  table.length = (s.length === undefined)
-      ? cols.reduce(function(a,e){return MAX(a,e[1].length)},0)
-      : s.length;
-  for (let i = 0, length = table.length, row; i < length; i++) {
-      table[i] = row = {};
-      cols.forEach(function(col) {
-          let h = col[0], c = col[1][i];
-          if (c === undefined) c = col[2];
-          _defProp(row, h, {get: function() {
-              delete this[h];
-              return this[h] = _isFn(c) ? c.call(table, row, i) : c
-          }, enumerable: true, configurable: true});
-      })
-  };
-  return table;
-};
+function _makeTable(default_col_formulas, set_length, rows) {
+    // default row cells, length (optional), 'hardcodes'
+    // Build 'default formula' prototype
+    // TODO can we extract out the idea of having the prototype hold
+    // the calculated values and memo on the child?
+    // http://2ality.com/2012/11/property-assignment-prototype-chain.html
+    // in theory, indifferent to whether sparse (obj) or dense (arr)? TODO think about that
+    // upside: huge saving in boilerplate code by pushing memoisation to UI responsibility
+    // downside: 'exception' row values aren't computed (only default row formulas are)
+    const t = [];
+    if (set_length === null) set_length = rows.length;
+    for (let i=0; i<set_length; i++) {
+        const r = rows[i] || {}; t.push(r); // "|| {}" for cases where generating excess rows
+        for (let k in default_col_formulas) {
+            if (!(k in r)) {
+                const v = default_col_formulas[k];
+                if (_isFn(v)) {
+                    Object.defineProperty(r, k, {get: function() {
+                        delete this[k]; return this[k] = fn.call(this, i, t);
+                    }, configurable: true, enumerable: true});
+                } else r[k] = v
+            }
+        }
+    }
+    return t;
+}
 function _defCells(c)     {for (let k in c) _defCell(k, c[k])};
 function _extraValues(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}}; // Should this uncaching happen elsewhere?
 function _calcSheet(c)    {for (let k in c) {let v = g[k]; if (c[k].t) _calcTable(v)}};
