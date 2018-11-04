@@ -22831,6 +22831,8 @@ Table_AddColumn: {
     v: function() {
         return function(table_fncall_node, col_index, header) {
             // TODO Also allow specifying default col formula?
+            // TODO if header not specified, make one up?
+            // if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
             const cols_nodepath = Table_GetColumnsObject(table_fncall_node);
             if (col_index === undefined) {
                 console.log(cols_nodepath.node.properties);
@@ -22851,11 +22853,8 @@ Table_AddColumn: {
 Table_ChangeCellValue: {
     v: function() {
         return function(table_np, row_index, col_header, new_value) {
-            console.log(table_np);
             const rows_np = Table_GetRowsArray(table_np);
-            console.log(rows_np);
             const row_np = rows_np.get("elements", row_index); // what if need to append?
-            console.log(row_np);
             let item_np = Object_GetItem(row_np, col_header); // what if item does not yet exist?
             if (item_np === undefined) {
                 Object_InsertItem(row_np, col_header, "null") // TODO insert in right order?
@@ -22873,28 +22872,6 @@ Table_ChangeCellValue: {
     },
     l: [32, 22]
 },
-
-// Table_GetColumnNodePaths: {
-//     v: function() {return function(tablePath) {
-//         const colNodePaths = {};
-//         const tablePropsPath = tablePath.get("properties");
-//         for (let i = 0; i < tablePropsPath.value.length; i++) {
-//             const propPath = tablePropsPath.get(i);
-//             const propValuePath = propPath.get("value");
-//             if (propValuePath.value.type === 'ObjectExpression') {
-//                 const valuesPath = Object_GetItem(propValuePath, "values");
-//                 const defaultPath = Object_GetItem(propValuePath, "default");
-//                 if (valuesPath !== undefined && defaultPath !== undefined) {
-//                     const heading = Object_GetKeyFromNode(propPath.get("key").node);
-//                     colNodePaths[heading] = propValuePath;
-//                 };
-//             };
-//         };
-//         return colNodePaths;
-//     }},
-//     l: [27, 22]
-// },
-//
 // Table_ResizeArray: {
 //     v: function() {return function(arrayPath, newSize) {
 //         // TODO shrink?
@@ -22907,43 +22884,6 @@ Table_ChangeCellValue: {
 //     }},
 //     l: [28, 22]
 // },
-// Table_AddColumn: {
-//     v: function() {return function(tablePath, heading, colIndex) {
-//         // TODO should this not have heading as a parameter, and auto-generate it to be unique?
-//         const lengths = [], headings = new Set();
-//         const columnPaths = Table_GetColumnNodePaths(tablePath);
-//         for (let heading in columnPaths) {
-//             const colPath = columnPaths[heading];
-//             headings.add(heading);
-//             const valuesPath = Object_GetItem(colPath, "values");
-//             let valuesNode = valuesPath.get("value").node;
-//             if (valuesNode.type === "ArrayExpression") {
-//                 lengths.push(valuesNode.elements.length);
-//             };
-//         };
-//         const MAX = function(a, b) {return Math.max(a, b);}
-//         const length = (lengths.length > 0) ? lengths.reduce(MAX, 0) : 0;
-//         const valuesProp = B.property('init', 
-//                             B.literal('values'),
-//         // TODO should it fill with holes instead?
-//         // TODO should the default value be a function that returns null or undefined?
-//         // That way we have a simpler template to work with for the UI
-//         // (or else we exclude the prop entirely), but may dirty up the source
-//                             B.arrayExpression(Array.prototype.fill.call(new Array(length), B.identifier('undefined')))
-//         );
-//         const defaultProp = B.property('init', B.literal('default'), B.literal(null));
-//         const newObject = B.objectExpression([defaultProp, valuesProp]);
-//         let newHeading = heading;
-//         if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
-//         const newProp = B.property('init', B.literal(newHeading), newObject);
-
-//         const tablePropsPath = tablePath.get("properties");
-//         if (colIndex === undefined) colIndex = tablePropsPath.value.length;
-//         tablePropsPath.value.splice(colIndex, 0, newProp);
-//     }},
-//     l: [30, 22]
-// },
-
 // Table_DeleteColumn: {
 //     v: function() {return function(tablePath, heading) {
 //         const tablePropsPath = tablePath.get("properties");
@@ -22957,26 +22897,6 @@ Table_ChangeCellValue: {
 //     }},
 //     l: [31, 22]
 // },
-
-// Table_AddRow: {
-//     v: function() {return function(tablePath, affectedColHeading, index, newValue) {
-//         const columnPaths = Table_GetColumnNodePaths(tablePath);
-//         for (let h in columnPaths) {
-//             const colPath = columnPaths[h];
-//             const valuesPath = Object_GetItem(colPath, "values");
-//             let valuesNode = valuesPath.get("value").node;
-//             if (valuesNode.type === "ArrayExpression") {
-//                 if (h === affectedColHeading && newValue !== undefined) {
-//                     valuesNode.elements.push(B.identifier(newValue));
-//                 } else {
-//                     valuesNode.elements.push(B.identifier("undefined"));
-//                 }
-//             }
-//         };
-//     }},
-//     l: [32, 22]
-// },
-
 // Table_DeleteRow: {
 //     v: function() {return function(tablePath, index) {
 //         const columnPaths = Table_GetColumnNodePaths(tablePath);
