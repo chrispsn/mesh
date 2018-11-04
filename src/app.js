@@ -22417,9 +22417,9 @@ display_fns: {
         table_rw: function(arr, formatted_arr, nodepath, id) {
 
             // Headings
-            const headings_nodepath = FunctionCall_GetArgument(nodepath, 0);
+            const headings_nodepath = Table_GetColumnsObject(nodepath);
             const headings = headings_nodepath.get("properties").value
-                .map(function(k) {return Object_GetKeyFromNode(k.key)})
+                .map(function(prop_n) {return Object_GetKeyFromPropNode(prop_n.key)})
             const heading_cells = headings.map(
                 function(heading, col_offset) { return {
                     // TODO
@@ -22451,7 +22451,7 @@ display_fns: {
                     const row_info = {};
                     // if ('properties' in row_node) ? (case where there are a bunch of rows with no cols?)
                     row_node.properties.forEach(function(prop_node) {
-                        const key = Object_GetKeyFromNode(prop_node.key);
+                        const key = Object_GetKeyFromPropNode(prop_node.key);
                         row_info[key] = prop_node.value;
                     })
                     rows_prop_value_nodes.push(row_info);
@@ -22503,7 +22503,6 @@ display_fns: {
             // Append cell
             let append_record_cells = [];
             const set_table_length_nodepath = FunctionCall_GetArgument(nodepath, 1);
-            console.log(set_table_length_nodepath);
             const showAppendCells = "undefined" !== set_table_length_nodepath.value.name; // TODO also account for null?
             if (showAppendCells) {
                 append_record_cells = headings.map(function(heading, offset_c) {return {
@@ -22556,7 +22555,7 @@ Object_GetPropNodeNamePropName: {
 
 // TODO write tests
 // TODO make this take a nodepath instead?
-Object_GetKeyFromNode: {
+Object_GetKeyFromPropNode: {
     v: function() {return function(obj_key_node) {
         return obj_key_node[Object_GetPropNodeNamePropName(obj_key_node.type)];
     }},
@@ -22601,7 +22600,7 @@ Cell_GetNodePath: {
         const propsPath = meshCellsNodePath.get('properties');
         for (let i=0; i < propsPath.value.length; i++) {
             const propPath = propsPath.get(i);
-            const cellName = Object_GetKeyFromNode(propPath.node.key)
+            const cellName = Object_GetKeyFromPropNode(propPath.node.key)
             if (cellName === key) {
                 const cellProps = propPath.get("value", "properties");
                 // TODO below is massive hack - should look at keys instead of assuming v is first
@@ -22673,7 +22672,7 @@ Object_GetItem: {
         for (let i=0; i < props_path.value.length; i++) {
             let prop_path = props_path.get(i);
             let key_node = prop_path.node.key;
-            if (Object_GetKeyFromNode(key_node) === key) {
+            if (key === Object_GetKeyFromPropNode(key_node)) {
                 return prop_path;
             }
         }
@@ -22689,7 +22688,7 @@ Object_GetItemIndex: {
         for (let i=0; i < props_path.value.length; i++) {
             let prop_path = props_path.get(i);
             let key_node = prop_path.node.key;
-            if (Object_GetKeyFromNode(key_node) === key) {
+            if (key === Object_GetKeyFromPropNode(key_node)) {
                 return i;
             }
         }
@@ -22771,7 +22770,7 @@ Object_RemoveItem: {
             for (let i=0; i < props_path.value.length; i++) {
                 let prop_path = props_path.get(i);
                 let key_node = prop_path.node.key;
-                if (key === Object_GetKeyFromNode(key_node, key)) {
+                if (key === Object_GetKeyFromPropNode(key_node)) {
                     prop_path.prune();
                 }
             }
@@ -22872,6 +22871,31 @@ Table_ChangeCellValue: {
     },
     l: [32, 22]
 },
+Table_DeleteRow: {
+    v: function() {return function(table_np, index) {
+        Table_GetRowsArray(table_np).get("elements", index).prune();
+    }},
+    l: [33, 22]
+},
+Table_DeleteColumn: {
+    v: function() {return function(table_np, heading) {
+        // Delete prop from row prototype
+        const row_proto_np = Table_GetColumnsObject(table_np);
+        Object_RemoveItem(row_proto_np, heading);
+        // Delete prop, if exists, from each hardcoded row
+        const elements_np = Table_GetRowsArray(table_np).get("elements");
+        for (let i = 0; i < elements_np.value.length; i++) {
+            let row_np = elements_np.get(i);
+            let props_np = row_np.get("properties");
+            for (let j = 0; j < props_np.value.length; j++) {
+                const prop_np = props_np.get(j);
+                const key = Object_GetKeyFromPropNode(prop_np.get("key").value);
+                if (key === heading) {prop_np.prune(); break}
+            }
+        };
+    }},
+    l: [34, 22]
+},
 // Table_ResizeArray: {
 //     v: function() {return function(arrayPath, newSize) {
 //         // TODO shrink?
@@ -22883,33 +22907,6 @@ Table_ChangeCellValue: {
 //         };
 //     }},
 //     l: [28, 22]
-// },
-// Table_DeleteColumn: {
-//     v: function() {return function(tablePath, heading) {
-//         const tablePropsPath = tablePath.get("properties");
-//         for (let i = 0; i < tablePropsPath.value.length; i++) {
-//             let propPath = tablePropsPath.get(i);
-//             let key = Object_GetKeyFromNode(propPath.get("key").value);
-//             if (key === heading) {
-//                 propPath.prune();
-//             }
-//         };
-//     }},
-//     l: [31, 22]
-// },
-// Table_DeleteRow: {
-//     v: function() {return function(tablePath, index) {
-//         const columnPaths = Table_GetColumnNodePaths(tablePath);
-//         for (let h in columnPaths) {
-//             const colPath = columnPaths[h];
-//             const valuesPath = Object_GetItem(colPath, "values");
-//             let valuesNode = valuesPath.get("value").node;
-//             if (valuesNode.type === "ArrayExpression") {
-//                 valuesPath.get("value", "elements", index).prune();
-//             }
-//         }
-//     }},
-//     l: [33, 22]
 // },
 
 /*
