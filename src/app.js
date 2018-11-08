@@ -22039,7 +22039,7 @@ generate_cells: {
         cells.forEach(function(c) {
             const cell_id = JSON.stringify(c.location);
             // TODO instead show collision as an error on the grid?
-            if (cell_id in new_cells) console.log("DISPLAY COLLISION:", cell_id);
+            if (cell_id in new_cells) console.warn("DISPLAY COLLISION:", cell_id);
             new_cells[cell_id] = c;
         })
 
