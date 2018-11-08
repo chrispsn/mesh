@@ -21918,12 +21918,10 @@ BLANK_FILE: {
         "        _STACK.push(k);",
         "        const v = ('r' in c) ? c.r : c.v;",
         "        if (!(k in _OUTPUT)) {",
-        "            const l = c.l, f = c.f;",
+        "            const f = c.f;",
         "            const o = _OUTPUT[k] = {",
-        "                t: c.t, s: c.s, n: c.n, // TODO assign instead?",
-        "                v: sc(v,0), ",
-        "                f: f ? f(v) : f,",
-        "                l: l",
+        "                t: c.t, s: c.s, n: c.n, l: c.l,",
+        "                v: sc(v,0), f: f ? f(v) : f",
         "            };",
         "        }",
         "        _STACK.pop();",
@@ -23160,12 +23158,11 @@ function _defCell(k, c) {
       _STACK.push(k);
       const v = ('r' in c) ? c.r : c.v;
       if (!(k in _OUTPUT)) {
-        const l = c.l, f = c.f;
+        const f = c.f;
         const o = _OUTPUT[k] = {
-          t: c.t, s: c.s, n: c.n, // TODO assign instead?
-          v: sc(v,0), 
-          f: f ? f(v) : f, // Not as sure about whether this should be a getter. But if is, could just wrap 'this.v' and avoid fn call
-          l: l // TODO make this allow getters as well? do we even need to memoise?
+          t: c.t, s: c.s, n: c.n, l: c.l,
+          v: sc(v,0), f: f ? f(v) : f, // Not as sure about whether this should be a getter. But if is, could just wrap 'this.v' and avoid fn call
+          // TODO make this allow getters as well? do we even need to memoise?
         };
       }
       _STACK.pop();
