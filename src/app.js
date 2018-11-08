@@ -21897,7 +21897,7 @@ BLANK_FILE: {
         "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k],d+1)};return n};",
             "return x;",
         "};",
-"",
+        "",
         "function find(a, p, options) {",
         "    const l = a.length, o = options || {};",
         "    for (let k = 0; k < l; k++) {",
@@ -21906,7 +21906,7 @@ BLANK_FILE: {
         "    }",
         "    return o.default;", // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
         "};",
-"",
+        "",
         "const _defProp = Object.defineProperty, _OUTPUT = {}, _STACK = [];",
         "function _defCell(k, c) {",
         "    return _defProp(g, k, {get: function() {",
@@ -21930,6 +21930,7 @@ BLANK_FILE: {
         "        return v;",
         "    }, configurable: true})",
         "};",
+        "function _isFn(value) {return typeof value === 'function'};",
         "function _makeTable(default_col_formulas, set_length, rows) {",
             // default row cells, length (optional), 'hardcodes'
             // Build 'default formula' prototype
