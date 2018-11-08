@@ -21461,103 +21461,109 @@ const B = Recast.types.builders;
 
 const _CELLS = {
 
-"rewrite_rules": {v: function() {return _makeTable(
-    {
-        description: function() {return null},
-        pattern: function() {return null},
-        rewrite: function() {return null}
-    },
-    null,
-    [
+"rewrite_rules": {
+    get v() {return _makeTable(
         {
-            description: "formulas",
-            pattern: /^=/,
-            rewrite: "$&"
+            description: function() {return null},
+            pattern: function() {return null},
+            rewrite: function() {return null}
         },
-        {
-            description: "dates",
-            pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})/,
-            rewrite: function(match, day, month, year, offset, string) {
-                return "new Date(" + [
-                    year, 
-                    parseInt(month-1, 10).toString(), 
-                    parseInt(day, 10).toString(),
-                ].join(", ") + ")";
+        null,
+        [
+            {
+                description: "formulas",
+                pattern: /^=/,
+                rewrite: "$&"
+            },
+            {
+                description: "function",
+                pattern: /^function\s*\(.*\)\s*\{.*\}/, // TODO improve this (doesn't allow newlines ATM)
+                rewrite: "$&"
+            },
+            {
+                description: "dates",
+                pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{4})/,
+                rewrite: function(match, day, month, year, offset, string) {
+                    return "new Date(" + [
+                        year, 
+                        parseInt(month-1, 10).toString(), 
+                        parseInt(day, 10).toString(),
+                    ].join(", ") + ")";
+                }
+            },
+            {
+                description: "dates2",
+                pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2})/,
+                rewrite: function(match, day, month, year, offset, string) {
+                    return "new Date(" + [
+                        "20" + year, 
+                        parseInt(month-1, 10).toString(), 
+                        parseInt(day, 10).toString(),
+                    ].join(", ") + ")";
+                }
+            },
+            {
+                description: "dates3",
+                pattern: /^([0-9]{4})\-([0-1]?[0-9])\-([0-2]?[0-9])/,
+                rewrite: function(match, year, month, day, offset, string) {
+                    return "new Date(" + [
+                        year, 
+                        parseInt(month-1, 10).toString(), 
+                        parseInt(day, 10).toString()
+                    ].join(", ") + ")";
+                }
+            },
+            {
+                description: "arrays",
+                pattern: /^\[.*\]$/,
+                rewrite: "$&"
+            },
+            {
+                description: "objects",
+                pattern: /^\{.*\}$/,
+                rewrite: "($&)"
+            },
+            {
+                description: "regex",
+                pattern: /\//,
+                rewrite: "$&"
+            },
+            {
+                description: "boolean",
+                pattern: /^(true|false)$/,
+                rewrite: "$&"
+            },
+            {
+                description: "percentages",
+                pattern: /^(-?[0-9]+\.?[0-9]*)%$/,
+                rewrite: function(match, number) {
+                    return (parseFloat(number) / 100).toString();
+                }
+            },
+            {
+                description: "numbers",
+                pattern: /^-?[0-9]+\.?[0-9]*$/,
+                rewrite: "$&"
             }
-        },
-        {
-            description: "dates2",
-            pattern: /^([0-9]{1,2})\/([0-9]{1,2})\/([0-9]{2})/,
-            rewrite: function(match, day, month, year, offset, string) {
-                return "new Date(" + [
-                    "20" + year, 
-                    parseInt(month-1, 10).toString(), 
-                    parseInt(day, 10).toString(),
-                ].join(", ") + ")";
-            }
-        },
-        {
-            description: "dates3",
-            pattern: /^([0-9]{4})\-([0-1]?[0-9])\-([0-2]?[0-9])/,
-            rewrite: function(match, year, month, day, offset, string) {
-                return "new Date(" + [
-                    year, 
-                    parseInt(month-1, 10).toString(), 
-                    parseInt(day, 10).toString()
-                ].join(", ") + ")";
-            }
-        },
-        {
-            description: "arrays",
-            pattern: /^\[.*\]$/,
-            rewrite: "$&"
-        },
-        {
-            description: "objects",
-            pattern: /^\{.*\}$/,
-            rewrite: "($&)"
-        },
-        {
-            description: "regex",
-            pattern: /\//,
-            rewrite: "$&"
-        },
-        {
-            description: "boolean",
-            pattern: /^(true|false)$/,
-            rewrite: "$&"
-        },
-        {
-            description: "percentages",
-            pattern: /^(-?[0-9]+\.?[0-9]*)%$/,
-            rewrite: function(match, number) {
-                return (parseFloat(number) / 100).toString();
-            }
-        },
-        {
-            description: "numbers",
-            pattern: /^-?[0-9]+\.?[0-9]*$/,
-            rewrite: "$&"
-        }
-    ]
+        ]
 
-    /*
-        
-    // Formulas (escape code for raw input). TODO also consider whether +, etc should be here
-    // Dates TODO make these just numbers instead? Transform to Excel style?
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
+        /*
+            
+        // Formulas (escape code for raw input). TODO also consider whether +, etc should be here
+        // Dates TODO make these just numbers instead? Transform to Excel style?
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
 
-    // Arrays TODO replace with a catch-all? TODO make allow newlines
+        // Arrays TODO replace with a catch-all? TODO make allow newlines
 
-    // Objects // TODO replace with a catch-all? // TODO make allow newlines // Note the brackets around the object
-    // Regex
-    // Booleans TODO make case-insensitive
-    // Numbers
+        // Objects // TODO replace with a catch-all? // TODO make allow newlines // Note the brackets around the object
+        // Regex
+        // Booleans TODO make case-insensitive
+        // Numbers
 
-    */
-)}, l: [3,1], t: true},
-rewrite_input: {v: function() {
-    return function (input_string) {
+        */
+    )}, l: [3,1], t: true},
+rewrite_input: {
+    v: function (input_string) {
         let matched_value, stop;
         rewrite_rules.forEach(function(rule) {
             if (!stop && rule.pattern.test(input_string)) {
@@ -21566,45 +21572,44 @@ rewrite_input: {v: function() {
             }
         });
         return (matched_value !== undefined) ? matched_value : ("\"" + input_string + "\"");
-    }
-}, l: [1, 1], t: true},
+    },
+    l: [1, 1], t: true},
 
 transform_formula_bar_input: {
-    v: function() {return function(raw_input, isTable) {
-        // Change property in-place
+    v: function(raw_input) {
         if (raw_input[0] === "=") {
             // TODO maybe do a check here to see if it *really* needs to be a formula? ie just a literal
             // Could do via AST transform, just quickly
-            const remainder = raw_input.slice(1);
-            const nodepath_type = (function() {
-                let nodepath;
-                const AST = parse_code_string_to_AST(remainder) 
-                Recast.visit(AST, {
-                    visitExpression: function (path) { nodepath = path; return false; }
-                });
-                return nodepath;
-            })();
-            if (isTable) {
-                return "function(row, i) {return " + remainder + "}";
-            } else {
-                return "function() {return " + remainder + "}";
-            };
+            // const nodepath_type = (function() {
+            //     let nodepath;
+            //     const AST = parse_code_string_to_AST(remainder) 
+            //     Recast.visit(AST, {
+            //         visitExpression: function (path) { nodepath = path; return false; }
+            //     });
+            //     return nodepath;
+            // })();
+            return raw_input.slice(1);
         } else {
             return rewrite_input(raw_input);
         }
-    }}, l: [1,6]},
+    }, l: [1,6]},
 
 cell_edit_types: {
-    v: function() { return _makeTable(
+    get v() {return _makeTable(
         // defaults
         {
             COMMIT_FORMULA_BAR_EDIT: function() {return function (meshCellsNode, state, action) {
                 // TODO Check that the commit is valid first?
                 const key = get_selected_cell(state).AST_props.key;
-                const cell_props_nodepath = Object_GetItem(meshCellsNode, key);
-                const cell_value_nodepath = Object_GetItem(cell_props_nodepath.get("value"), "v");
-                const inserted_code = transform_formula_bar_input(action.commit_value);
-                Object_ReplaceItemValue(cell_value_nodepath, inserted_code);
+                const transformed_input = transform_formula_bar_input(action.commit_value);
+                const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
+                Object_RemoveItem(cell_props_nodepath, "v");
+                // (ideally do in-place so order not changed to minimise source impact)
+                if (action.commit_value[0] === "=") {
+                    Object_InsertGetter(cell_props_nodepath, "v", transformed_input);
+                } else {
+                    Object_InsertItem(cell_props_nodepath, "v", transformed_input)
+                }
                 return action.offset;
             }},
             DELETE_VALUE: function() {return function (meshCellsNode, state, action) {
@@ -21824,8 +21829,9 @@ cell_edit_types: {
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
                     const rowIndex = get_selected_cell(state).AST_props.rowIndex;
                     const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
-                    const inserted_code = transform_formula_bar_input(action.commit_value, true);
-                    Table_ChangeCellValue(fnCallNodepath, rowIndex, colHeading, inserted_code)
+                    const transformed_input = transform_formula_bar_input(action.commit_value);
+                    const is_formula = action.commit_value[0] === "=";
+                    Table_ChangeCellValue(fnCallNodepath, rowIndex, colHeading, transformed_input, is_formula);
                     return action.offset;
                 },
                 DELETE_VALUE: function(meshCellsNode, state, action) {
@@ -21850,10 +21856,12 @@ cell_edit_types: {
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const colHeading = get_selected_cell(state).AST_props.colHeading;
-                    const rowIndex = get_selected_cell(state).AST_props.rowIndex;
+                    const rowIndex = -2 + get_selected_cell(state).AST_props.rowIndex;
                     const fnCallNodepath = Cell_GetNodePath(meshCellsNode, key).value;
                     const inserted_code = transform_formula_bar_input(action.commit_value, true);
                     Table_AddRow(fnCallNodepath, rowIndex, "{" + colHeading + ": " + inserted_code + "}");
+                    const is_formula = "=" === action.commit_value[0];
+                    Table_ChangeCellValue(fnCallNodepath, rowIndex, colHeading, inserted_code, is_formula);
                     return action.offset;
                 }
             }
@@ -21869,7 +21877,7 @@ LINE_SEPARATOR: {
 
 // TODO add indentation
 BLANK_FILE: {
-    v: function() {return [
+    get v() {return [
         
         "'use strict';",
         "const _CELLS = {};",
@@ -21900,7 +21908,6 @@ BLANK_FILE: {
         "};",
 "",
         "const _defProp = Object.defineProperty, _OUTPUT = {}, _STACK = [];",
-        "function _isFn(value) {return typeof value === 'function'};",
         "function _defCell(k, c) {",
         "    return _defProp(g, k, {get: function() {",
         "        if (_STACK.length > 0) {",
@@ -21909,14 +21916,14 @@ BLANK_FILE: {
         "            edges.add(top);",
         "        }",
         "        _STACK.push(k);",
-        "        let v = ('r' in c) ? c.r : (c.r = _isFn(c.v) ? c.v() : c.v);",
+        "        const v = ('r' in c) ? c.r : c.v;",
         "        if (!(k in _OUTPUT)) {",
         "            const l = c.l, f = c.f;",
         "            const o = _OUTPUT[k] = {",
         "                t: c.t, s: c.s, n: c.n, // TODO assign instead?",
         "                v: sc(v,0), ",
         "                f: f ? f(v) : f,",
-        "                l: _isFn(l) ? l() : l",
+        "                l: l",
         "            };",
         "        }",
         "        _STACK.pop();",
@@ -21963,26 +21970,26 @@ BLANK_FILE: {
 },
 
 get_cell: {
-    v: function() {return function(cells, cell_location) {
+    v: function(cells, cell_location) {
         const cell_id = JSON.stringify(cell_location);
         if (cell_id in cells) {
             return cells[cell_id];
         } else {
             return Object.assign({}, EMPTY_CELL, {location: cell_location});
         }
-    }},
+    },
     l: [23, 1]
 },
 
 get_selected_cell: {
-    v: function() {return function(state) {
+    v: function(state) {
         return get_cell(state.cells, state.selected_cell_loc);
-    }},
+    },
     l: [22, 1]
 },  
 
 generate_cells: {
-    v: function() {return function(RESULTS, cellsNodePath) {
+    v: function(RESULTS, cellsNodePath) {
         const cells = [];
         // TODO implement f, s, n
 
@@ -22008,6 +22015,7 @@ generate_cells: {
             }
 
             let value_nodepath = Cell_GetNodePath(cellsNodePath, id).value;
+            console.dir(value_nodepath);
             const display_fn = display_fns[triage(value_nodepath.node.type, cell.v, Boolean(cell.t))];
 
             // Not sure on exactly which parameters are best here, and which order makes most sense.
@@ -22036,12 +22044,12 @@ generate_cells: {
         })
 
         return new_cells;
-    }}, l: [25, 1]
+    }, l: [25, 1]
 },
 
 triage: {
     // TODO replace with 'find' call
-    v: function() {return function triage(nodetype, value, isTable) {
+    v: function triage(nodetype, value, isTable) {
         let stop, return_value;
         triage_table.forEach(function(row) {
             if (!stop
@@ -22055,7 +22063,7 @@ triage: {
             }
         });
         return return_value !== undefined ? return_value : "value";
-    }}, l: [1, 15]
+    }, l: [1, 15]
 },
 
 // Lists of possible types:
@@ -22063,7 +22071,7 @@ triage: {
 // https://github.com/benjamn/ast-types/blob/master/def/es6.js
 
 triage_table: {
-    v: function() {return _makeTable(
+    get v() {return _makeTable(
         {
             nodetype: function() {return undefined},
             prototype: function() {return undefined},
@@ -22179,7 +22187,7 @@ triage_table: {
 // TODO Do we really need an explicit 'empty' cell?
 // Surely the React component can adjust for that
 EMPTY_CELL: {
-    v: function() {return ({
+    get v() {return ({
         repr: '', 
         ref_string: null, 
         formula_bar_value: '',
@@ -22190,24 +22198,24 @@ EMPTY_CELL: {
 },
 
 leaf_is_formula: {
-    v: function() {return function(node) {
-        return (-1 === 'Literal UnaryExpression'.indexOf(node.type));
+    v: function(node) {
+        return (-1 === 'Literal UnaryExpression FunctionExpression'.indexOf(node.type));
         /*'TemplateLiteral',*/ 
-    }},
+    },
     l: [19, 9]
 },
 
 leaf_classes: {
-    v: function() {return function(value) {
+    v: function(value) {
         return typeof value 
                 + (typeof value === 'boolean' ? ' ' + String(value) : '')
                 + (Error.prototype.isPrototypeOf(value) ? ' error' : '');
-    }},
+    },
     l: [20, 9]
 },
 
 get_formula_bar_text: {
-    v: function() {return function(is_formula, raw_text) {
+    v: function(is_formula, raw_text) {
         if (is_formula) {
             if (raw_text[0] === "{") { // TODO better way to detect ObjectLiteral?
                 return "=(" + raw_text + ")";
@@ -22216,12 +22224,12 @@ get_formula_bar_text: {
             return raw_text.slice(1, -1);
         }
         return raw_text;
-    }},
+    },
     l: [21, 9]
 },
 
 display_fns: {
-    v: function() {return ({
+    get v() {return ({
         dummy: function(value, formatted_value, value_nodepath, id) {
             // For use where you don't know what to use for the formula bar value
             // and code location values yet.
@@ -22452,7 +22460,12 @@ display_fns: {
                     // if ('properties' in row_node) ? (case where there are a bunch of rows with no cols?)
                     row_node.properties.forEach(function(prop_node) {
                         const key = Object_GetKeyFromPropNode(prop_node.key);
-                        row_info[key] = prop_node.value;
+                        let prop_value_node = prop_node.value;
+                        // TODO merge with Cell_GetNodePath at some point (both do lookthrough for getters)
+                        if (prop_node.kind === "get") {
+                            prop_value_node = prop_value_node.body.body[0].argument;
+                        }
+                        row_info[key] = prop_value_node;
                     })
                     rows_prop_value_nodes.push(row_info);
                 }
@@ -22466,15 +22479,11 @@ display_fns: {
                 }
                 headings.map(function(heading, offset_c) {
                     // TODO somewhere account for case where row was auto-generated so there is no AST node for that row
-                    let row_prop_value_node = row_prop_value_nodes[heading];
+                    const row_prop_value_node = row_prop_value_nodes[heading];
                     let is_formula, raw_text, formula_bar_text;
                     // Property actually exists on row's object literal
                     if (heading in row_prop_value_nodes) {
                         is_formula = leaf_is_formula(row_prop_value_node);
-                        if (row_prop_value_node.type === "FunctionExpression") {
-                            // TODO merge with equivalent in display.js / maybe separate that 'lookthrough' aspect into its own function?
-                            row_prop_value_node = row_prop_value_node.body.body[0].argument;
-                        }
                         raw_text = print_AST_to_code_string(row_prop_value_node);
                         formula_bar_text = get_formula_bar_text(is_formula, raw_text);
                     } else {
@@ -22529,26 +22538,24 @@ display_fns: {
 /* PRIVATE (setup) */
 
 RECAST_SETTINGS: {
-    v: function() {return ({ lineTerminator: LINE_SEPARATOR })},
+    get v() {return ({ lineTerminator: LINE_SEPARATOR })},
     l: [27, 1]
 },
 
 makeUniqueID: {
-    v: function() {return function(existing_IDs, len) {
+    v: function(existing_IDs, len) {
         // See also https://github.com/benjamn/private/blob/master/private.js#L49
         do {var new_ID = Math.random().toString(36).substr(2, len)}
         while (existing_IDs.has(new_ID));
         return new_ID;
-    }},
+    },
     l: [2, 22]
 },
 
 // TODO should be an object or map
 Object_GetPropNodeNamePropName: {
-    v: function(){
-        return function(nodeType) {
-            return (nodeType === 'Literal') ? 'value' : 'name';
-        }
+    v: function(nodeType) {
+        return (nodeType === 'Literal') ? 'value' : 'name';
     },
     l: [3, 22]
 },
@@ -22556,28 +22563,28 @@ Object_GetPropNodeNamePropName: {
 // TODO write tests
 // TODO make this take a nodepath instead?
 Object_GetKeyFromPropNode: {
-    v: function() {return function(obj_key_node) {
+    v: function(obj_key_node) {
         return obj_key_node[Object_GetPropNodeNamePropName(obj_key_node.type)];
-    }},
+    },
     l: [4, 22]
 },
 
 parse_code_string_to_AST: {
-    v: function() {return function(code_string) {
+    v: function(code_string) {
         return Recast.parse(code_string, RECAST_SETTINGS);
-    }},
+    },
     l: [5, 22]
 },
 
 print_AST_to_code_string: {
-    v: function() {return function(AST) {
+    v: function(AST) {
         return Recast.print(AST, RECAST_SETTINGS).code;
-    }},
+    },
     l: [6, 22]
 },
 
 Cells_GetNodePath: {
-    v: function() {return function(AST) {
+    v: function(AST) {
         let nodepath_to_return;
         Recast.visit(AST, {
             visitVariableDeclarator: function(path) {
@@ -22590,12 +22597,12 @@ Cells_GetNodePath: {
             }
         });
         return nodepath_to_return.get('init');
-    }},
+    },
     l: [7, 22],
 },
 
 Cell_GetNodePath: {
-    v: function() {return function(meshCellsNodePath, key) {
+    v: function(meshCellsNodePath, key) {
         // TODO Eventually should allow both Identifiers and Literals using Object_GetPropNodeNamePropName
         const propsPath = meshCellsNodePath.get('properties');
         for (let i=0; i < propsPath.value.length; i++) {
@@ -22603,15 +22610,17 @@ Cell_GetNodePath: {
             const cellName = Object_GetKeyFromPropNode(propPath.node.key)
             if (cellName === key) {
                 const cellProps = propPath.get("value", "properties");
-                // TODO below is massive hack - should look at keys instead of assuming v is first
-                let cellValueNodePath = cellProps.get(0, "value");
-                if (cellValueNodePath.node.type === "FunctionExpression") {
+                let propIndex = -1;
+                cellProps.value.forEach(function(p, index) {if (Object_GetKeyFromPropNode(p.key) === "v") propIndex = index});
+                const cellPropNodePath = cellProps.get(propIndex);
+                let cellValueNodePath = cellPropNodePath.get("value");
+                if (cellPropNodePath.node.kind === "get") {
                     cellValueNodePath = cellValueNodePath.get("body", "body", 0, "argument")
                 }
                 return { property: propPath, value: cellValueNodePath, };
             };
         };
-    }},
+    },
     l: [8, 22],
 },
 
@@ -22619,14 +22628,14 @@ Cell_GetNodePath: {
 
 // TODO write tests
 Cell_DeleteValue: {
-    v: function() {return function(value_path) {value_path.replace(B.literal(null))}},
+    v: function(value_path) {value_path.replace(B.literal(null))},
     l: [10, 22]
 },
 
 /* ARRAY */
 
 Array_InsertElement: {
-    v: function() {return function(arr_path, element_num, inserted_text) {
+    v: function(arr_path, element_num, inserted_text) {
         const elements_path = arr_path.get('elements');
         const inserted_node = B.identifier(inserted_text);
         if (elements_path.node.elements.length === 0) {
@@ -22634,39 +22643,39 @@ Array_InsertElement: {
         } else {
             elements_path.insertAt(element_num, inserted_node);
         }
-    }},
+    },
     l: [12, 22]
 },
 
 Array_AppendElement: {
-    v: function() {return function(arr_path, inserted_text) {
+    v: function(arr_path, inserted_text) {
         const elements_path = arr_path.get('elements');
         const inserted_node = B.identifier(inserted_text);
         elements_path.push(inserted_node);
-    }},
+    },
     l: [13, 22]
 },
 
 Array_ReplaceElement: {
-    v: function() {return function(arr_path, element_num, inserted_text) {
+    v: function(arr_path, element_num, inserted_text) {
         const elements_path = arr_path.get('elements');
         elements_path.get(element_num).replace(B.identifier(inserted_text));
-    }},
+    },
     l: [14, 22]
 },
 
 Array_RemoveElement: {
-    v: function() {return function(arr_path, element_num) {
+    v: function(arr_path, element_num) {
         const element_path = arr_path.get('elements', element_num);
         element_path.prune();
-    }},
+    },
     l: [15, 22]
 },
 
 /* OBJECT */
 
 Object_GetItem: {
-    v: function() {return function(obj_path, key) {
+    v: function(obj_path, key) {
         const props_path = obj_path.get('properties');
 
         for (let i=0; i < props_path.value.length; i++) {
@@ -22677,12 +22686,12 @@ Object_GetItem: {
             }
         }
         return undefined;
-    }},
+    },
     l: [17, 22]
 },
 
 Object_GetItemIndex: {
-    v: function() {return function(obj_path, key) {
+    v: function(obj_path, key) {
         const props_path = obj_path.get('properties');
 
         for (let i=0; i < props_path.value.length; i++) {
@@ -22693,28 +22702,28 @@ Object_GetItemIndex: {
             }
         }
         return false;
-    }},
+    },
     l: [18, 22]
 },
 
 // TODO: be smart about how the 'key' is created (id vs string literal)
 Object_ReplaceItemKey: {
-    v: function() {return function(obj_item_path, new_key_text) {
+    v: function(obj_item_path, new_key_text) {
         // TODO throw error if duplicate key?
         obj_item_path.get('key').replace(B.identifier(new_key_text));
-    }},
+    },
     l: [19, 22]
 },
 
 Object_ReplaceItemValue: {
-    v: function() {return function(obj_item_path, new_value_text) {
+    v: function(obj_item_path, new_value_text) {
         obj_item_path.get('value').replace(B.identifier(new_value_text));
-    }},
+    },
     l: [20, 22]
 },
 
 Object_InsertItem: {
-    v: function() {return function(obj_path, key_text, value_text, index) {
+    v: function(obj_path, key_text, value_text, index) {
         // TODO throw error if duplicate key?
         const props_path = obj_path.get('properties');
         const new_prop_node = B.property('init', 
@@ -22726,12 +22735,12 @@ Object_InsertItem: {
         } else {
             props_path.insertAt(index, new_prop_node);
         }
-    }},
+    },
     l: [21, 22]
 },
 
 Object_InsertGetter: {
-    v: function() {return function(obj_path, key_text, body_text, index) {
+    v: function(obj_path, key_text, body_text, index) {
         // TODO throw error if duplicate key?
         // TODO make these self-memoising?
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get#Smart_self-overwriting_lazy_getters
@@ -22750,20 +22759,20 @@ Object_InsertGetter: {
         } else {
             props_path.insertAt(index, new_prop_node);
         }
-    }},
+    },
     l: [22, 22]
 },
 
 Object_ReplaceGetterReturnValue: {
-    v: function() {return function(obj_getter_prop_path, new_return_value_text) {
+    v: function(obj_getter_prop_path, new_return_value_text) {
         const val = obj_getter_prop_path.get('value', 'body', 'body', 0, 'argument');
         val.replace(B.identifier(new_return_value_text));
-    }},
+    },
     l: [23, 22]
 },
 
 Object_RemoveItem: {
-    v: function() {return function(obj_path, key) {
+    v: function(obj_path, key) {
         // TODO throw error if missing key?
         const props_path = obj_path.get('properties');
         if (props_path.value.length > 0) {
@@ -22775,93 +22784,88 @@ Object_RemoveItem: {
                 }
             }
         }
-    }},
+    },
     l: [24, 22]
 },
 
 /* TABLE */
 
 Table_Create: {
-    v: function() {return function(cellObjPath) {
-        const cellValuePropPath = Object_GetItem(cellObjPath, "v");
-        const table_text = "function () {return _makeTable({}, null, [])}";
-        Object_ReplaceItemValue(cellValuePropPath, table_text);
+    v: function(cellObjPath) {
+        const table_text = "_makeTable({}, null, [])";
+        Object_RemoveItem(cellObjPath, 'v');
+        Object_InsertGetter(cellObjPath, 'v', table_text);
         const cellTableFlagPropPath = Object_GetItem(cellObjPath, "t");
         if (cellTableFlagPropPath !== undefined) {
             Object_ReplaceItemValue(cellTableFlagPropPath, "true");
         } else {
             Object_InsertItem(cellObjPath, "t", "true")
         };
-    }},
+    },
     l: [26, 22]
 },
 
 Table_GetColumnsObject: {
-    v: function() {return function(table_np) {return FunctionCall_GetArgument(table_np, 0)}},
+    v: function(table_np) {return FunctionCall_GetArgument(table_np, 0)},
     l: [27, 22]
 },
 
 Table_GetRowCountOverride: {
-    v: function() {return function(table_np) {return FunctionCall_GetArgument(table_np, 1)}},
+    v: function(table_np) {return FunctionCall_GetArgument(table_np, 1)},
     l: [28, 22]
 },
 
 Table_GetRowsArray: {
-    v: function() {return function(table_np) {return FunctionCall_GetArgument(table_np, 2)}},
+    v: function(table_np) {return FunctionCall_GetArgument(table_np, 2)},
     l: [29, 22]
 },
 
 Table_AddRow: {
-    v: function() {
-        return function(table_fncall_node, row_index, prop_obj) {
-            const rows_nodepath = Table_GetRowsArray(table_fncall_node);
-            const new_row = prop_obj || {}; // May need to convert to node equivalent
-            if (row_index === undefined) {
-                // rows_nodepath.node.elements.splice( ??? );
-            }
-            else { rows_nodepath.node.elements.push(String(new_row)); }
+    v: function(table_fncall_node, row_index, prop_obj) {
+        const rows_nodepath = Table_GetRowsArray(table_fncall_node);
+        const new_row = prop_obj || {}; // May need to convert to node equivalent
+        const o_node = B.objectExpression([]); // TODO fill out with prop_obj's properties
+        if (row_index === undefined) {
+            // rows_nodepath.node.elements.splice( ??? );
         }
+        else { rows_nodepath.node.elements.push(o_node); }
         // TODO if a row is already there, push it down (insert before it)
     },
     l: [30, 22]
 },
 
 Table_AddColumn: {
-    v: function() {
-        return function(table_fncall_node, col_index, header) {
-            // TODO Also allow specifying default col formula?
-            // TODO if header not specified, make one up?
-            // if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
-            const cols_nodepath = Table_GetColumnsObject(table_fncall_node);
-            if (col_index === undefined) {
-                console.log(cols_nodepath.node.properties);
-                const new_col_node = B.property('init', 
-                    // TODO using this instead of literal is probably a massive hack
-                    B.identifier(header), 
-                    B.literal(null)
-                );
-                cols_nodepath.node.properties.push(new_col_node);
-            } else {
-                // ???
-            }
+    v: function(table_fncall_node, col_index, header) {
+        // TODO Also allow specifying default col formula?
+        // TODO if header not specified, make one up?
+        // if (newHeading === undefined) newHeading = makeUniqueID(headings, 8);
+        const cols_nodepath = Table_GetColumnsObject(table_fncall_node);
+        if (col_index === undefined) {
+            const new_col_node = B.property('init', 
+                // TODO using this instead of literal is probably a massive hack
+                B.identifier(header), 
+                B.literal(null)
+            );
+            cols_nodepath.node.properties.push(new_col_node);
+        } else {
+            // ???
         }
     },
     l: [31, 22]
 },
 
 Table_ChangeCellValue: {
-    v: function() {
-        return function(table_np, row_index, col_header, new_value) {
-            const rows_np = Table_GetRowsArray(table_np);
-            const row_np = rows_np.get("elements", row_index); // what if need to append?
-            let item_np = Object_GetItem(row_np, col_header); // what if item does not yet exist?
-            if (item_np === undefined) {
-                Object_InsertItem(row_np, col_header, "null") // TODO insert in right order?
-                item_np = Object_GetItem(row_np, col_header);
-            }
-            Object_ReplaceItemValue(item_np, new_value)
+    v: function(table_np, row_index, col_header, new_value, is_formula) {
+        const rows_np = Table_GetRowsArray(table_np);
+        const row_np = rows_np.get("elements", row_index); // what if need to append?
+        let item_np = Object_GetItem(row_np, col_header); // what if item does not yet exist?
+        if (item_np !== undefined) Object_RemoveItem(row_np, col_header);
+        // TODO insert in right order?
+        if (is_formula) {
+            Object_InsertGetter(row_np, col_header, new_value);
+        } else {
+            Object_InsertItem(row_np, col_header, new_value) 
         }
-        // // TODO if values is a function call, fail?
         // const valuesPath = Object_GetItem(colPath.get("value"), "values").get("value");
         // const currentLength = valuesPath.node.elements.length;
         // if (currentLength < index + 1) { // Expand only, don't shrink
@@ -22872,13 +22876,13 @@ Table_ChangeCellValue: {
     l: [32, 22]
 },
 Table_DeleteRow: {
-    v: function() {return function(table_np, index) {
+    v: function(table_np, index) {
         Table_GetRowsArray(table_np).get("elements", index).prune();
-    }},
+    },
     l: [33, 22]
 },
 Table_DeleteColumn: {
-    v: function() {return function(table_np, heading) {
+    v: function(table_np, heading) {
         // Delete prop from row prototype
         const row_proto_np = Table_GetColumnsObject(table_np);
         Object_RemoveItem(row_proto_np, heading);
@@ -22893,7 +22897,7 @@ Table_DeleteColumn: {
                 if (key === heading) {prop_np.prune(); break}
             }
         };
-    }},
+    },
     l: [34, 22]
 },
 // Table_ResizeArray: {
@@ -22911,22 +22915,21 @@ Table_DeleteColumn: {
 
 /*
 Table_ChangeDefaultFormulaCell: function() {},
-Table_Add: function() {}, // add tests for this?? Maybe not needed if just do to an empty object
-Table_EditLength: function() {},
-Table_DeleteLength: function() {}, // not sure
+Table_EditRuntimeLength: function() {},
+Table_DeleteRuntimeLength: function() {}, // not sure
 */
 
 FunctionCall_GetArgument: {
-    v: function() {return function(functionCallNodePath, argIndex) {
+    v: function(functionCallNodePath, argIndex) {
         return functionCallNodePath.get("arguments", argIndex);
-    }},
+    },
     l: [35, 22]
 },
 
 // TODO is there a more brief alternative to assign?
 // TODO can we get rid of all the (state, action) signatures?
 state_changes: {
-    v: function() {return _makeTable(
+    get v() {return _makeTable(
         {
             action_type: function() {return null}
         },
@@ -23054,7 +23057,7 @@ state_changes: {
 },
 
 old_state: {
-    v: function() {return ({
+    get v() {return ({
         mode: 'READY',
         // TODO do I have to tell cells where they are? Alt: do I have to use locations as keys?
         // Alt 2: why can't the cells come through as a key-value map? Then really can skip
@@ -23070,7 +23073,7 @@ old_state: {
 },
 
 new_state: {
-    v: function() {
+    get v() {
         const matching_row = find(state_changes, function(row) {return row.action_type === action.type});
         console.log("ACTION RECEIVED:", action);
         console.log("MATCHING ROW:", matching_row);
@@ -23093,12 +23096,12 @@ results: {
 },
 
 AST: {
-    v: function() {return parse_code_string_to_AST(old_state.code_editor.value)},
+    get v() {return parse_code_string_to_AST(old_state.code_editor.value)},
     l: [1, 27]
 },
 
 cells: {
-    v: function() {return generate_cells(results, Cells_GetNodePath(AST))},
+    get v() {return generate_cells(results, Cells_GetNodePath(AST))},
     l: [1, 28]
 }
 
@@ -23146,7 +23149,6 @@ function find(a, p, options) {
 };
 
 const _defProp = Object.defineProperty, _OUTPUT = {}, _STACK = [];
-function _isFn(value) {return typeof value === 'function'};
 function _defCell(k, c) {
   return _defProp(g, k, {get: function() {
       if (_STACK.length > 0) {
@@ -23155,20 +23157,22 @@ function _defCell(k, c) {
           edges.add(top);
       }
       _STACK.push(k);
-      let v = ('r' in c) ? c.r : (c.r = _isFn(c.v) ? c.v() : c.v);
+      const v = ('r' in c) ? c.r : c.v;
       if (!(k in _OUTPUT)) {
         const l = c.l, f = c.f;
         const o = _OUTPUT[k] = {
           t: c.t, s: c.s, n: c.n, // TODO assign instead?
           v: sc(v,0), 
-          f: f ? f(v) : f,
-          l: _isFn(l) ? l() : l
+          f: f ? f(v) : f, // Not as sure about whether this should be a getter. But if is, could just wrap 'this.v' and avoid fn call
+          l: l // TODO make this allow getters as well? do we even need to memoise?
         };
       }
       _STACK.pop();
       return v;
   }, configurable: true})
 };
+function _isFn(value) {return typeof value === 'function'};
+function _isGetter(o, k) {return 'get' in Object.getOwnPropertyDescriptor(o, k)};
 function _makeTable(default_col_formulas, set_length, rows) {
     // default row cells, length (optional), 'hardcodes'
     // Build 'default formula' prototype
