@@ -21464,9 +21464,9 @@ const _CELLS = {
 "rewrite_rules": {
     get v() {return _makeTable(
         {
-            description: function() {return null},
-            pattern: function() {return null},
-            rewrite: function() {return null}
+            description: null,
+            pattern: null,
+            rewrite: null
         },
         null,
         [
@@ -21598,7 +21598,7 @@ cell_edit_types: {
     get v() {return _makeTable(
         // defaults
         {
-            COMMIT_FORMULA_BAR_EDIT: function() {return function (meshCellsNode, state, action) {
+            COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                 // TODO Check that the commit is valid first?
                 const key = get_selected_cell(state).AST_props.key;
                 const transformed_input = transform_formula_bar_input(action.commit_value);
@@ -21611,29 +21611,29 @@ cell_edit_types: {
                     Object_InsertItem(cell_props_nodepath, "v", transformed_input)
                 }
                 return action.offset;
-            }},
-            DELETE_VALUE: function() {return function (meshCellsNode, state, action) {
+            },
+            DELETE_VALUE: function (meshCellsNode, state, action) {
                 alert("No 'delete value' action defined.")
                 return [0, 0];
-            }},
-            DELETE_ELEMENT: function() {return function(meshCellsNode, state, action) {
+            },
+            DELETE_ELEMENT: function(meshCellsNode, state, action) {
                 const key = get_selected_cell(state).AST_props.key;
                 const cell_props_nodepath = Object_GetItem(meshCellsNode, key);
                 cell_props_nodepath.prune();
                 return [0, 0];
-            }},
-            DELETE_CONTAINER: function() {return function(meshCellsNode, state, action) {
+            },
+            DELETE_CONTAINER: function(meshCellsNode, state, action) {
                 const key = get_selected_cell(state).AST_props.key;
                 const cell_props_nodepath = Object_GetItem(meshCellsNode, key);
                 cell_props_nodepath.prune();
                 return [0, 0];
-            }},
-            CREATE_TABLE: function() {return function(meshCellsNode, state, action) {
+            },
+            CREATE_TABLE: function(meshCellsNode, state, action) {
                 const key = get_selected_cell(state).AST_props.key;
                 const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
                 Table_Create(cell_props_nodepath);
                 return [0, 0];
-            }}
+            }
         }
         // # rows
         , null
@@ -21928,32 +21928,30 @@ BLANK_FILE: {
         "        return v;",
         "    }, configurable: true})",
         "};",
-        "function _isFn(value) {return typeof value === 'function'};",
-        "function _makeTable(default_col_formulas, set_length, rows) {",
-            // default row cells, length (optional), 'hardcodes'
-            // Build 'default formula' prototype
-            // TODO can we extract out the idea of having the prototype hold
-            // the calculated values and memo on the child?
-            // http://2ality.com/2012/11/property-assignment-prototype-chain.html
-            // in theory, indifferent to whether sparse (obj) or dense (arr)? TODO think about that
-            // upside: huge saving in boilerplate code by pushing memoisation to UI responsibility
-            // downside: 'exception' row values aren't computed (only default row formulas are)
+        "function _makeTable(defs, length, rows) {",
         "    const t = [];",
-        "    if (set_length === null) set_length = rows.length;",
-        "    for (let i=0; i<set_length; i++) {",
-        "        const r = rows[i] || {}; t.push(r);", // "|| {}" for cases where generating excess rows"
-        "        for (let k in default_col_formulas) {",
-        "            if (!(k in r)) {",
-        "                const v = default_col_formulas[k];",
-        "                if (_isFn(v)) {",
-        "                    Object.defineProperty(r, k, {get: function() {",
-        "                        delete this[k]; return this[k] = v.call(this, i, t);",
-        "                    }, configurable: true, enumerable: true});",
-        "                } else r[k] = v",
-        "            }",
-        "        }",
+        "    if (length === null) length = rows.length;",
+        "    const proto = {}; for (let k in defs) _memoProp(defs, proto, k);",
+        "    for (let i=0; i<length; i++) {",
+        "        const r = rows[i] || {}; t.push(r);",
+        "        Object.setPrototypeOf(r, proto);",
+        "        _defProp(r, 't', {enumerable: false, value: t});",
+        "        _defProp(r, 'i', {enumerable: false, value: i});",
         "    }",
         "    return t;",
+        "}",
+        "function _getGetter(o, k) {return Object.getOwnPropertyDescriptor(o, k);}",
+        "function _memoProp(source, dest, k) {",
+        "    const getter = _getGetter(source, k);",
+        "    return (getter !== undefined)",
+        "        ? _defProp(dest, k, {",
+        "            get: function() {",
+        "                const v = getter.call(this);",
+        "                _defProp(this, k, {value: v});",
+        "                return v;",
+        "            }",
+        "        })",
+        "        : (dest[k] = source[k], dest);",
         "}",
         "function _defCells(c)     {for (let k in c) _defCell(k, c[k])};",
         "function _extraValues(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}};", // Should this uncaching happen elsewhere?
@@ -22072,11 +22070,11 @@ triage: {
 triage_table: {
     get v() {return _makeTable(
         {
-            nodetype: function() {return undefined},
-            prototype: function() {return undefined},
-            typeof: function() {return undefined},
-            isTable: function() {return undefined},
-            fn: function() {return null}
+            nodetype: undefined,
+            prototype: undefined,
+            typeof: undefined,
+            isTable: undefined,
+            fn: null
         },
         null,
         [
@@ -22930,7 +22928,7 @@ FunctionCall_GetArgument: {
 state_changes: {
     get v() {return _makeTable(
         {
-            action_type: function() {return null}
+            action_type: null
         },
         null,
         [
@@ -23169,33 +23167,30 @@ function _defCell(k, c) {
       return v;
   }, configurable: true})
 };
-function _isFn(value) {return typeof value === 'function'};
-function _isGetter(o, k) {return 'get' in Object.getOwnPropertyDescriptor(o, k)};
-function _makeTable(default_col_formulas, set_length, rows) {
-    // default row cells, length (optional), 'hardcodes'
-    // Build 'default formula' prototype
-    // TODO can we extract out the idea of having the prototype hold
-    // the calculated values and memo on the child?
-    // http://2ality.com/2012/11/property-assignment-prototype-chain.html
-    // in theory, indifferent to whether sparse (obj) or dense (arr)? TODO think about that
-    // upside: huge saving in boilerplate code by pushing memoisation to UI responsibility
-    // downside: 'exception' row values aren't computed (only default row formulas are)
+function _makeTable(defs, length, rows) {
     const t = [];
-    if (set_length === null) set_length = rows.length;
-    for (let i=0; i<set_length; i++) {
+    if (length === null) length = rows.length;
+    const proto = {}; for (let k in defs) _memoProp(defs, proto, k);
+    for (let i=0; i<length; i++) {
         const r = rows[i] || {}; t.push(r); // "|| {}" for cases where generating excess rows
-        for (let k in default_col_formulas) {
-            if (!(k in r)) {
-                const v = default_col_formulas[k];
-                if (_isFn(v)) {
-                    Object.defineProperty(r, k, {get: function() {
-                        delete this[k]; return this[k] = v.call(this, i, t);
-                    }, configurable: true, enumerable: true});
-                } else r[k] = v
-            }
-        }
+        Object.setPrototypeOf(r, proto);
+        _defProp(r, 't', {enumerable: false, value: t});
+        _defProp(r, 'i', {enumerable: false, value: i});
     }
     return t;
+}
+function _getGetter(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}
+function _memoProp(source, dest, k) {
+    const getter = _getGetter(source, k);
+    return (getter !== undefined)
+        ? _defProp(dest, k, {
+            get: function() {
+                const v = getter.call(this);
+                _defProp(this, k, {value: v});
+                return v;
+            }
+        })
+        : (dest[k] = source[k], dest)
 }
 function _defCells(c)     {for (let k in c) _defCell(k, c[k])};
 function _extraValues(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}}; // Should this uncaching happen elsewhere?
