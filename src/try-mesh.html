@@ -49,6 +49,12 @@
 
 'use strict';
 
+/* POLYFILLS */
+
+// OBJECT.ASSIGN. Minified version of polyfill from here:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+"function"!=typeof Object.assign&&Object.defineProperty(Object,"assign",{value:function(e,t){"use strict";if(null==e)throw new TypeError("Cannot convert undefined or null to object");for(var n=Object(e),r=1;r<arguments.length;r++){var o=arguments[r];if(null!=o)for(var c in o)Object.prototype.hasOwnProperty.call(o,c)&&(n[c]=o[c])}return n},writable:!0,configurable:!0});
+
 /* REACT */
 
 const EMPTY_CELL = { // TODO get this from the worker eventually
@@ -248,7 +254,7 @@ function send_app_action(message_obj) {
 
 let sheet_iframe = document.getElementById("sheet");
 function reset_sheet(new_code) {
-    if (sheet_iframe) sheet_iframe.remove();
+    if (sheet_iframe) sheet_iframe.parentNode.removeChild(sheet_iframe);
     sheet_iframe = document.createElement("iframe");
     sheet_iframe.setAttribute("name", "sheet");
     sheet_iframe.setAttribute("style", "display:none;");
