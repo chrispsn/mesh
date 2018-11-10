@@ -4,7 +4,7 @@ Mesh is a JavaScript code editor that feels like a spreadsheet.
 
 Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Actions on the grid are automatically translated to changes in the JavaScript code.
 
-Mesh's aim is to improve the user experience of 'regular' programming languages. Consider Mesh if you:
+Mesh's aim is to help people maximise their personal productivity. Consider Mesh if you:
 
 - use JavaScript, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
@@ -15,11 +15,11 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 ## How to get Mesh
 
-You can [try Mesh online](http://mesh-spreadsheet.com/try-mesh.html). You'll get best results in a recent version of Google Chrome, but it works all the way down to Internet Explorer 11.
+You can [try Mesh online](http://mesh-spreadsheet.com/try-mesh.html). It'll run faster in new browsers but it works all the way down to Internet Explorer 11.
 
-Or you can [download the project as a zip file](https://github.com/chrispsn/mesh/archive/master.zip) and double-click on `try-mesh.html` in the `src` directory.
+You can also [download the project as a zip file](https://github.com/chrispsn/mesh/archive/master.zip) and double-click on `try-mesh.html` in the `src` directory.
 
-Note the project doesn't have file reading or writing right now; we have plans to add it via [Monotreme](https://github.com/chrispsn/monotreme).
+Note that Mesh doesn't have file reading or writing right now; we have plans to add it via [Monotreme](https://github.com/chrispsn/monotreme).
 
 ## Quick user guide
 
@@ -35,11 +35,11 @@ Create a name by typing a name into a cell.
 
 Assign a value to a name by typing into the cell to the right of a name, for example:
 
-- `123`
-- `Hello world!`
-- `true`
-- `function() {return 1 + 2}`
-- `2018-11-10`.
+- Numbers: `123`
+- Strings: `Hello world!`
+- Booleans: `true`
+- Functions: `function() {return 1 + 2}`
+- Dates: `2018-11-10`.
 
 To make data entry easier, we rewrite your "common sense" input to a JavaScript equivalent (like other spreadsheet programs). For example, `Hello world!` (without quotes) will be written into `"Hello world!"` (with quotes).
 
@@ -54,13 +54,18 @@ Replace the contents of a cell by selecting it and writing over it. Edit a cell'
 
 ### Tables
 
-Tables are common in spreadsheets but are underrepresented in traditional programming languages. Mesh hopes to change that!
+Tables are common in spreadsheets, but less so in traditional programming languages. Mesh hopes to change that!
 
-Visually in the grid, they're rows and columns with headers. In JavaScript terms, tables are vanilla arrays of objects, but with the ability to:
+Tables appear in the grid as rows and columns with a header row at the top.
 
-- create default column values (default row properties), including calculated columns (`_makeTable` parameter 1)
-- expand or shrink based on a specified length, including one calculated from other cells at runtime (`makeTable` parameter 2)
-- reference other cells in the table based on the row's absolute or relative position.
+But in JavaScript terms, tables are arrays of objects. The wrapper function `_makeTable` adds the ability to:
+
+- specify default columns (default row object properties), including calculated columns (parameter 1)
+- expand or shrink based on a specified length, including one calculated from other cells at runtime (parameter 2)
+- reference other cells in the table based on the row's absolute or relative position, via a few default row properties:
+  - `this` (the row)
+  - `i` (the row's index)
+  - `t` (the table).
 
 Create an array or object by clicking on a value a cell and pressing `Ctrl + Alt + t`.
 
@@ -72,7 +77,7 @@ You can then add or delete columns or rows:
 
 Delete the array or object entirely with `Ctrl _` (ie `Ctrl Shift -`).
 
-Search a table for a specific row with the built-in `find` function, or query it with standard array methods like `map`, `filter` and `reduce`.
+Search a table for a row with the built-in `find` function, or query it with standard array methods like `map`, `filter` and `reduce`.
 
 Use tables to simplify heavily nested (indented) code, such as complex conditional logic or multi-dimensional concepts. Peter Kankowski's Code Project article [Table-driven approach](https://www.codeproject.com/Articles/42732/Table-driven-Approach) has some great examples.
 
@@ -92,11 +97,13 @@ We're also considering adding:
 - a ES5-friendly way to [write functions in shorter syntax](https://gist.github.com/chrispsn/4d451e0ebe5600148c7c392f6281b251)
 - some standard 'data aggregation' functions like `SUM`.
 
-The boilerplate will be updated from time to time; for this reason, it is dated in the comments.
+The boilerplate will be updated from time to time; for this reason, it has a version date in the comments.
 
 ### Messaging
 
-Mesh sheets are JavaScript apps in their own right. With a little extra boilerplate, they can send and receive messages. In particular, you can send in streams of values and get calculations out:
+Mesh sheets are JavaScript apps in their own right, and with a little extra boilerplate, they can send and receive messages.
+
+In particular, you can send in streams of values and get calculations out:
 
 ![Animated GIF of rough stream functionality](docs/feed.gif)
 
@@ -128,11 +135,6 @@ For writing programs, Mesh has advantages over a 'traditional' spreadsheet:
 
 Also, Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This and its familiar interface give it a better shot of overcoming 'spreadsheet inertia', particularly if we can get it running on Windows without installation being required (via JScript).
 
-## Caveats with this approach
-
-- Unlike Excel, the whole file gets recalculated every time (no caching of values that won't change)
-- Mesh misses out on Excel's built-in functions (although in IE11 we can probably get access to `WorksheetFunction` via COM).
-
 ## Known issues
 
 - Incomplete syntax support (eg spreads (`[...elements, "extra"]`); Maps and Sets; some functions)
@@ -140,10 +142,13 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 - When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and let you click on a cell to insert a reference
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
+- Poor JavaScript standard library (although in IE11 we can probably get access to `WorksheetFunction` via COM).
 
 ## I want to contribute!
 
-Awesome! Please check out the [contributions guide](CONTRIBUTING.md). The codebase is pretty rough right now, so feel free to get in touch via Twitter too.
+Awesome! Please check out the [contributions guide](CONTRIBUTING.md).
+
+The codebase is pretty rough right now, so feel free to [get in touch via Twitter](https://twitter.com/MeshSpreadsheet) if you have any questions.
 
 ## Bugs, issues, enhancements, contact
 
