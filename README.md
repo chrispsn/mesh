@@ -15,66 +15,97 @@ Mesh's aim is to improve the user experience of 'regular' programming languages.
 
 ## How to get Mesh
 
-You can [try Mesh online](http://mesh-spreadsheet.com/try-mesh.html). You'll get best results in a recent version of Google Chrome. Note the web demo doesn't have file reading or writing right now.
+You can [try Mesh online](http://mesh-spreadsheet.com/try-mesh.html). You'll get best results in a recent version of Google Chrome, but it works all the way down to Internet Explorer 11.
 
-To work with local files (read and write), you will need to build the source and run with Electron:
+Or you can [download the project as a zip file](https://github.com/chrispsn/mesh/archive/master.zip) and double-click on `try-mesh.html` in the `src` directory.
 
-1. Install [Yarn](https://yarnpkg.com/en/docs/install) or the **latest** LTS version of [node.js](https://nodejs.org/en/download/)
-2. Clone the Mesh source via Git
-3. In the Mesh `src` directory, at the command line, type `yarn` or `npm install` (as relevant) and press Enter.
-4. In the Mesh `src` directory, at the command line, type `yarn build_electron` or `npm build_electron` (as relevant) and press Enter.
-
-Then to launch, again in the `src` directory, type `yarn start` or `npm start` (as relevant) and press Enter.
-
-Repeat step 4 for every code change.
+Note the project doesn't have file reading or writing right now; we have plans to add it via [Monotreme](https://github.com/chrispsn/monotreme).
 
 ## Quick user guide
 
-Mesh is a JavaScript code editor. Your actions in the 2D grid on the left change the code text on the right. The code on the right is run (`eval`ed) every time you commit a change from the formula bar (by pressing `Enter` or `Tab`), or from the code pane (by clicking back on the grid).
+Mesh is a JavaScript code editor. Your actions in the 2D grid on the left change the code text on the right. The code on the right is run every time you commit a change from the formula bar (by pressing `Enter` or `Tab`).
 
-When you select a cell, the corresponding code will be selected in the right-hand pane.
+You can see the generated code by toggling the code pane. There is a button in the status bar at the bottom. You can also edit the code directly and then click on the grid to run it.
 
 ### Name-based referencing
 
-![Animated GIF of simple value edits](docs/demo_values.gif)
-
 Compared to existing spreadsheet programs, Mesh does not have location-based referencing - every value has a name.
 
-Create a name by typing a name into a cell. You'll see this inserts some `Mesh.attach` code in the right-hand pane.
+Create a name by typing a name into a cell.
 
-Assign a value to a name by typing into the cell to the right of a name (for example `123` or `"Hello world!"` or `true`). Note strings need to be in single or double quotes, or backticks for template literals.
+Assign a value to a name by typing into the cell to the right of a name, for example:
 
-Replace the contents of a cell by selecting it and writing over it. Edit a cell's contents by pressing `F2`. Commit the edit by pressing `Enter`. Note that if the cell is the result of a calculation (such as a processed array), you'll edit the formula that produced the cell, not the calculated value in the cell.
+- `123`
+- `Hello world!`
+- `true`
+- `function() {return 1 + 2}`
+- `2018-11-10`.
 
-### Arrays and objects
+To make data entry easier, we rewrite your "common sense" input to a JavaScript equivalent (like other spreadsheet programs). For example, `Hello world!` (without quotes) will be written into `"Hello world!"` (with quotes).
 
-Create an array or object by typing `[]` or `{}` into a value box.
+Add a formula to a cell in the same way:
 
-Items in arrays and objects take up their own cells and can be individually manipulated:
+- `=1+2`
+- `=some_cell_name + 123`.
 
-- Append to an array or object by typing into the 'append' cells that appear
+Effectively formulas are a way to write "raw" JavaScript code, including code that references other cells.
+
+Replace the contents of a cell by selecting it and writing over it. Edit a cell's contents by pressing `F2`. Commit the edit by pressing `Enter`.
+
+### Tables
+
+Tables are common in spreadsheets but are underrepresented in traditional programming languages. Mesh hopes to change that!
+
+Visually in the grid, they're rows and columns with headers. In JavaScript terms, tables are vanilla arrays of objects, but with the ability to:
+
+- create default column values (default row properties), including calculated columns (`_makeTable` parameter 1)
+- expand or shrink based on a specified length, including one calculated from other cells at runtime (`makeTable` parameter 2)
+- reference other cells in the table based on the row's absolute or relative position.
+
+Create an array or object by clicking on a value a cell and pressing `Ctrl + Alt + t`.
+
+You can then add or delete columns or rows:
+
+- Append to an array or object by typing into the 'new row' cells that appear
 - Insert a new cell above a selected cell with `Ctrl =`
 - Delete a selected cell with `Ctrl -`.
 
 Delete the array or object entirely with `Ctrl _` (ie `Ctrl Shift -`).
 
-### Other data structures
+Search a table for a specific row with the built-in `find` function, or query it with standard array methods like `map`, `filter` and `reduce`.
 
-Mesh has built-in support for displaying JavaScript primitives, arrays and objects, but sometimes you'll want to customise how the code and its results map to the grid, including the actions that occur when you select a cell or commit a change.
+Use tables to simplify heavily nested (indented) code, such as complex conditional logic or multi-dimensional concepts. Peter Kankowski's Code Project article [Table-driven approach](https://www.codeproject.com/Articles/42732/Table-driven-Approach) has some great examples.
 
-You can give a custom display function to `Mesh.attach`. This is how we show records (arrays of objects) as a table.
+### Mesh files
 
-### Functions and other edits
+Mesh files are just plain-text JavaScript files. To see the contents of the file you're writing, toggle the **code pane** with the link in the status bar at the bottom of the screen.
 
-You can also edit the code directly by clicking and typing into the code pane. Commit the change by clicking back onto the grid. This is useful for editing code that makes less sense to interact with via a grid or formula bar, such as large functions.
+You can edit the spreadsheet and see the change in the code on the right.
 
-### Meta
+You'll also see some **boilerplate code** near the bottom. The boilerplate:
 
-Open a file with `Ctrl o`, save with `Ctrl s`, save as with `Ctrl S` (ie `Ctrl Shift s`).
+- turns the cells specification in `_CELLS` into a functioning spreadsheet, with caching of cell values whose inputs have not changed
+- provides table creation (with their own internal caching) and the `find` function to query tables alongside standard ES5 JavaScript array methods
+- uses a function `sc` to strip out parts of cells that won't make it through the [structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) when the spreadsheet output is sent through [nb: this may be moved out of the boilerplate]
 
-Show and hide the code pane with `Ctrl U` (ie `Ctrl Shift u`).
+We're also considering adding:
+- a ES5-friendly way to [write functions in shorter syntax](https://gist.github.com/chrispsn/4d451e0ebe5600148c7c392f6281b251)
+- some standard 'data aggregation' functions like `SUM`.
 
-If Mesh breaks, reload with `F5`.
+The boilerplate will be updated from time to time; for this reason, it is dated in the comments.
+
+### Messaging
+
+Mesh sheets are JavaScript apps in their own right. With a little extra boilerplate, they can send and receive messages. In particular, you can send in streams of values and get calculations out:
+
+![Animated GIF of rough stream functionality](docs/feed.gif)
+
+We're looking into the best way to allow Mesh sheets to support a wide variety of message formats. Right now the Mesh app uses cross-document messaging via [`onmessage`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onmessage) and [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
+
+We're also looking into ways that Mesh sheets can:
+
+- be embedded into other apps
+- act as cloud APIs.
 
 ## Benefits of Mesh (or "LOL, you will never beat Excel")
 
@@ -100,7 +131,7 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 ## Caveats with this approach
 
 - Unlike Excel, the whole file gets recalculated every time (no caching of values that won't change)
-- Mesh misses out on Excel's built-in functions (although if we can get Mesh running on native Windows via JScript, we can probably get access to `WorksheetFunction` via COM).
+- Mesh misses out on Excel's built-in functions (although in IE11 we can probably get access to `WorksheetFunction` via COM).
 
 ## Known issues
 
