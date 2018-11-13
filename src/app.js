@@ -21877,18 +21877,19 @@ LINE_SEPARATOR: {
 
 // TODO add indentation
 BLANK_FILE: {
-    get v() {return [
+    v: [
         
         "'use strict';",
         "const _CELLS = {};",
-        "const g = window;",
         "",
         "/* Mesh boilerplate - do not change. 2018-11-10-1 */",
         "// Cell props: v = value or formula (fn), l = grid coordinates,",
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
+        "const g = window;",
         "function sc(x, d) {",
         // Used to determine what to show in the cell in the Mesh UI.
         // Not everything can be transferred via structured clone.
+        // TODO move this fn to something inserted at runtime?
         "    if (d === 5) return null;", // TODO why is it 5? I just played until I found something that showed the whole Mesh grid...
         "    if (typeof x === 'function') return \"ƒ\";",
         "    if (x instanceof RegExp || x instanceof Date ",
@@ -21920,8 +21921,8 @@ BLANK_FILE: {
         "        if (!(k in _OUTPUT)) {",
         "            const f = c.f;",
         "            const o = _OUTPUT[k] = {",
-        "                t: c.t, s: c.s, n: c.n, l: c.l,",
-        "                v: sc(v,0), f: f ? f(v) : f",
+        "                t: c.t, s: c.s, n: c.n, l: c.l,", // Not as sure about whether this should be a getter. But if is, could just wrap 'this.v' and avoid fn call
+        "                v: sc(v,0), f: f ? f(v) : f", // TODO make this allow getters as well? do we even need to memoise?
         "            };",
         "        }",
         "        _STACK.pop();",
@@ -21929,10 +21930,9 @@ BLANK_FILE: {
         "    }, configurable: true})",
         "};",
         "function _makeTable(defs, length, rows) {",
-        "    const t = [];",
-        "    if (length === null) length = rows.length;",
-        "    const proto = {}; for (let k in defs) _memoProp(defs, proto, k);",
-        "    for (let i=0; i<length; i++) {",
+        "    const t = [], proto = {};",
+        "    for (let k in defs) _memoProp(defs, proto, k);",
+        "    for (let i=0,l=length!==null?length:rows.length;i<l;i++) {",
         "        const r = rows[i] || {}; t.push(r);",
         "        Object.setPrototypeOf(r, proto);",
         "        _defProp(r, 't', {enumerable: false, value: t});",
@@ -21940,10 +21940,10 @@ BLANK_FILE: {
         "    }",
         "    return t;",
         "}",
-        "function _getGetter(o, k) {return Object.getOwnPropertyDescriptor(o, k);}",
+        "function _getGetter(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}",
         "function _memoProp(source, dest, k) {",
         "    const getter = _getGetter(source, k);",
-        "    return (getter !== undefined)",
+        "    return (getter !== undefined)", // do we need to return here? i don't think we use the result. maybe just have an if/else
         "        ? _defProp(dest, k, {",
         "            get: function() {",
         "                const v = getter.call(this);",
@@ -21961,7 +21961,7 @@ BLANK_FILE: {
         // TODO store output on cell instead of in _OUTPUT? (But easy to just send _OUTPUT)
         "function _uncache(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)};",
         "/* END Mesh boilerplate */"
-        ].join(LINE_SEPARATOR)
+        ].join("/n")
     },
     l: [20,1]
 },
@@ -22046,7 +22046,7 @@ generate_cells: {
 
 triage: {
     // TODO replace with 'find' call
-    v: function triage(nodetype, value, isTable) {
+    v: function (nodetype, value, isTable) {
         let stop, return_value;
         triage_table.forEach(function(row) {
             if (!stop
@@ -22203,10 +22203,10 @@ leaf_is_formula: {
 },
 
 leaf_classes: {
-    v: function(value) {
-        return typeof value 
-                + (typeof value === 'boolean' ? ' ' + String(value) : '')
-                + (Error.prototype.isPrototypeOf(value) ? ' error' : '');
+    v: function(v) {
+        return typeof v 
+                + (typeof v === 'boolean' ? ' ' + String(v) : '')
+                + (Error.prototype.isPrototypeOf(v) ? ' error' : '');
     },
     l: [20, 9]
 },
@@ -22529,10 +22529,7 @@ display_fns: {
     l: [19, 11]
 },
 
-// Useful:
-// astexplorer.net
-
-/* PRIVATE (setup) */
+// Useful: astexplorer.net
 
 RECAST_SETTINGS: {
     get v() {return ({ lineTerminator: LINE_SEPARATOR })},
@@ -22551,32 +22548,24 @@ makeUniqueID: {
 
 // TODO should be an object or map
 Object_GetPropNodeNamePropName: {
-    v: function(nodeType) {
-        return (nodeType === 'Literal') ? 'value' : 'name';
-    },
+    v: function(nodeType) { return (nodeType === 'Literal') ? 'value' : 'name' },
     l: [3, 22]
 },
 
 // TODO write tests
 // TODO make this take a nodepath instead?
 Object_GetKeyFromPropNode: {
-    v: function(obj_key_node) {
-        return obj_key_node[Object_GetPropNodeNamePropName(obj_key_node.type)];
-    },
+    v: function(objKeyNode) { return objKeyNode[Object_GetPropNodeNamePropName(objKeyNode.type)] },
     l: [4, 22]
 },
 
 parse_code_string_to_AST: {
-    v: function(code_string) {
-        return Recast.parse(code_string, RECAST_SETTINGS);
-    },
+    v: function(code_string) { return Recast.parse(code_string, RECAST_SETTINGS) },
     l: [5, 22]
 },
 
 print_AST_to_code_string: {
-    v: function(AST) {
-        return Recast.print(AST, RECAST_SETTINGS).code;
-    },
+    v: function(AST) { return Recast.print(AST, RECAST_SETTINGS).code },
     l: [6, 22]
 },
 
@@ -22662,10 +22651,7 @@ Array_ReplaceElement: {
 },
 
 Array_RemoveElement: {
-    v: function(arr_path, element_num) {
-        const element_path = arr_path.get('elements', element_num);
-        element_path.prune();
-    },
+    v: function(array_np, i) {array_np.get('elements', i).prune()},
     l: [15, 22]
 },
 
@@ -22674,7 +22660,6 @@ Array_RemoveElement: {
 Object_GetItem: {
     v: function(obj_path, key) {
         const props_path = obj_path.get('properties');
-
         for (let i=0; i < props_path.value.length; i++) {
             let prop_path = props_path.get(i);
             let key_node = prop_path.node.key;
@@ -22690,7 +22675,6 @@ Object_GetItem: {
 Object_GetItemIndex: {
     v: function(obj_path, key) {
         const props_path = obj_path.get('properties');
-
         for (let i=0; i < props_path.value.length; i++) {
             let prop_path = props_path.get(i);
             let key_node = prop_path.node.key;
@@ -23119,88 +23103,9 @@ Array.prototype.fill||Object.defineProperty(Array.prototype,'fill',{value:functi
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
 
-const g = window;
-
 /* SHOWTIME */
 
-function sc(x, d) {
-// Used to determine what to show in the cell in the Mesh UI.
-// Not everything can be transferred via structured clone.
-// TODO move this fn to something inserted at runtime?
-    if (d === 5) return null; // TODO why is it 5? I just played until I found something that showed the whole Mesh grid...
-    if (typeof x === 'function') return "ƒ";
-    if (x instanceof RegExp || x instanceof Date 
-        || x === null || x === undefined) return x;
-    if (Array.isArray(x)) return x.map(function(a){return sc(a,d+1)});
-    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k],d+1)};return n};
-    return x;
-};
-
-function find(a, p, options) {
-  const l = a.length, o = options || {};
-  for (let k = 0; k < l; k++) {
-      const v = a[k];
-      if (p(v)) return (o.index ? k : v);
-  }
-  return o.default; // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
-};
-
-const _defProp = Object.defineProperty, _OUTPUT = {}, _STACK = [];
-function _defCell(k, c) {
-  return _defProp(g, k, {get: function() {
-      if (_STACK.length > 0) {
-          const top = _STACK[_STACK.length-1];
-          const edges = ('deps' in c) ? c.deps : (c.deps = new Set());
-          edges.add(top);
-      }
-      _STACK.push(k);
-      const v = ('r' in c) ? c.r : c.v;
-      if (!(k in _OUTPUT)) {
-        const f = c.f;
-        const o = _OUTPUT[k] = {
-          t: c.t, s: c.s, n: c.n, l: c.l,
-          v: sc(v,0), f: f ? f(v) : f, // Not as sure about whether this should be a getter. But if is, could just wrap 'this.v' and avoid fn call
-          // TODO make this allow getters as well? do we even need to memoise?
-        };
-      }
-      _STACK.pop();
-      return v;
-  }, configurable: true})
-};
-function _makeTable(defs, length, rows) {
-    const t = [];
-    if (length === null) length = rows.length;
-    const proto = {}; for (let k in defs) _memoProp(defs, proto, k);
-    for (let i=0; i<length; i++) {
-        const r = rows[i] || {}; t.push(r); // "|| {}" for cases where generating excess rows
-        Object.setPrototypeOf(r, proto);
-        _defProp(r, 't', {enumerable: false, value: t});
-        _defProp(r, 'i', {enumerable: false, value: i});
-    }
-    return t;
-}
-function _getGetter(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}
-function _memoProp(source, dest, k) {
-    const getter = _getGetter(source, k);
-    return (getter !== undefined)
-        ? _defProp(dest, k, {
-            get: function() {
-                const v = getter.call(this);
-                _defProp(this, k, {value: v});
-                return v;
-            }
-        })
-        : (dest[k] = source[k], dest)
-}
-function _defCells(c)     {for (let k in c) _defCell(k, c[k])};
-function _extraValues(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}}; // Should this uncaching happen elsewhere?
-function _calcSheet(c)    {for (let k in c) {let v = g[k]; if (c[k].t) _calcTable(v)}};
-function _calcTable(t)    {for (let i in t){let r=t[i];for(let h in r)r[h]}};
-// TODO do we also need to delete c.deps if it has it?
-// TODO store output on cell instead of in _OUTPUT? (But easy to just send _OUTPUT)
-function _uncache(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)};
-
-/* END Mesh boilerplate */
+eval(BLANK_FILE.v);
 
 // Implies cells should be separate to state - rest of state lives in a cell of the sheet.
 // (That's OK - the cells for editing ui-logic are different from the ones ui-logic is generating.)
