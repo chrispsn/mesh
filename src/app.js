@@ -21878,15 +21878,12 @@ LINE_SEPARATOR: {
 // TODO add indentation
 BLANK_FILE: {
     v: [
-        
-        "'use strict';",
-        "const _CELLS = {};",
-        "",
         "/* Mesh boilerplate - do not change. 2018-11-10-1 */",
         "// Cell props: v = value or formula (fn), l = grid coordinates,",
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
-        "const g = window;",
-        "function sc(x, d) {",
+        "'use strict'",
+        "const g = (function () {return this || (1, eval)('this')}())", 
+        "g.sc = function(x, d) {",
         // Used to determine what to show in the cell in the Mesh UI.
         // Not everything can be transferred via structured clone.
         // TODO move this fn to something inserted at runtime?
@@ -21897,19 +21894,19 @@ BLANK_FILE: {
         "    if (Array.isArray(x)) return x.map(function(a){return sc(a,d+1)});",
         "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k],d+1)};return n};",
             "return x;",
-        "};",
+        "}",
         "",
-        "function find(a, p, options) {",
+        "g.find = function(a, p, options) {",
         "    const l = a.length, o = options || {};",
         "    for (let k = 0; k < l; k++) {",
         "        const v = a[k];",
         "        if (p(v)) return (o.index ? k : v);",
         "    }",
         "    return o.default;", // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
-        "};",
+        "}",
         "",
-        "const _defProp = Object.defineProperty, _OUTPUT = {}, _STACK = [];",
-        "function _defCell(k, c) {",
+        "g._defProp = Object.defineProperty, g._OUTPUT = {}, g._STACK = []",
+        "g._defCell = function(k, c) {",
         "    return _defProp(g, k, {get: function() {",
         "        if (_STACK.length > 0) {",
         "            const top = _STACK[_STACK.length-1];",
@@ -21928,8 +21925,8 @@ BLANK_FILE: {
         "        _STACK.pop();",
         "        return v;",
         "    }, configurable: true})",
-        "};",
-        "function _makeTable(defs, length, rows) {",
+        "}",
+        "g._makeTable = function(defs, length, rows) {",
         "    const t = [], proto = {};",
         "    for (let k in defs) _memoProp(defs, proto, k);",
         "    for (let i=0,l=length!==null?length:rows.length;i<l;i++) {",
@@ -21940,8 +21937,8 @@ BLANK_FILE: {
         "    }",
         "    return t;",
         "}",
-        "function _getGetter(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}",
-        "function _memoProp(source, dest, k) {",
+        "g._getGetter = function(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}",
+        "g._memoProp = function(source, dest, k) {",
         "    const getter = _getGetter(source, k);",
         "    return (getter !== undefined)", // do we need to return here? i don't think we use the result. maybe just have an if/else
         "        ? _defProp(dest, k, {",
@@ -21953,16 +21950,16 @@ BLANK_FILE: {
         "        })",
         "        : (dest[k] = source[k], dest);",
         "}",
-        "function _defCells(c)     {for (let k in c) _defCell(k, c[k])};",
-        "function _extraValues(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}};", // Should this uncaching happen elsewhere?
-        "function _calcSheet(c)    {for (let k in c) {let v = g[k]; if (c[k].t) _calcTable(v)}};",
-        "function _calcTable(t)    {for (let i in t){let r=t[i];for(let h in r)r[h]}};",
+        "g._defCells = function(c)     {for (let k in c) _defCell(k, c[k])}",
+        "g._extraValues = function(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}}", // Should this uncaching happen elsewhere?
+        "g._calcSheet = function(c)    {for (let k in c) {let v = g[k]; if (c[k].t) _calcTable(v)}}",
+        "g._calcTable = function(t)    {for (let i in t){let r=t[i];for(let h in r)r[h]}}",
         // TODO do we also need to delete c.deps if it has it?
         // TODO store output on cell instead of in _OUTPUT? (But easy to just send _OUTPUT)
-        "function _uncache(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)};",
-        "/* END Mesh boilerplate */"
-        ].join("/n")
-    },
+        "g._uncache = function(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)}",
+        "/* END Mesh boilerplate */",
+        "g._CELLS = {}"
+    ].join("\n"),
     l: [20,1]
 },
 
@@ -22573,16 +22570,16 @@ Cells_GetNodePath: {
     v: function(AST) {
         let nodepath_to_return;
         Recast.visit(AST, {
-            visitVariableDeclarator: function(path) {
+            visitAssignmentExpression: function(path) {
                 // TODO put some variable decln type check here?
-                if (path.node.id.name == '_CELLS') {
-                    nodepath_to_return = path;
+                if ("g._CELLS" === Recast.print(path.node.left).code) {
+                    nodepath_to_return = path.get("right");
                     return false;
                 }
                 this.traverse(path);
             }
         });
-        return nodepath_to_return.get('init');
+        return nodepath_to_return;
     },
     l: [7, 22],
 },
@@ -23105,7 +23102,7 @@ Array.prototype.fill||Object.defineProperty(Array.prototype,'fill',{value:functi
 
 /* SHOWTIME */
 
-eval(BLANK_FILE.v);
+eval(_CELLS.BLANK_FILE.v);
 
 // Implies cells should be separate to state - rest of state lives in a cell of the sheet.
 // (That's OK - the cells for editing ui-logic are different from the ones ui-logic is generating.)
