@@ -21875,10 +21875,9 @@ LINE_SEPARATOR: {
     l: [19, 1]
 },
 
-// TODO add indentation
-BLANK_FILE: {
+BOILERPLATE: {
     v: [
-        "/* Mesh boilerplate - do not change. 2018-11-13-2 */",
+        "/* Mesh boilerplate - do not change. 2018-11-13-3 */",
         "// Cell props: v = value or formula (fn), l = grid coordinates,",
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
         "'use strict'",
@@ -21955,10 +21954,15 @@ BLANK_FILE: {
         // TODO do we also need to delete c.deps if it has it?
         // TODO store output on cell instead of in _OUTPUT? (But easy to just send _OUTPUT)
         "g._uncache = function(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)}",
-        "/* END Mesh boilerplate */",
-        "g._CELLS = {}"
+        "/* END Mesh boilerplate */"
     ].join("\n"),
-    l: [20,1]
+    l: [20, 1]
+},
+
+// TODO add indentation
+BLANK_FILE: {
+    get v() {return BOILERPLATE + "\n" + "const _CELLS = {}"},
+    l: [21,1]
 },
 
 get_cell: {
@@ -22567,10 +22571,10 @@ Cells_GetNodePath: {
     v: function(AST) {
         let nodepath_to_return;
         Recast.visit(AST, {
-            visitAssignmentExpression: function(path) {
+            visitVariableDeclarator: function(path) {
                 // TODO put some variable decln type check here?
-                if ("g._CELLS" === Recast.print(path.node.left).code) {
-                    nodepath_to_return = path.get("right");
+                if ("_CELLS" === path.node.id.name) {
+                    nodepath_to_return = path.get("init");
                     return false;
                 }
                 this.traverse(path);
@@ -23099,7 +23103,7 @@ Array.prototype.fill||Object.defineProperty(Array.prototype,'fill',{value:functi
 
 /* SHOWTIME */
 
-eval(_CELLS.BLANK_FILE.v);
+eval(_CELLS.BOILERPLATE.v);
 
 // Implies cells should be separate to state - rest of state lives in a cell of the sheet.
 // (That's OK - the cells for editing ui-logic are different from the ones ui-logic is generating.)
@@ -23113,4 +23117,5 @@ eval(_CELLS.BLANK_FILE.v);
 // UI LOGIC
 // in default case: needs to send 'expanded cell' (generate_cells) info from full case of calculator. but this can be values only
 // in full case: only needed if you're editing the mesh UI file in Mesh itself
+// needs the values and the source code, but doesn't need to run the file itself
 // needs the values and the source code, but doesn't need to run the file itself
