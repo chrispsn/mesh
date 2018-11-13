@@ -21880,7 +21880,6 @@ BOILERPLATE: {
         "/* Mesh boilerplate - do not change. 2018-11-13-3 */",
         "// Cell props: v = value or formula (fn), l = grid coordinates,",
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
-        "'use strict'",
         "const g = (function () {return this || (1, eval)('this')}())", 
         "g._sc = function(x, d) {",
         // Used to determine what to show in the cell in the Mesh UI.
@@ -21961,7 +21960,7 @@ BOILERPLATE: {
 
 // TODO add indentation
 BLANK_FILE: {
-    get v() {return BOILERPLATE + "\n" + "const _CELLS = {}"},
+    get v() {return "'use strict';" + "\n" + "const _CELLS = {}" + "\n" + BOILERPLATE},
     l: [21,1]
 },
 
