@@ -21878,7 +21878,7 @@ LINE_SEPARATOR: {
 // TODO add indentation
 BLANK_FILE: {
     v: [
-        "/* Mesh boilerplate - do not change. 2018-11-13-1 */",
+        "/* Mesh boilerplate - do not change. 2018-11-13-2 */",
         "// Cell props: v = value or formula (fn), l = grid coordinates,",
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
         "'use strict'",
@@ -21895,7 +21895,6 @@ BLANK_FILE: {
         "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k],d+1)};return n};",
             "return x;",
         "}",
-        "",
         "g.find = function(a, p, options) {",
         "    const l = a.length, o = options || {};",
         "    for (let k = 0; k < l; k++) {",
@@ -21904,7 +21903,6 @@ BLANK_FILE: {
         "    }",
         "    return o.default;", // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
         "}",
-        "",
         "g._defProp = Object.defineProperty, g._OUTPUT = {}, g._STACK = []",
         "g._defCell = function(k, c) {",
         "    return _defProp(g, k, {get: function() {",
@@ -21934,21 +21932,21 @@ BLANK_FILE: {
         "        Object.setPrototypeOf(r, proto);",
         "        _defProp(r, 't', {enumerable: false, value: t});",
         "        _defProp(r, 'i', {enumerable: false, value: i});",
-        "    }",
-        "    return t;",
+        "    };",
+        "    return t",
         "}",
         "g._getGetter = function(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}",
         "g._memoProp = function(source, dest, k) {",
         "    const getter = _getGetter(source, k);",
-        "    return (getter !== undefined)", // do we need to return here? i don't think we use the result. maybe just have an if/else
-        "        ? _defProp(dest, k, {",
+        "    if (getter !== undefined) {", // do we need to return here? i don't think we use the result. maybe just have an if/else
+        "        _defProp(dest, k, {",
         "            get: function() {",
         "                const v = getter.call(this);",
         "                _defProp(this, k, {value: v});",
         "                return v;",
-        "            }",
+        "            }, enumerable: true",
         "        })",
-        "        : (dest[k] = source[k], dest);",
+        "    } else dest[k] = source[k];",
         "}",
         "g._defCells = function(c)     {for (let k in c) _defCell(k, c[k])}",
         "g._extraValues = function(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}}", // Should this uncaching happen elsewhere?
@@ -22009,7 +22007,6 @@ generate_cells: {
             }
 
             let value_nodepath = Cell_GetNodePath(cellsNodePath, id).value;
-            console.dir(value_nodepath);
             const display_fn = display_fns[triage(value_nodepath.node.type, cell.v, Boolean(cell.t))];
 
             // Not sure on exactly which parameters are best here, and which order makes most sense.
