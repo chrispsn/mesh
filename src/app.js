@@ -21882,7 +21882,7 @@ BOILERPLATE: {
         "// f = format fn, s = transpose?, t = is table?, n = show name?",
         "'use strict'",
         "const g = (function () {return this || (1, eval)('this')}())", 
-        "g.sc = function(x, d) {",
+        "g._sc = function(x, d) {",
         // Used to determine what to show in the cell in the Mesh UI.
         // Not everything can be transferred via structured clone.
         // TODO move this fn to something inserted at runtime?
@@ -21890,8 +21890,8 @@ BOILERPLATE: {
         "    if (typeof x === 'function') return \"ƒ\";",
         "    if (x instanceof RegExp || x instanceof Date ",
         "        || x === null || x === undefined) return x;",
-        "    if (Array.isArray(x)) return x.map(function(a){return sc(a,d+1)});",
-        "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=sc(x[k],d+1)};return n};",
+        "    if (Array.isArray(x)) return x.map(function(a){return _sc(a,d+1)});",
+        "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=_sc(x[k],d+1)};return n};",
             "return x;",
         "}",
         "g.find = function(a, p, options) {",
@@ -21916,7 +21916,7 @@ BOILERPLATE: {
         "            const f = c.f;",
         "            const o = _OUTPUT[k] = {",
         "                t: c.t, s: c.s, n: c.n, l: c.l,", // Not as sure about whether this should be a getter. But if is, could just wrap 'this.v' and avoid fn call
-        "                v: sc(v,0), f: f ? f(v) : f", // TODO make this allow getters as well? do we even need to memoise?
+        "                v: _sc(v,0), f: f ? f(v) : f", // TODO make this allow getters as well? do we even need to memoise?
         "            };",
         "        }",
         "        _STACK.pop();",
@@ -23117,5 +23117,4 @@ eval(_CELLS.BOILERPLATE.v);
 // UI LOGIC
 // in default case: needs to send 'expanded cell' (generate_cells) info from full case of calculator. but this can be values only
 // in full case: only needed if you're editing the mesh UI file in Mesh itself
-// needs the values and the source code, but doesn't need to run the file itself
 // needs the values and the source code, but doesn't need to run the file itself
