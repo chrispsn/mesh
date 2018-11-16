@@ -21650,7 +21650,8 @@ cell_edit_types: {
                 cell_type: "EMPTY",
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     Object_InsertItem(meshCellsNode,
-                        "\"" + action.commit_value + "\"",
+                        // TODO Detect duplicate names and make sure is a valid Identifier in ES5/6
+                        action.commit_value,
                         "{v: null, l: [" + state.selected_cell_loc + "]}"
                     );
                     return action.offset;
@@ -21658,6 +21659,23 @@ cell_edit_types: {
             },
             {
                 cell_type: "KEY", // TODO add 'change symbol' functionality
+                COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+                // // TODO Check that the commit is valid first?
+                const a = get_selected_cell(state).AST_props.key;
+                const b = action.commit_value;
+                Recast.visit(meshCellsNode, {
+                    visitIdentifier: function(p) {
+                        const n = p.node;
+                        if (
+                            n.name === a 
+                            && ("MemberExpression" !== p.parentPath.node.type || p.parentPath.name === "right") 
+                            && !p.scope.lookup(a)
+                        ) n.name = b;
+                        this.traverse(p);
+                    }
+                });
+                return action.offset;
+              },
                 DELETE_ELEMENT: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const index = get_selected_cell(state).AST_props.index;
