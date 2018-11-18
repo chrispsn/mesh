@@ -21928,7 +21928,7 @@ BOILERPLATE: {
         "            edges.add(top);",
         "        }",
         "        _STACK.push(k);",
-        "        const v = ('r' in c) ? c.r : c.v;",
+        "        const v = ('r' in c) ? c.r : c.v;", // Could also remove the getter (if a getter) and save on a named prop, then reassign c.v to the result
         "        if (!(k in _OUTPUT)) {",
         "            const f = c.f;",
         "            const o = _OUTPUT[k] = {",
