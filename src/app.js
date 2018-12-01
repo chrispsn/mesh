@@ -21562,6 +21562,7 @@ const _CELLS = {
 
         */
     )}, l: [3,1], t: true},
+
 rewrite_input: {
     v: function (input_string) {
         let matched_value, stop;
@@ -21573,7 +21574,8 @@ rewrite_input: {
         });
         return (matched_value !== undefined) ? matched_value : ("\"" + input_string + "\"");
     },
-    l: [1, 1], t: true},
+    l: [1, 2], t: true
+},
 
 transform_formula_bar_input: {
     v: function(raw_input) {
@@ -21592,7 +21594,7 @@ transform_formula_bar_input: {
         } else {
             return rewrite_input(raw_input);
         }
-    }, l: [1,6]},
+    }, l: [1,7]},
 
 cell_edit_types: {
     get v() {return _makeTable(
@@ -21633,6 +21635,14 @@ cell_edit_types: {
                 const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
                 Table_Create(cell_props_nodepath);
                 return [0, 0];
+            },
+            TOGGLE_NAME_VISIBILITY: function(meshCellsNode, state, action) {
+                const key = get_selected_cell(state).AST_props.key;
+                const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
+                const name_prop_np = Object_GetItem(cell_props_nodepath, "n");
+                if (name_prop_np) name_prop_np.prune();
+                else Object_InsertItem(cell_props_nodepath, "n", "false");
+                return action.offset;
             }
         }
         // # rows
@@ -21649,13 +21659,34 @@ cell_edit_types: {
             {
                 cell_type: "EMPTY",
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
+                    const loc = state.selected_cell_loc;
+                    const cell_name = String.fromCharCode(65+loc[1]) + (1+loc[0]); // TODO fix for col 27+
+                    const temp_cell_code = "({l: [" + state.selected_cell_loc + "], n: false})";
+                    const temp_AST = parse_code_string_to_AST(temp_cell_code);
+                    let temp_node;
+                    Recast.visit(temp_AST, {
+                        visitObjectExpression: function(path) {
+                            temp_node = path; return false;
+                        }
+                    });
+                    const transformed_input = transform_formula_bar_input(action.commit_value);
+                    if (action.commit_value[0] === "=") {
+                        Object_InsertGetter(temp_node, "v", transformed_input);
+                    } else {
+                        Object_InsertItem(temp_node, "v", transformed_input)
+                    }
+                    console.log(print_AST_to_code_string(temp_node));
                     Object_InsertItem(meshCellsNode,
                         // TODO Detect duplicate names and make sure is a valid Identifier in ES5/6
-                        action.commit_value,
-                        "{v: null, l: [" + state.selected_cell_loc + "]}"
+                        cell_name,
+                        print_AST_to_code_string(temp_node)
                     );
                     return action.offset;
                 },
+                TOGGLE_NAME_VISIBILITY: function(meshCellsNode, state, action) {
+                    alert("No 'toggle name visibility' action defined.")
+                    return [0, 0];
+                }
             },
             {
                 cell_type: "KEY", // TODO add 'change symbol' functionality
@@ -21890,7 +21921,7 @@ cell_edit_types: {
 
 LINE_SEPARATOR: {
     v: "\n", // TODO was require('os').EOL before
-    l: [19, 1]
+    l: [19, 2]
 },
 
 BOILERPLATE: {
@@ -21973,13 +22004,13 @@ BOILERPLATE: {
         "g._uncache = function(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)}",
         "/* END Mesh boilerplate */"
     ].join("\n"),
-    l: [20, 1]
+    l: [20, 2]
 },
 
 // TODO add indentation
 BLANK_FILE: {
     get v() {return "'use strict';" + "\n" + "const _CELLS = {}" + "\n" + BOILERPLATE},
-    l: [21,1]
+    l: [21, 2]
 },
 
 get_cell: {
@@ -21991,33 +22022,36 @@ get_cell: {
             return Object.assign({}, EMPTY_CELL, {location: cell_location});
         }
     },
-    l: [23, 1]
+    l: [23, 2]
 },
 
 get_selected_cell: {
     v: function(state) {
         return get_cell(state.cells, state.selected_cell_loc);
     },
-    l: [22, 1]
+    l: [22, 2]
 },  
 
 generate_cells: {
     v: function(RESULTS, cellsNodePath) {
         const cells = [];
-        // TODO implement f, s, n
+        // TODO implement f (formatted value), s (transpose)
 
         for (let id in RESULTS) {
 
             const cell = RESULTS[id];
             const location = cell.l;
-    //      {v, l:loc, f:formatted_value, s:transpose, t:isTable, n:showID}] of Object.entries(RESULTS)) {
+            const value_nodepath = Cell_GetNodePath(cellsNodePath, id).value;
+            const triage_result = triage(value_nodepath.node.type, cell.v, Boolean(cell.t));
+            const display_fn = display_fns[triage_result.fn];
+            const name_offset = triage_result.name_offset;
 
             // TODO add work of defining this back into display.js?
             // Would seem to fit better there, even if the fn signature is different
-            const showID = cell.n;
-            if (showID !== false) {
+            const showID = cell.n === undefined;
+            if (showID) {
                 cells.push({
-                    location: cell.l,
+                    location: [location[0] + name_offset[0], location[1] + name_offset[1]],
                     repr: id,
                     ref_string: id,
                     formula_bar_value: id,
@@ -22026,9 +22060,6 @@ generate_cells: {
                     AST_props: {key: id},
                 });
             }
-
-            let value_nodepath = Cell_GetNodePath(cellsNodePath, id).value;
-            const display_fn = display_fns[triage(value_nodepath.node.type, cell.v, Boolean(cell.t))];
 
             // Not sure on exactly which parameters are best here, and which order makes most sense.
             // 1. Value is needed because the AST doesn't know what (eg) a fn call evaluates to.
@@ -22056,13 +22087,13 @@ generate_cells: {
         })
 
         return new_cells;
-    }, l: [25, 1]
+    }, l: [25, 2]
 },
 
 triage: {
     // TODO replace with 'find' call
     v: function (nodetype, value, isTable) {
-        let stop, return_value;
+        let stop, matched_row;
         triage_table.forEach(function(row) {
             if (!stop
                 && ((row.nodetype === undefined) || (nodetype === row.nodetype))
@@ -22071,11 +22102,11 @@ triage: {
                 && ((row.isTable === undefined) || (row.isTable === isTable))
             ) {
                 stop = true;
-                return_value = row.fn;
+                matched_row = row;
             }
         });
-        return return_value !== undefined ? return_value : "value";
-    }, l: [1, 15]
+        return matched_row !== undefined ? {fn: matched_row.fn, name_offset: matched_row.name_offset} : {fn: "value", name_offset: [0, -1]};
+    }, l: [1, 16]
 },
 
 // Lists of possible types:
@@ -22100,45 +22131,54 @@ triage_table: {
                 nodetype: 'CallExpression',
                 isTable: true,
                 fn: "table_rw",
+                name_offset: [-1, 0]
             },
             {
                 typeof: "Array",
                 isTable: true,
                 fn: "table_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "ArrayExpression",
                 fn: "array_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "ObjectExpression",
                 fn: "object_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "CallExpression",
                 prototype: Array.prototype,
                 typeof: "ALL",
                 fn: "array_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "CallExpression",
                 typeof: "object",
                 fn: "object_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "MemberExpression",
                 prototype: Array.prototype,
                 fn: "array_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "MemberExpression",
                 typeof: "object",
                 fn: "object_ro",
+                name_offset: [-1, 0]
             },
             {
                 nodetype: "NewExpression",
                 typeof: "object",
-                fn: "object_ro"
+                fn: "object_ro",
+                name_offset: [-1, 0]
             }
         ]
         
@@ -22214,7 +22254,7 @@ leaf_is_formula: {
         return (-1 === 'Literal UnaryExpression FunctionExpression'.indexOf(node.type));
         /*'TemplateLiteral',*/ 
     },
-    l: [19, 9]
+    l: [19, 10]
 },
 
 leaf_classes: {
@@ -22223,7 +22263,7 @@ leaf_classes: {
                 + (typeof v === 'boolean' ? ' ' + String(v) : '')
                 + (Error.prototype.isPrototypeOf(v) ? ' error' : '');
     },
-    l: [20, 9]
+    l: [20, 10]
 },
 
 get_formula_bar_text: {
@@ -22237,7 +22277,7 @@ get_formula_bar_text: {
         }
         return raw_text;
     },
-    l: [21, 9]
+    l: [21, 10]
 },
 
 display_fns: {
@@ -22246,7 +22286,7 @@ display_fns: {
             // For use where you don't know what to use for the formula bar value
             // and code location values yet.
             return [{
-                location: [0, 1],
+                location: [0, 0],
                 ref_string: id,
                 repr: 'TODO',
                 formula_bar_value: "TODO",
@@ -22260,7 +22300,7 @@ display_fns: {
             const raw_text = print_AST_to_code_string(value_nodepath);
             const is_formula = leaf_is_formula(value_nodepath.node);
             const value_cell = {
-                location: [0, 1], 
+                location: [0, 0], 
                 ref_string: id,
                 repr: (formatted_value === undefined) ? String(value) : formatted_value,
                 formula_bar_value: get_formula_bar_text(is_formula, raw_text),
@@ -22280,7 +22320,7 @@ display_fns: {
             const formula_bar_value = get_formula_bar_text(is_formula, raw_text);
             return array.map(function(value, row_offset) {
                 return {
-                    location: [1 + row_offset, 0],
+                    location: [row_offset, 0],
                     repr: String(value),
                     ref_string: id,
                     formula_bar_value: formula_bar_value,
@@ -22300,7 +22340,7 @@ display_fns: {
                 const is_formula = leaf_is_formula(element_node);
                 const raw_text = print_AST_to_code_string(element_node);
                 return ({
-                    location: [1 + row_offset, 0],
+                    location: [row_offset, 0],
                     repr: String(value),
                     AST_props: {index: row_offset, key: id},
                     ref_string: id,
@@ -22311,7 +22351,7 @@ display_fns: {
             })
     
             const append_cell = {
-                location: [1 + array.length, 0],
+                location: [array.length, 0],
                 repr: '',
                 AST_props: {index: 1 + array.length, key: id},
                 ref_string: id,
@@ -22340,7 +22380,7 @@ display_fns: {
                 const key = entry[0], value = entry[1];
     
                 const key_cell = ({
-                    location: [1 + row_offset, 0],
+                    location: [row_offset, 0],
                     repr: String(key), 
                     ref_string: id,
                     formula_bar_value: formula_bar_text,
@@ -22350,7 +22390,7 @@ display_fns: {
                 });
     
                 const value_cell = ({
-                    location: [1 + row_offset, 1],
+                    location: [row_offset, 1],
                     repr: String(value), 
                     ref_string: id,
                     formula_bar_value: formula_bar_text,
@@ -22379,7 +22419,7 @@ display_fns: {
                 let raw_text = print_AST_to_code_string(key_node);
                 let formula_bar_text = get_formula_bar_text(false, raw_text);
                 const key_cell = ({
-                    location: [1 + row_offset, 0],
+                    location: [row_offset, 0],
                     // TODO visually show the difference between keys surrounded by "" and those not?
                     repr: String(key), 
                     ref_string: id,
@@ -22400,7 +22440,7 @@ display_fns: {
                 raw_text = print_AST_to_code_string(value_node);
                 formula_bar_text = get_formula_bar_text(is_formula, raw_text);
                 const value_cell = ({
-                    location: [1 + row_offset, 1],
+                    location: [row_offset, 1],
                     // TODO show function bodies (currently show as blank)
                     // Maybe we need a 'show as leaf' function
                     // to get the right styling etc
@@ -22417,7 +22457,7 @@ display_fns: {
             });
     
             const append_cell = {
-                location: [1 + cells.length / 2, 0],
+                location: [cells.length / 2, 0],
                 repr: '',
                 ref_string: id,
                 classes: 'add_key',
@@ -22443,7 +22483,7 @@ display_fns: {
             const heading_cells = headings.map(
                 function(heading, col_offset) { return {
                     // TODO
-                    location: [1, col_offset], 
+                    location: [0, col_offset], 
                     repr: String(heading),
                     classes: 'heading',
                     formula_bar_value: heading,
@@ -22455,7 +22495,7 @@ display_fns: {
             // Add column
             // TODO get working for 'no headings' case
             const add_column_cell = {
-                location: [1, headings.length],
+                location: [0, headings.length],
                 repr: '',
                 classes: 'add_col',
                 formula_bar_value: '',
@@ -22509,7 +22549,7 @@ display_fns: {
                                             : String(value);
                     record_cells.push(
                         ({
-                            location: [2 + offset_r, offset_c],
+                            location: [1 + offset_r, offset_c],
                             repr: formatted_value,
                             formula_bar_value: formula_bar_text,
                             cell_AST_changes_type: 'TABLE_RW_VALUE_CELL',
@@ -22527,7 +22567,7 @@ display_fns: {
             const showAppendCells = "undefined" !== set_table_length_nodepath.value.name; // TODO also account for null?
             if (showAppendCells) {
                 append_record_cells = headings.map(function(heading, offset_c) {return {
-                    location: [2 + arr.length, offset_c],
+                    location: [1 + arr.length, offset_c],
                     repr: '',
                     classes: 'append',
                     formula_bar_value: "",
@@ -22558,30 +22598,30 @@ makeUniqueID: {
         while (existing_IDs.has(new_ID));
         return new_ID;
     },
-    l: [2, 22]
+    l: [2, 23]
 },
 
 // TODO should be an object or map
 Object_GetPropNodeNamePropName: {
     v: function(nodeType) { return (nodeType === 'Literal') ? 'value' : 'name' },
-    l: [3, 22]
+    l: [3, 23]
 },
 
 // TODO write tests
 // TODO make this take a nodepath instead?
 Object_GetKeyFromPropNode: {
     v: function(objKeyNode) { return objKeyNode[Object_GetPropNodeNamePropName(objKeyNode.type)] },
-    l: [4, 22]
+    l: [4, 23]
 },
 
 parse_code_string_to_AST: {
     v: function(code_string) { return Recast.parse(code_string, RECAST_SETTINGS) },
-    l: [5, 22]
+    l: [5, 23]
 },
 
 print_AST_to_code_string: {
     v: function(AST) { return Recast.print(AST, RECAST_SETTINGS).code },
-    l: [6, 22]
+    l: [6, 23]
 },
 
 Cells_GetNodePath: {
@@ -22599,7 +22639,7 @@ Cells_GetNodePath: {
         });
         return nodepath_to_return;
     },
-    l: [7, 22],
+    l: [7, 23],
 },
 
 Cell_GetNodePath: {
@@ -22622,7 +22662,7 @@ Cell_GetNodePath: {
             };
         };
     },
-    l: [8, 22],
+    l: [8, 23],
 },
 
 /* GENERAL */
@@ -22630,7 +22670,7 @@ Cell_GetNodePath: {
 // TODO write tests
 Cell_DeleteValue: {
     v: function(value_path) {value_path.replace(B.literal(null))},
-    l: [10, 22]
+    l: [10, 23]
 },
 
 /* ARRAY */
@@ -22645,7 +22685,7 @@ Array_InsertElement: {
             elements_path.insertAt(element_num, inserted_node);
         }
     },
-    l: [12, 22]
+    l: [12, 23]
 },
 
 Array_AppendElement: {
@@ -22654,7 +22694,7 @@ Array_AppendElement: {
         const inserted_node = B.identifier(inserted_text);
         elements_path.push(inserted_node);
     },
-    l: [13, 22]
+    l: [13, 23]
 },
 
 Array_ReplaceElement: {
@@ -22662,12 +22702,12 @@ Array_ReplaceElement: {
         const elements_path = arr_path.get('elements');
         elements_path.get(element_num).replace(B.identifier(inserted_text));
     },
-    l: [14, 22]
+    l: [14, 23]
 },
 
 Array_RemoveElement: {
     v: function(array_np, i) {array_np.get('elements', i).prune()},
-    l: [15, 22]
+    l: [15, 23]
 },
 
 /* OBJECT */
@@ -22684,7 +22724,7 @@ Object_GetItem: {
         }
         return undefined;
     },
-    l: [17, 22]
+    l: [17, 23]
 },
 
 Object_GetItemIndex: {
@@ -22699,7 +22739,7 @@ Object_GetItemIndex: {
         }
         return false;
     },
-    l: [18, 22]
+    l: [18, 23]
 },
 
 // TODO: be smart about how the 'key' is created (id vs string literal)
@@ -22708,14 +22748,14 @@ Object_ReplaceItemKey: {
         // TODO throw error if duplicate key?
         obj_item_path.get('key').replace(B.identifier(new_key_text));
     },
-    l: [19, 22]
+    l: [19, 23]
 },
 
 Object_ReplaceItemValue: {
     v: function(obj_item_path, new_value_text) {
         obj_item_path.get('value').replace(B.identifier(new_value_text));
     },
-    l: [20, 22]
+    l: [20, 23]
 },
 
 Object_InsertItem: {
@@ -22732,7 +22772,7 @@ Object_InsertItem: {
             props_path.insertAt(index, new_prop_node);
         }
     },
-    l: [21, 22]
+    l: [21, 23]
 },
 
 Object_InsertGetter: {
@@ -22756,7 +22796,7 @@ Object_InsertGetter: {
             props_path.insertAt(index, new_prop_node);
         }
     },
-    l: [22, 22]
+    l: [22, 23]
 },
 
 Object_ReplaceGetterReturnValue: {
@@ -22764,7 +22804,7 @@ Object_ReplaceGetterReturnValue: {
         const val = obj_getter_prop_path.get('value', 'body', 'body', 0, 'argument');
         val.replace(B.identifier(new_return_value_text));
     },
-    l: [23, 22]
+    l: [23, 23]
 },
 
 Object_RemoveItem: {
@@ -22781,7 +22821,7 @@ Object_RemoveItem: {
             }
         }
     },
-    l: [24, 22]
+    l: [24, 23]
 },
 
 /* TABLE */
@@ -22798,22 +22838,22 @@ Table_Create: {
             Object_InsertItem(cellObjPath, "t", "true")
         };
     },
-    l: [26, 22]
+    l: [26, 23]
 },
 
 Table_GetColumnsObject: {
     v: function(table_np) {return FunctionCall_GetArgument(table_np, 0)},
-    l: [27, 22]
+    l: [27, 23]
 },
 
 Table_GetRowCountOverride: {
     v: function(table_np) {return FunctionCall_GetArgument(table_np, 1)},
-    l: [28, 22]
+    l: [28, 23]
 },
 
 Table_GetRowsArray: {
     v: function(table_np) {return FunctionCall_GetArgument(table_np, 2)},
-    l: [29, 22]
+    l: [29, 23]
 },
 
 Table_AddRow: {
@@ -22827,7 +22867,7 @@ Table_AddRow: {
         else { rows_nodepath.node.elements.push(o_node); }
         // TODO if a row is already there, push it down (insert before it)
     },
-    l: [30, 22]
+    l: [30, 23]
 },
 
 Table_AddColumn: {
@@ -22847,7 +22887,7 @@ Table_AddColumn: {
             // ???
         }
     },
-    l: [31, 22]
+    l: [31, 23]
 },
 
 Table_ChangeCellValue: {
@@ -22869,13 +22909,13 @@ Table_ChangeCellValue: {
         // };
         // Array_ReplaceElement(valuesPath, index, new_value);
     },
-    l: [32, 22]
+    l: [32, 23]
 },
 Table_DeleteRow: {
     v: function(table_np, index) {
         Table_GetRowsArray(table_np).get("elements", index).prune();
     },
-    l: [33, 22]
+    l: [33, 23]
 },
 Table_DeleteColumn: {
     v: function(table_np, heading) {
@@ -22894,7 +22934,7 @@ Table_DeleteColumn: {
             }
         };
     },
-    l: [34, 22]
+    l: [34, 23]
 },
 // Table_ResizeArray: {
 //     v: function() {return function(arrayPath, newSize) {
@@ -22919,7 +22959,7 @@ FunctionCall_GetArgument: {
     v: function(functionCallNodePath, argIndex) {
         return functionCallNodePath.get("arguments", argIndex);
     },
-    l: [35, 22]
+    l: [35, 23]
 },
 
 // TODO is there a more brief alternative to assign?
@@ -23065,7 +23105,7 @@ old_state: {
         filepath: null,
         empty_cell: Object.assign({}, EMPTY_CELL)
     })},
-    l: [3, 30]
+    l: [4, 30]
 },
 
 new_state: {
@@ -23078,27 +23118,27 @@ new_state: {
         console.log("MOVING TO NEW STATE:", new_state);
         return new_state;
     },
-    l: [11, 30]
+    l: [11, 31]
 },
 
 action: {
     v: {type: ''},
-    l: [1, 25]
+    l: [2, 25]
 },
 
 results: {
     v: null,
-    l: [1, 30]
+    l: [1, 31]
 },
 
 AST: {
     get v() {return parse_code_string_to_AST(old_state.code_editor.value)},
-    l: [1, 27]
+    l: [5, 25]
 },
 
 cells: {
     get v() {return generate_cells(results, Cells_GetNodePath(AST))},
-    l: [1, 28]
+    l: [2, 28]
 }
 
 };

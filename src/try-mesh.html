@@ -67,23 +67,13 @@ const EMPTY_CELL = { // TODO get this from the worker eventually
 const assign = Object.assign; // TODO eventually polyfill
 
 const Cell = createReactClass({
-
-    componentDidMount: function() {
-        this.ensureVisible();
-    },
-
-    componentDidUpdate: function() {
-        this.ensureVisible();
-    },
-
     ensureVisible: function() {
-        if (this.props.selected) {
-            // http://stackoverflow.com/a/30497101
-            // https://facebook.github.io/react/docs/react-dom.html#finddomnode
-            ReactDOM.findDOMNode(this).scrollIntoView(false);
-        }
+        // http://stackoverflow.com/a/30497101
+        // https://facebook.github.io/react/docs/react-dom.html#finddomnode
+        if (this.props.selected) ReactDOM.findDOMNode(this).scrollIntoView(false);
     },
-
+    componentDidMount:  function() {this.ensureVisible()},
+    componentDidUpdate: function() {this.ensureVisible()},
     render: function() {
         let props = this.props;
         props = {
@@ -93,7 +83,6 @@ const Cell = createReactClass({
         }
         return React.createElement("td", props, this.props.repr);
     }
-
 });
 
 const Grid = createReactClass({
@@ -103,7 +92,7 @@ const Grid = createReactClass({
         const cells_obj = this.props.cells;
         const selected_idxs = this.props.selected_cell_loc;
         console.log("Grid's cells_obj:", cells_obj);
-        const cells_array = Object.keys(cells_obj).reduce(function(arr, key) {arr.push(cells_obj[key]); return arr}, []) || [];
+        const cells_array = Object.keys(cells_obj).reduce(function(arr, k) {arr.push(cells_obj[k]); return arr}, []) || [];
         
         const MAX = function(agg, curr) {return Math.max(agg, curr)};
         const max_cell_row_idx = cells_array
@@ -127,8 +116,7 @@ const Grid = createReactClass({
                     assign({}, cell, {
                         key: id + '|' + cell.repr, 
                         id: id,
-                        // TODO Seems a pain to do this for every cell instead of
-                        // just the selected one
+                        // TODO Seems a pain to do this for every cell instead of just the selected one
                         selected: (row_idx === selected_idxs[0] && col_idx === selected_idxs[1])
                     })
                 ))
@@ -466,9 +454,11 @@ function process_keydown_event (bindings, event) {
 
 const grid_keydown_events = [
     // TODO what else should trigger this? + etc?
+    // TODO turn this into a Mesh table?
     {mode: 'READY', keypattern: /^[\w-"'\(\[{\/=*]$/, modifiers: function(e) {return !e.ctrlKey}, action: function() {return { type: 'EDIT_CELL_REPLACE' }}},
 
     {mode: 'READY', keypattern: /^F2$/, action: function() {return { type: 'EDIT_CELL' }}},
+    {mode: 'READY', keypattern: /^F3$/, preventDefault: true, action: function() {return { type: 'EDIT_AST', AST_edit_type: 'TOGGLE_NAME_VISIBILITY', offset: [0, 0] }}},
 
     {mode: 'READY', keypattern: /^ArrowLeft$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [0, -1] }}},
     {mode: 'READY', keypattern: /^ArrowUp$/, action: function() {return { type: 'MOVE_CELL_SELECTION', offset: [-1, 0] }}},
