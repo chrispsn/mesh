@@ -21544,6 +21544,11 @@ const _CELLS = {
                 description: "numbers",
                 pattern: /^-?[0-9]+\.?[0-9]*$/,
                 rewrite: "$&"
+            },
+            {
+                description: "strings",
+                pattern: /[\s\S]*/,
+                rewrite: function(_, offset, string) {return "\"" + string.replace(/\n/g, "\\n") + "\""}
             }
         ]
 
@@ -21572,7 +21577,7 @@ rewrite_input: {
                 stop = true;
             }
         });
-        return (matched_value !== undefined) ? matched_value : ("\"" + input_string + "\"");
+        return matched_value;
     },
     l: [1, 2], t: true
 },
