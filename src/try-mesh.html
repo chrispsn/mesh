@@ -80,6 +80,7 @@ const Cell = createReactClass({
             className: ((props.classes.length === 0 ? 'empty' : props.classes) 
                         + (props.selected ? ' selected' : '')),
             id: props.id,
+            title: this.props.repr
         }
         return React.createElement("td", props, this.props.repr);
     }
