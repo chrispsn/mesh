@@ -514,9 +514,16 @@ function get_clicked_cell_location (event) {
 
 HTML_elements.grid.addEventListener('click', function(event) {
     const clicked_location = get_clicked_cell_location(event);
-    if (clicked_location === null) { return }
+    if (clicked_location === null) return;
 
     const mode = old_state.mode;
+    if (old_state.mode === "EDIT") {
+        // TODO make insertion more sophisticated - eg replace 'last selected cell' if clicked wrong
+        // TODO insert where *cursor* is. Don't just append
+        HTML_elements.formula_bar.value += old_state.cells[JSON.stringify(clicked_location)].ref_string;
+        HTML_elements.formula_bar.focus();
+        return;
+    }
     for (let key in grid_click_events) {
         const shortcut = grid_click_events[key];
         if (mode === shortcut.mode) {
@@ -529,7 +536,7 @@ HTML_elements.grid.addEventListener('click', function(event) {
 
 HTML_elements.grid.addEventListener('dblclick', function(event) {
     const clicked_location = get_clicked_cell_location(event);
-    if (clicked_location === null) { return }
+    if (clicked_location === null) return;
 
     if (old_state.mode === 'READY') {
         const action = assign({}, {type: 'EDIT_CELL', location: clicked_location});
