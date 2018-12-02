@@ -21603,7 +21603,6 @@ transform_formula_bar_input: {
 
 cell_edit_types: {
     get v() {return _makeTable(
-        // defaults
         {
             COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                 // TODO Check that the commit is valid first?
@@ -21611,7 +21610,7 @@ cell_edit_types: {
                 const transformed_input = transform_formula_bar_input(action.commit_value);
                 const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
                 Object_RemoveItem(cell_props_nodepath, "v");
-                // (ideally do in-place so order not changed to minimise source impact)
+                // TODO do 'v' change in-place so source order not changed.'v' should come first in props
                 if (action.commit_value[0] === "=") {
                     Object_InsertGetter(cell_props_nodepath, "v", transformed_input);
                 } else {
@@ -21650,9 +21649,7 @@ cell_edit_types: {
                 return action.offset;
             }
         }
-        // # rows
         , null
-        // # hardcode rows
         , [
             {
                 cell_type: "DEFAULT",
@@ -21676,9 +21673,9 @@ cell_edit_types: {
                     });
                     const transformed_input = transform_formula_bar_input(action.commit_value);
                     if (action.commit_value[0] === "=") {
-                        Object_InsertGetter(temp_node, "v", transformed_input);
+                        Object_InsertGetter(temp_node, "v", transformed_input, 0);
                     } else {
-                        Object_InsertItem(temp_node, "v", transformed_input)
+                        Object_InsertItem(temp_node, "v", transformed_input, 0)
                     }
                     console.log(print_AST_to_code_string(temp_node));
                     Object_InsertItem(meshCellsNode,
@@ -21694,7 +21691,7 @@ cell_edit_types: {
                 }
             },
             {
-                cell_type: "KEY", // TODO add 'change symbol' functionality
+                cell_type: "KEY",
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                 // // TODO Check that the commit is valid first?
                 const a = get_selected_cell(state).AST_props.key;
@@ -22157,7 +22154,6 @@ triage_table: {
             {
                 nodetype: "CallExpression",
                 prototype: Array.prototype,
-                typeof: "ALL",
                 fn: "array_ro",
                 name_offset: [-1, 0]
             },
