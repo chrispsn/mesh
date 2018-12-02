@@ -21677,7 +21677,6 @@ cell_edit_types: {
                     } else {
                         Object_InsertItem(temp_node, "v", transformed_input, 0)
                     }
-                    console.log(print_AST_to_code_string(temp_node));
                     Object_InsertItem(meshCellsNode,
                         // TODO Detect duplicate names and make sure is a valid Identifier in ES5/6
                         cell_name,
@@ -22486,6 +22485,7 @@ display_fns: {
                     // TODO
                     location: [0, col_offset], 
                     repr: String(heading),
+                    ref_string: id,
                     classes: 'heading',
                     formula_bar_value: heading,
                     AST_props: {key: id, heading: heading, colIndex: col_offset},
@@ -22498,6 +22498,7 @@ display_fns: {
             const add_column_cell = {
                 location: [0, headings.length],
                 repr: '',
+                ref_string: id,
                 classes: 'add_col',
                 formula_bar_value: '',
                 cell_AST_changes_type: 'TABLE_RW_ADD_COLUMN_CELL',
@@ -22552,6 +22553,7 @@ display_fns: {
                         ({
                             location: [1 + offset_r, offset_c],
                             repr: formatted_value,
+                            ref_string: id,
                             formula_bar_value: formula_bar_text,
                             cell_AST_changes_type: 'TABLE_RW_VALUE_CELL',
                             AST_props: {key: id, colHeading: heading, rowIndex: offset_r},
@@ -22570,6 +22572,7 @@ display_fns: {
                 append_record_cells = headings.map(function(heading, offset_c) {return {
                     location: [1 + arr.length, offset_c],
                     repr: '',
+                    ref_string: id,
                     classes: 'append',
                     formula_bar_value: "",
                     cell_AST_changes_type: 'TABLE_RW_APPEND_CELL',
