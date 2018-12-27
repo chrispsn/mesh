@@ -22532,11 +22532,12 @@ display_fns: {
                     row_prop_value_nodes = rows_prop_value_nodes[offset_r];
                 }
                 headings.map(function(heading, offset_c) {
-                    // TODO somewhere account for case where row was auto-generated so there is no AST node for that row
-                    const row_prop_value_node = row_prop_value_nodes[heading];
                     let is_formula, raw_text, formula_bar_text;
-                    // Property actually exists on row's object literal
-                    if (heading in row_prop_value_nodes) {
+                    // TODO split this conditional to account for cases where:
+                    // (a) row literal doesn't exist and
+                    // (b) row literal exists, but doesn't have a hardcoded value for that col header
+                    if (row_prop_value_nodes && (heading in row_prop_value_nodes)) {
+                        const row_prop_value_node = row_prop_value_nodes[heading];
                         is_formula = leaf_is_formula(row_prop_value_node);
                         raw_text = print_AST_to_code_string(row_prop_value_node);
                         formula_bar_text = get_formula_bar_text(is_formula, raw_text);
