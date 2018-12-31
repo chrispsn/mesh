@@ -21663,7 +21663,7 @@ cell_edit_types: {
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
                     const loc = state.selected_cell_loc;
                     const cell_name = String.fromCharCode(65+loc[1]) + (1+loc[0]); // TODO fix for col 27+
-                    const temp_cell_code = "({l: [" + state.selected_cell_loc + "], n: false})";
+                    const temp_cell_code = "({l: [" + loc + "], n: false})";
                     const temp_AST = parse_code_string_to_AST(temp_cell_code);
                     let temp_node;
                     Recast.visit(temp_AST, {
@@ -21686,6 +21686,26 @@ cell_edit_types: {
                 },
                 TOGGLE_NAME_VISIBILITY: function(meshCellsNode, state, action) {
                     alert("No 'toggle name visibility' action defined.")
+                    return [0, 0];
+                },
+                CREATE_TABLE: function(meshCellsNode, state, action) {
+                    // Copied from default COMMIT_FORMULA_BAR_EDIT in this object
+                    const loc = state.selected_cell_loc;
+                    const temp_cell_code = "({v: null, l: [" + loc + "], n: false})";
+                    const temp_AST = parse_code_string_to_AST(temp_cell_code);
+                    let temp_node;
+                    Recast.visit(temp_AST, {
+                        visitObjectExpression: function(path) {
+                            temp_node = path; return false;
+                        }
+                    });
+                    Table_Create(temp_node);
+                    // TODO Detect duplicate names and make sure is a valid Identifier in ES5/6
+                    const cell_name = String.fromCharCode(65+loc[1]) + (1+loc[0]); // TODO fix for col 27+
+                    Object_InsertItem(meshCellsNode,
+                        cell_name,
+                        print_AST_to_code_string(temp_node)
+                    );
                     return [0, 0];
                 }
             },
