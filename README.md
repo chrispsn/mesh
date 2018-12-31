@@ -67,7 +67,7 @@ But in JavaScript terms, tables are arrays of objects. The wrapper function `_ma
   - `i` (the row's index)
   - `t` (the table).
 
-Create an array or object by clicking on a value a cell and pressing `Ctrl + Alt + t`.
+Create an array or object by clicking on an empty cell or value cell and pressing `Ctrl + Alt + t`.
 
 You can then add or delete columns or rows:
 
