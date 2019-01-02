@@ -67,7 +67,7 @@ But in JavaScript terms, tables are arrays of objects. The wrapper function `_ma
   - `i` (the row's index)
   - `t` (the table).
 
-Create an array or object by clicking on an empty cell or value cell and pressing `Ctrl + Alt + t`.
+Create a table by clicking on an empty cell or value cell and pressing `Ctrl + Alt + t`.
 
 You can then add or delete columns or rows:
 
@@ -75,7 +75,7 @@ You can then add or delete columns or rows:
 - Insert a new cell above a selected cell with `Ctrl =`
 - Delete a selected cell with `Ctrl -`.
 
-Delete the array or object entirely with `Ctrl _` (ie `Ctrl Shift -`).
+Delete the table entirely with `Ctrl _` (ie `Ctrl Shift -`).
 
 Search a table for a row with the built-in `find` function, or query it with standard array methods like `map`, `filter` and `reduce`.
 
@@ -138,8 +138,7 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 ## Known issues
 
 - Incomplete syntax support (eg spreads (`[...elements, "extra"]`); Maps and Sets; some functions)
-- Can't rename a name without it breaking other references in the file (Excel beats this hands down)
-- When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and let you click on a cell to insert a reference
+- When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and potentially show dependence/precedence arrows
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
 - Poor JavaScript standard library (although in IE11 we can probably get access to `WorksheetFunction` via COM).
