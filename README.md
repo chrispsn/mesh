@@ -4,7 +4,7 @@ Mesh is a JavaScript code editor that feels like a spreadsheet.
 
 Specifically, Mesh is a spreadsheet UI wrapper around a text file editor. Actions on the grid are automatically translated to changes in the JavaScript code.
 
-Mesh's aim is to help people maximise their personal productivity. Consider Mesh if you:
+Mesh helps people maximise their personal productivity and to share their work with others. Consider Mesh if you:
 
 - use JavaScript, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
