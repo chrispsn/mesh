@@ -142,7 +142,8 @@ And finally, the Mesh sheet format is just JavaScript code in a text file, so:
 - When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and potentially show dependence/precedence arrows
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
-- Poor JavaScript standard library (although we have some [ideas to solve this](https://twitter.com/MeshSpreadsheet/status/1010857552551206912).
+- There's no clear idiomatic way to import external libraries
+- Poor JavaScript standard library (although we have some [ideas to solve this](https://twitter.com/MeshSpreadsheet/status/1010857552551206912)).
 
 ## I want to contribute!
 
