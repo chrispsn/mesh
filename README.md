@@ -29,28 +29,31 @@ You can see the generated code by toggling the code pane. There is a button in t
 
 ### Name-based referencing
 
-Compared to existing spreadsheet programs, Mesh does not have location-based referencing - every value has a name.
+When you create a cell, it gets given a name based on its location (eg `D4`). You can press `F3` while selecting the cell to toggle whether its name is shown, and can edit the name by typing over that name like any other value.
 
-Create a name by typing a name into a cell.
+#### What about nested data?
 
-Assign a value to a name by typing into the cell to the right of a name, for example:
+The contents of objects, arrays and tables don't get their own cell references - only the object itself. This ensures cells always have a unique name, and that any visual collisions that arise when using expanding dynamic data don't have an impact on calculations.
+
+To refer to an element of an array or object, or a table row, use standard property access syntax (eg `=D4[1]` or `=D4.foo` or `=D4[2].someHeading`).
+
+### Values and formulas
+
+To overwrite a cell's contents, just select it and start typing. You'll see your edits appear in the formula bar at the top. Press `Enter` when you're done. If you instead want to edit the cell's contents in-place, press `F2` before you start typing.
+
+To make data entry easier, we rewrite your "common sense" input to a JavaScript equivalent if necessary. For example, `Hello world!` (without quotes) will be written into `"Hello world!"` (with quotes). Values can be:
 
 - Numbers: `123`
 - Strings: `Hello world!`
 - Booleans: `true`
 - Functions: `function() {return 1 + 2}`
-- Dates: `2018-11-10`.
+- Dates: `2018-11-10`
+- Regular expressions: `/hello world/g`
 
-To make data entry easier, we rewrite your "common sense" input to a JavaScript equivalent (like other spreadsheet programs). For example, `Hello world!` (without quotes) will be written into `"Hello world!"` (with quotes).
-
-Add a formula to a cell in the same way:
+Formulas are a way to write "raw" JavaScript code, including code that references other cells. You can add a formula to a cell in the same way as you'd add a value, but with a `=` at the front:
 
 - `=1+2`
 - `=some_cell_name + 123`.
-
-Effectively formulas are a way to write "raw" JavaScript code, including code that references other cells.
-
-Replace the contents of a cell by selecting it and writing over it. Edit a cell's contents by pressing `F2`. Commit the edit by pressing `Enter`.
 
 ### Tables
 
@@ -126,14 +129,12 @@ In these cases, a spreadsheet is often used because of the user's familiarity or
 
 For writing programs, Mesh has advantages over a 'traditional' spreadsheet:
 
-- Mesh is designed to process, and generate, data of arbitrary length
-- the absence of location-based referencing eliminates a class of errors that normally require humans to identify and fix
 - the Mesh file format is just JavaScript code in a text file, so:
   - `diff`ing is easy (function is built into Windows: [`FC`](https://ss64.com/nt/fc.html) in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
   - it integrates with standard version control systems like Git
   - you don't need Mesh to run a Mesh file, so you can integrate Mesh files into other systems.
 
-Also, Mesh is written in JavaScript so, in theory, most people have a way of getting and running it. This and its familiar interface give it a better shot of overcoming 'spreadsheet inertia', particularly if we can get it running on Windows without installation being required (via JScript).
+Mesh is designed to be easy to get and use, even if you're stuck running an old operating system or browser. In particular, because it's written in ES5, Mesh offers a first-class user experience in Internet Explorer 11 (which comes bundled with Windows).
 
 ## Known issues
 
@@ -141,7 +142,7 @@ Also, Mesh is written in JavaScript so, in theory, most people have a way of get
 - When editing in the formula bar, it should show the edits in the cell 'live', highlight input cells in the grid, and potentially show dependence/precedence arrows
 - Poor compatibility with standard data formats like CSV (I need to figure out how to integrate a CSV parser without compromising the ability to run Mesh files without Mesh)
 - Poor integration with Electron (such as menu items for New, Open, Save, Save As)
-- Poor JavaScript standard library (although in IE11 we can probably get access to `WorksheetFunction` via COM).
+- Poor JavaScript standard library (although we have some [ideas to solve this](https://twitter.com/MeshSpreadsheet/status/1010857552551206912).
 
 ## I want to contribute!
 
