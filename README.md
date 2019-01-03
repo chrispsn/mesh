@@ -33,7 +33,7 @@ When you create a cell, it gets given a name based on its location (eg `D4`). Yo
 
 #### What about nested data?
 
-The contents of objects, arrays and tables don't get their own cell references - only the object itself. This ensures cells always have a unique name, and that any visual collisions that arise when using expanding dynamic data don't have an impact on calculations.
+The contents of objects, arrays and tables don't get their own cell references - only the object itself. This ensures cells always have a unique name, and that any visual collisions that arise when using expanding dynamic data don't have an impact on calculations (ie [`#SPILL!` errors](https://support.office.com/en-us/article/-spill-errors-in-excel-ffe0f555-b479-4a17-a6e2-ef9cc9ad4023)).
 
 To refer to an element of an array or object, or a table row, use standard property access syntax (eg `=D4[1]` or `=D4.foo` or `=D4[2].someHeading`).
 
@@ -129,7 +129,7 @@ In particular, Mesh offers a first-class user experience in Internet Explorer 11
 
 Because Mesh is small, free and highly compatible, you can put it on a USB or email it to a friend and have confidence that they can open your sheet files. Alternatively, you can embed your sheet into the Mesh URL as a querystring (*currently broken, but will be fixed soon!*).
 
-Mesh is designed from ground up to support data of arbitrary length. Traditional spreadsheets give all values on the grid a location-based reference, so they suffer from expanding dynamic arrays generating [`#SPILL!` errors](https://support.office.com/en-us/article/-spill-errors-in-excel-ffe0f555-b479-4a17-a6e2-ef9cc9ad4023) that cause calculations to fail
+Mesh is designed from the ground up to support formulas that output data of arbitrary length. Traditional spreadsheets give all values on the grid a location-based reference, so they can lead to expanding dynamic arrays generating [`#SPILL!` errors](https://support.office.com/en-us/article/-spill-errors-in-excel-ffe0f555-b479-4a17-a6e2-ef9cc9ad4023) that cause calculations to fail.
 
 And finally, the Mesh sheet format is just JavaScript code in a text file, so:
   - `diff`ing is easy (function is built into Windows: [`FC`](https://ss64.com/nt/fc.html) in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell - you could even use Word's compare tool in a pinch)
