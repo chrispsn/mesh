@@ -117,24 +117,24 @@ We're also looking into ways that Mesh sheets can:
 - be embedded into other apps
 - act as cloud APIs.
 
-## Benefits of Mesh (or "LOL, you will never beat Excel")
+## Benefits of Mesh (or "a new spreadsheet program? you're crazy!")
 
-Mesh is *not* intended to replace existing spreadsheet programs in all domains.
+Excel, Google Sheets and LibreOffice are mature, feature-packed products that are unlikely to be displaced anytime soon, particularly where a team is happy using tools they already have and know.
 
-Existing spreadsheet programs offer location-based referencing and formatting, which is very flexible. This makes them perfect as a calculation scratch-pad, or for viewing or editing data in formats like CSVs.
+Nevertheless, Mesh has some advantages.
 
-However, spreadsheets are often used in domains where a 'traditional' programming languages would be a better tool, such as repeated processes with minimal human intervention. In particular, spreadsheets are poor at processing and generating data of arbitrary length ([more discussion here](http://chrispsn.com/mesh-preview.html)).
+Mesh uses JavaScript as its formula language (a) to bring the power of 'traditional' programming to spreadsheets and (b) because pretty much everyone has access to ES5 JavaScript, even if their computer is old or locked down by IT.
 
-In these cases, a spreadsheet is often used because of the user's familiarity or preference for a spreadsheet environment, or because a spreadsheet is the only tool available in the user's position (perhaps it's pre-installed on colleagues' machines, or the user does not have permission to install new programs or use cloud solutions).
+In particular, Mesh offers a first-class user experience in Internet Explorer 11 (which comes bundled with Windows).
 
-For writing programs, Mesh has advantages over a 'traditional' spreadsheet:
+Because Mesh is small, free and highly compatible, you can put it on a USB or email it to a friend and have confidence that they can open your sheet files. Alternatively, you can embed your sheet into the Mesh URL as a querystring (*currently broken, but will be fixed soon!*).
 
-- the Mesh file format is just JavaScript code in a text file, so:
-  - `diff`ing is easy (function is built into Windows: [`FC`](https://ss64.com/nt/fc.html) in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell)
+Mesh is designed from ground up to support data of arbitrary length. Traditional spreadsheets give all values on the grid a location-based reference, so they suffer from expanding dynamic arrays generating [`#SPILL!` errors](https://support.office.com/en-us/article/-spill-errors-in-excel-ffe0f555-b479-4a17-a6e2-ef9cc9ad4023) that cause calculations to fail
+
+And finally, the Mesh sheet format is just JavaScript code in a text file, so:
+  - `diff`ing is easy (function is built into Windows: [`FC`](https://ss64.com/nt/fc.html) in CMD, [`Compare-Object`](https://serverfault.com/a/5604) in PowerShell - you could even use Word's compare tool in a pinch)
   - it integrates with standard version control systems like Git
-  - you don't need Mesh to run a Mesh file, so you can integrate Mesh files into other systems.
-
-Mesh is designed to be easy to get and use, even if you're stuck running an old operating system or browser. In particular, because it's written in ES5, Mesh offers a first-class user experience in Internet Explorer 11 (which comes bundled with Windows).
+  - you don't need Mesh to run a Mesh file, so you can integrate Mesh files into other systems, including webpages (see the messaging discussion above).
 
 ## Known issues
 
