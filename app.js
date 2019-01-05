@@ -21644,6 +21644,7 @@ cell_edit_types: {
                 const key = get_selected_cell(state).AST_props.key;
                 const cell_props_nodepath = Object_GetItem(meshCellsNode, key).get("value");
                 const name_prop_np = Object_GetItem(cell_props_nodepath, "n");
+                // TODO NEXT Cell_ChangeName
                 if (name_prop_np) name_prop_np.prune();
                 else Object_InsertItem(cell_props_nodepath, "n", "false");
                 return action.offset;
@@ -21712,22 +21713,10 @@ cell_edit_types: {
             {
                 cell_type: "KEY",
                 COMMIT_FORMULA_BAR_EDIT: function (meshCellsNode, state, action) {
-                // // TODO Check that the commit is valid first?
-                const a = get_selected_cell(state).AST_props.key;
-                const b = action.commit_value;
-                Recast.visit(meshCellsNode, {
-                    visitIdentifier: function(p) {
-                        const n = p.node;
-                        if (
-                            n.name === a 
-                            && ("MemberExpression" !== p.parentPath.node.type || p.parentPath.name === "right") 
-                            && !p.scope.lookup(a)
-                        ) n.name = b;
-                        this.traverse(p);
-                    }
-                });
-                return action.offset;
-              },
+                    // TODO Check that the commit is valid first?
+                    Cell_ChangeName(meshCellsNode, get_selected_cell(state).AST_props.key, action.commit_value);
+                    return action.offset;
+                },
                 DELETE_ELEMENT: function(meshCellsNode, state, action) {
                     const key = get_selected_cell(state).AST_props.key;
                     const index = get_selected_cell(state).AST_props.index;
@@ -22688,6 +22677,22 @@ Cell_GetNodePath: {
         };
     },
     l: [8, 23],
+},
+
+Cell_ChangeName: {
+    v: function (meshCellsNode, old_name, new_name) {
+        Recast.visit(meshCellsNode, {
+            visitIdentifier: function(p) {
+                const n = p.node;
+                if (
+                    n.name === old_name
+                    && ("MemberExpression" !== p.parentPath.node.type || p.parentPath.name === "right") 
+                    && !p.scope.lookup(old_name)
+                ) n.name = new_name;
+                this.traverse(p);
+            }
+        });
+    }, l: [9, 23]
 },
 
 /* GENERAL */
