@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<label for="input">Type a number</label>
+<input id="input" type="number" value=1>
+
+<p>Output (input times two): <span id="output">...</span></p>
+
+<script>
+
+    /*
+    This example uses an iframe to make local files work seamlessly,
+    but you could also serve the sheet via web as a WebWorker.
+    Also, instead of inserting the iframe and its code,
+    you could hardcode the iframe in the HTML
+    and add its code to the bottom of the Mesh sheet itself,
+    at the expense of reducing the sheet's (im)portability in other situations.
+    */
+    sheet_iframe = document.createElement("iframe");
+    sheet_iframe.setAttribute("name", "sheet");
+    sheet_iframe.setAttribute("style", "display:none;");
+    document.body.appendChild(sheet_iframe);
+    sheet_iframe.contentDocument.write(
+        '<script src="messaging.mesh"><\/script>'
+        + '<script>'
+        + "console.log('SHEET: Adding functions...');"
+        + "_defFunctions();"
+        + "_defCells(_CELLS);"
+        + "_calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*');"
+        + "onmessage = function(e) {"
+        + "  console.log('SHEET: Calculating...');"
+        + "  _extraValues(e.data.values);"
+        + "  _calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*');"
+        + '}<\/script>'
+    );
+
+    // This code is application-specific.
+    onmessage = function(e) {
+        document.getElementById("output").innerHTML = e.data.output.v
+    };
+    document.querySelector("#input").addEventListener("input", function() {
+        const v = this.valueAsNumber;
+        sheet_iframe.contentWindow.postMessage(
+            // IE11 compatibility requires this horrible workaround for this.valueAsNumber:
+            // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/669685/
+            {values: {input: isNaN(v) ? parseInt(this.value) : v}},
+            '*'
+        )
+    });
+
+</script>
+
+</body>
+
+</html>
