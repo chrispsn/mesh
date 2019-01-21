@@ -21473,6 +21473,17 @@ limitations under the License.
 
 const B = Recast.types.builders;
 
+const _FUNCTIONS = {
+    find: function(a, p, options) {
+        const l = a.length, o = options || {};
+        for (let k = 0; k < l; k++) {
+            const v = a[k];
+            if (p(v)) return (o.index ? k : v);
+        }
+        return o.default; // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
+    }
+}
+
 const _CELLS = {
 
 "rewrite_rules": {
@@ -21966,14 +21977,6 @@ BOILERPLATE: {
         "    if (typeof x === 'object') {const n={};for(let k in x){n[k]=_sc(x[k],d+1)};return n};",
             "return x;",
         "}",
-        "g.find = function(a, p, options) {",
-        "    const l = a.length, o = options || {};",
-        "    for (let k = 0; k < l; k++) {",
-        "        const v = a[k];",
-        "        if (p(v)) return (o.index ? k : v);",
-        "    }",
-        "    return o.default;", // TODO what to return if options.index = true? -1? what does normal array.proto.find do?
-        "}",
         "g._defProp = Object.defineProperty, g._OUTPUT = {}, g._STACK = []",
         "g._defCell = function(k, c) {",
         "    return _defProp(g, k, {get: function() {",
@@ -22026,6 +22029,7 @@ BOILERPLATE: {
         // TODO do we also need to delete c.deps if it has it?
         // TODO store output on cell instead of in _OUTPUT? (But easy to just send _OUTPUT)
         "g._uncache = function(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)}",
+        "g._defFunctions = function()  {for (let k in _FUNCTIONS) g[k] = _FUNCTIONS[k]}",
         "/* END Mesh boilerplate */"
     ].join("\n"),
     l: [20, 2]
@@ -22033,7 +22037,7 @@ BOILERPLATE: {
 
 // TODO add indentation
 BLANK_FILE: {
-    get v() {return "'use strict';" + "\n" + "const _CELLS = {}" + "\n" + BOILERPLATE},
+    get v() {return "'use strict';" + "\n" + "const _CELLS = {}" + "\n" + "const _FUNCTIONS = {}" + "\n" + BOILERPLATE},
     l: [21, 2]
 },
 

@@ -269,6 +269,8 @@ function reset_sheet(new_code) {
         '<script>'
         + new_code
         + "\n"
+        + "console.log('Adding functions...');"
+        + "_defFunctions();"
         + "console.log('Calculating...');"
         + "_defCells(_CELLS);"
         + "_calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*');"
@@ -377,6 +379,7 @@ onmessage = function(e) {
 app_iframe.contentDocument.write('<script src="./app.js"><\/script>');
 app_iframe.contentDocument.write(
     '<script>'
+    + "_defFunctions();"
     + "onmessage = function(e) {"
     + "    console.log('MESSAGE RECEIVED BY', window.name, ':', e.data);"
     + "    _defCells(_CELLS); _extraValues(e.data.values);"
