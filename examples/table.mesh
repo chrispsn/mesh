@@ -1,0 +1,120 @@
+'use strict';
+
+/* TABLE EXPLAINER */
+
+const _CELLS = {
+    // Press F3 with a cell selected
+    // to change its name from the default (location)
+    some_table: ({
+      l: [2,1],
+      get v() {
+        return _makeTable(
+
+          // Arg 1: row prototype
+          // Edit the defaults via the code pane;
+          // we don't have UI bindings for this yet
+          {
+            input: "default",
+            // This calculated column formula was added
+            // by editing the table in the code pane
+            get output() {return this.input * 2}
+        },
+
+        // Arg 2: row count
+        // By default this is based on the number of literal rows,
+        // but you can make it >=0 and it will generate rows
+        // as needed, using the row prototype
+        null,
+
+        // Arg 3: row literals (array of row objects)
+        // These are updated via the UI.
+        [{
+            input: 1
+        }, {
+            input: 2
+        }, {
+            output: 3
+        }]);
+
+      },
+      t: true
+    }),
+
+    output_sum: ({
+        l: [1,6],
+        get v() {
+
+            // Working with table *columns* is a bit of a pain -
+            // I'm thinking of making it easier to refer to them.
+            // This would instead be `SUM(some_table.output)`
+            return some_table.reduce(function(s, r) {return s+r.output}, 0);
+        
+        }
+    })
+}
+const _FUNCTIONS = {}
+/* Mesh boilerplate - do not change. 2018-11-13-3 */
+// Cell props: v = value or formula (fn), l = grid coordinates,
+// f = format fn, s = transpose?, t = is table?, n = show name?
+const g = (function () {return this || (1, eval)('this')}())
+g._sc = function(x, d) {
+    if (d === 5) return null;
+    if (typeof x === 'function') return "ƒ";
+    if (x instanceof RegExp || x instanceof Date 
+        || x === null || x === undefined) return x;
+    if (Array.isArray(x)) return x.map(function(a){return _sc(a,d+1)});
+    if (typeof x === 'object') {const n={};for(let k in x){n[k]=_sc(x[k],d+1)};return n};
+return x;
+}
+g._defProp = Object.defineProperty, g._OUTPUT = {}, g._STACK = []
+g._defCell = function(k, c) {
+    return _defProp(g, k, {get: function() {
+        if (_STACK.length > 0) {
+            const top = _STACK[_STACK.length-1];
+            const edges = ('deps' in c) ? c.deps : (c.deps = new Set());
+            edges.add(top);
+        }
+        _STACK.push(k);
+        const v = ('r' in c) ? c.r : c.v;
+        if (!(k in _OUTPUT)) {
+            const f = c.f;
+            const o = _OUTPUT[k] = {
+                t: c.t, s: c.s, n: c.n, l: c.l,
+                v: _sc(v,0), f: f ? f(v) : f
+            };
+        }
+        _STACK.pop();
+        return v;
+    }, configurable: true})
+}
+g._makeTable = function(defs, length, rows) {
+    const t = [], proto = {};
+    for (let k in defs) _memoProp(defs, proto, k);
+    for (let i=0,l=length!==null?length:rows.length;i<l;i++) {
+        const r = rows[i] || {}; t.push(r);
+        Object.setPrototypeOf(r, proto);
+        _defProp(r, 't', {enumerable: false, value: t});
+        _defProp(r, 'i', {enumerable: false, value: i});
+    };
+    return t
+}
+g._getGetter = function(o, k) {return Object.getOwnPropertyDescriptor(o, k).get}
+g._memoProp = function(source, dest, k) {
+    const getter = _getGetter(source, k);
+    if (getter !== undefined) {
+        _defProp(dest, k, {
+            get: function() {
+                const v = getter.call(this);
+                _defProp(this, k, {value: v});
+                return v;
+            }, enumerable: true
+        })
+    } else dest[k] = source[k];
+}
+g._defCells = function(c)     {for (let k in c) _defCell(k, c[k])}
+g._extraValues = function(vs) {for (let k in vs) {if (_CELLS[k].r !== vs[k]) {_uncache(k); _CELLS[k].r = vs[k]}}}
+g._calcSheet = function(c)    {for (let k in c) {let v = g[k]; if (c[k].t) _calcTable(v)}}
+g._calcTable = function(t)    {for (let i in t){let r=t[i];for(let h in r)r[h]}}
+g._uncache = function(k)      {const c = _CELLS[k]; delete c.r; delete _OUTPUT[k]; if ('deps' in c) c.deps.forEach(_uncache)}
+g._defFunctions = function()  {for (let k in _FUNCTIONS) g[k] = _FUNCTIONS[k]}
+/* END Mesh boilerplate */
