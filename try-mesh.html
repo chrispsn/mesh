@@ -153,19 +153,15 @@ const Grid = createReactClass({
 const StatusBar = function(props) {
     const current_mode = React.createElement('dd', {}, props.mode);
     const separator = React.createElement('dd', {}, " | ");
-    const current_file = React.createElement('dd', {}, props.filepath || 'No file loaded');
-    const mesh_link = React.createElement('a', { href: "http://mesh-spreadsheet.com", target: "_blank" }, "Mesh website");
-    const github_link = React.createElement('a', { href: "https://github.com/chrispsn/mesh/", target: "_blank" }, "GitHub");
-    const twitter_link = React.createElement('a', { href: "https://twitter.com/MeshSpreadsheet", target: "_blank" }, "Twitter");
+    // const current_file = React.createElement('dd', {}, props.filepath || 'No file loaded');
+    const homepage_link = React.createElement('a', { href: "http://mesh-spreadsheet.com", target: "_blank" }, "Website");
     const change_theme = React.createElement('a', {id: "theme_changer", href: "javascript: // Change theme"}, "Change theme")
     const toggle_code_pane = React.createElement('a', {id: "code_pane_toggler", href: "javascript: // Toggle code pane"}, "Toggle code pane")
     const save_to_URL = React.createElement('a', {id: "URL_saver", href: "javascript: // Save sheet as URL component;"}, "Save to URL")
     return React.createElement('dl', {}, 
         current_mode, separator, 
-        current_file, separator,
-        mesh_link, separator,
-        github_link, separator,
-        twitter_link, separator,
+        // current_file, separator,
+        homepage_link, separator,
         change_theme, separator,
         toggle_code_pane, separator,
         save_to_URL
