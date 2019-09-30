@@ -106,9 +106,7 @@ The boilerplate will be updated from time to time; for this reason, it has a ver
 
 Mesh sheets are JavaScript apps in their own right, and with a little extra boilerplate, they can send and receive messages.
 
-In particular, you can send in streams of values and get calculations out:
-
-![Animated GIF of rough stream functionality](docs/feed.gif)
+In particular, you can send in streams of values and get calculations out ([demo GIF](https://twitter.com/MeshSpreadsheet/status/1055454079244091392)).
 
 We're looking into the best way to allow Mesh sheets to support a wide variety of message formats. Right now the Mesh app uses cross-document messaging via [`onmessage`](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/onmessage) and [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
