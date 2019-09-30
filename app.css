@@ -32,7 +32,7 @@ body {
     margin: 0;
     box-sizing: border-box;
     height: 100%;
-	display: flex;
+    display: flex;
     flex-direction: column;
 }
 
@@ -45,7 +45,7 @@ body {
 }
 
 #row-container {
-	display: flex;
+    display: flex;
     flex-direction: row;
     height: 100%;
     box-sizing: border-box;
@@ -118,10 +118,11 @@ body {
 
 #code-editor {
     width: 70em;
+    flex-direction: column;
 }
 
 .CodeMirror {
-    height: 100%;
+    flex-grow: 1;
     font-family: Consolas, monospace;
 }
 
