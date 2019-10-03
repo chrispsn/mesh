@@ -319,9 +319,9 @@ onmessage = function(e) {
         if (old_state.mode === 'LOAD_CODE_FROM_PANE') {
             send_app_action({ type: 'LOAD_CODE', code: code_editor.getValue() });
         } else if (old_state.mode === 'EDITING_CODE') {
-            HTML_elements.code_editor.style.display = 'block';
+            HTML_elements.code_editor.style.display = 'flex';
         } else {
-            HTML_elements.code_editor.style.display = (old_state.code_editor.show ? 'block' : 'none');
+            HTML_elements.code_editor.style.display = (old_state.code_editor.show ? 'flex' : 'none');
             code_editor.setValue(old_state.code_editor.value);
         }
         // TODO setting this every time is probably slow - consider React-ising
