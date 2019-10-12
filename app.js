@@ -21496,9 +21496,9 @@ rewrite_rules: {
         null,
         [
             {
-                description: "formulas",
-                pattern: /^=/,
-                rewrite: "$&"
+                description: "equal_string",
+                pattern: /^=$/,
+                rewrite: "\"=\""
             },
             {
                 description: "function",
@@ -21605,7 +21605,7 @@ rewrite_input: {
 
 transform_formula_bar_input: {
     v: function(raw_input) {
-        if (raw_input[0] === "=") {
+        if (raw_input[0] === "=" && raw_input !== "=") {
             // TODO maybe do a check here to see if it *really* needs to be a formula? ie just a literal
             // Could do via AST transform, just quickly
             // const nodepath_type = (function() {
