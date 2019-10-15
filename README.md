@@ -9,7 +9,14 @@ Mesh helps people maximise their personal productivity and to share their work w
 - use JavaScript, but want rapid visual feedback and a convenient grid UI
 - use spreadsheets, but feel constrained by Excel's limitations.
 
-**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are lots of missing features and bugs. Follow updates at [@MeshSpreadsheet](https://twitter.com/MeshSpreadsheet).
+**WARNING!** Mesh is under active development. The UI and APIs will likely change a lot, it is not well optimised, and there are lots of missing features and bugs. [Sign up](https://mailchi.mp/fd475b82195b/mesh-mailing-list) for the mailing list and follow the project on Twitter at [@MeshSpreadsheet](https://twitter.com/MeshSpreadsheet).
+
+## Video demos (alpha)
+
+- [Basics](https://www.youtube.com/watch?v=_U6gE3cNgbI&list=PLf1PDMa3qVP27-oVMEdCX6FR1Ok972cpI&index=2)
+- [Deep-dive on tables](https://www.youtube.com/watch?v=x32tBLGrLAQ&list=PLf1PDMa3qVP27-oVMEdCX6FR1Ok972cpI&index=2)
+
+Loan calculator example:
 
 ![Animated GIF of Mesh in action](docs/mesh_demo.gif)
 
