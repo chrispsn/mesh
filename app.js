@@ -23206,6 +23206,21 @@ Array.prototype.fill||Object.defineProperty(Array.prototype,'fill',{value:functi
 
 eval(_CELLS.BOILERPLATE.v);
 
+// fire an event on the document saying that the app is ready
+if (typeof document != "undefined") {
+    var event;
+    
+    try {
+        event = new CustomEvent("meshAppReady", {});
+    } catch(e) {
+        // only for IE
+        event = document.createEvent('Event');
+        event.initEvent("meshAppReady", true, true);
+    }
+    
+    document.dispatchEvent(event);
+}
+
 // Implies cells should be separate to state - rest of state lives in a cell of the sheet.
 // (That's OK - the cells for editing ui-logic are different from the ones ui-logic is generating.)
 
