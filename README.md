@@ -24,9 +24,9 @@ Loan calculator example:
 
 ## How to get Mesh
 
-You can [try Mesh online](http://mesh-spreadsheet.com/try-mesh.html). It'll run faster in new browsers but it works all the way down to Internet Explorer 11.
+[Download the project as a zip file](https://github.com/chrispsn/mesh/archive/master.zip) and double-click on `try-mesh.html` in the `src` directory.
 
-You can also [download the project as a zip file](https://github.com/chrispsn/mesh/archive/master.zip) and double-click on `try-mesh.html` in the `src` directory.
+It'll run faster in new browsers but it works all the way down to Internet Explorer 11.
 
 Note that Mesh doesn't have file reading or writing right now; we have plans to add it via [Monotreme](https://github.com/chrispsn/monotreme).
 
