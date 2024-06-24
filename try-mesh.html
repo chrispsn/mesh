@@ -372,29 +372,12 @@ onmessage = function(e) {
 
 /* LOAD APP */
 
-app_iframe.contentDocument.write('<script src="./app.js"><\/script>');
-app_iframe.contentDocument.write(
-    '<script>'
-    + "_defFunctions();"
-    + "onmessage = function(e) {"
-    + "    console.log('MESSAGE RECEIVED BY', window.name, ':', e.data);"
-    + "    _defCells(_CELLS); _extraValues(e.data.values);"
-    + "    _calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')"
-    // TODO what if we only send the deltas? ie only the props in _OUTPUT that changed?
-    + "}"
-    + '<\/script>'
-            // "    if (e.data.action === 'full') {",
-    // "        var V = e.data.values;",
-    // "        for (var k in V) _CELLSdefCell(k, {v: V[k]});",
-    // Ideally keep calcing first uncalced cell til empty
-    // "    }",
-    // TODO reset changed variables at end?
-);
-
-// Trigger sending of initial state by app
-app_iframe.contentDocument.write(
-    "<script>_defCells(_CELLS); _calcSheet(_CELLS); parent.postMessage(_OUTPUT, '*')<\/script>"
-)
+let scriptElement = app_iframe.contentDocument.createElement("script");
+scriptElement.src = "./app.js";
+app_iframe.contentDocument.body.append(scriptElement);
+scriptElement = app_iframe.contentDocument.createElement("script");
+scriptElement.src = "./app2.js";
+app_iframe.contentDocument.body.append(scriptElement);
 
 if (location.hash) {
     // TODO this is a *terrible* race condition. Definitely need to fix
